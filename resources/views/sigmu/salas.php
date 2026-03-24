@@ -1,0 +1,32 @@
+<?php
+declare(strict_types=1);
+
+$edificioId = isset($edificioId) ? (int) $edificioId : 0;
+$salas = (isset($salas) && is_array($salas)) ? $salas : [];
+?>
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>SIGMU - Salas</title>
+</head>
+<body>
+    <h1>Salas del edificio <?= (int) $edificioId ?></h1>
+    <p><a href="/sigmu">Volver a edificios</a></p>
+
+    <?php if (!$salas): ?>
+        <p>No hay salas para este edificio o no tienes acceso.</p>
+    <?php else: ?>
+        <ul>
+            <?php foreach ($salas as $sala): ?>
+                <li>
+                    <a href="/sigmu/sala?sala_id=<?= (int) $sala['id'] ?>">
+                        <?= htmlspecialchars((string) $sala['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                    </a>
+                    - piso <?= (int) $sala['numero_piso'] ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+</body>
+</html>
