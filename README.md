@@ -1,6 +1,6 @@
-# SIGMU - Estructura completa PHP + MySQL
+# SIGMU - Complete PHP + MySQL Structure
 
-Base de proyecto PHP organizada por capas, preparada para web, API y CLI.
+Proyecto para sistema de gestión de mobiliario universitario escrito en PHP
 
 ## Estructura principal
 
