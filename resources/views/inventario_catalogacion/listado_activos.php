@@ -8,10 +8,11 @@ $activos = (isset($activos) && is_array($activos)) ? $activos : [];
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>SIGMU - Activos</title>
+    <title>SIGMU - Inventario | Activos por sala (RF-01 a RF-06, consulta RF-02)</title>
 </head>
 <body>
     <h1>Activos de la sala <?= (int) $salaId ?></h1>
+    <p><strong>Modulo:</strong> Inventario y catalogacion — consulta por ubicacion.</p>
     <p><a href="/sigmu">Volver a edificios</a></p>
 
     <?php if (!$activos): ?>

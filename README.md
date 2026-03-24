@@ -18,7 +18,13 @@ Proyecto para sistema de gestión de mobiliario universitario escrito en PHP
 - `database/`
   - `migrations/`, `seeders/`, `factories/`, `dumps/`
 - `resources/`
-  - `views/` (incluye `layouts/` y `partials/`)
+  - `views/` por modulo funcional (RF):
+    - `administracion_usuarios/` (RF-17, RF-18, RF-19)
+    - `inventario_catalogacion/` (RF-01 a RF-06)
+    - `localizacion_asignacion/` (RF-07 a RF-09)
+    - `mantenimiento_estado/` (RF-10 a RF-13)
+    - `reportes_consultas/` (RF-14 a RF-16)
+    - `gestion_espacios/` (RF-20, RF-21)
   - `lang/es` y `lang/en`
 - `public/`
   - `index.php`, `.htaccess`, `assets/`
@@ -52,6 +58,6 @@ Proyecto para sistema de gestión de mobiliario universitario escrito en PHP
 - **Controller**: `app/Http/Controllers/SigmuController.php`
 - **Service**: `app/Services/SigmuService.php`
 - **Repository**: `app/Repositories/SigmuRepository.php`
-- **View**: `resources/views/sigmu/*.php`
+- **View**: `resources/views/{modulo}/*.php` (ver lista de modulos arriba)
 
 Primero entra por el controlador, luego el servicio, despues el repositorio consulta la BD y finalmente responde una vista.

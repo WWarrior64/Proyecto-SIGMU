@@ -29,7 +29,13 @@ final class SigmuController
             }
         }
 
-        return view('sigmu.dashboard', [
+        if (!$sessionUser) {
+            return view('administracion_usuarios.login', [
+                'error' => $error,
+            ]);
+        }
+
+        return view('localizacion_asignacion.panel_edificios', [
             'sessionUser' => $sessionUser,
             'edificios' => $edificios,
             'error' => $error,
@@ -95,7 +101,7 @@ final class SigmuController
 
         try {
             $salas = $this->service->obtenerMisSalas($edificioId);
-            return view('sigmu.salas', [
+            return view('localizacion_asignacion.salas', [
                 'edificioId' => $edificioId,
                 'salas' => $salas,
             ]);
@@ -117,7 +123,7 @@ final class SigmuController
 
         try {
             $activos = $this->service->obtenerMisActivos($salaId);
-            return view('sigmu.activos', [
+            return view('inventario_catalogacion.listado_activos', [
                 'salaId' => $salaId,
                 'activos' => $activos,
             ]);

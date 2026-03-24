@@ -8,10 +8,11 @@ $salas = (isset($salas) && is_array($salas)) ? $salas : [];
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>SIGMU - Salas</title>
+    <title>SIGMU - Localizacion | Salas por edificio (RF-07 a RF-09)</title>
 </head>
 <body>
     <h1>Salas del edificio <?= (int) $edificioId ?></h1>
+    <p><strong>Modulo:</strong> Localizacion y asignacion.</p>
     <p><a href="/sigmu">Volver a edificios</a></p>
 
     <?php if (!$salas): ?>
