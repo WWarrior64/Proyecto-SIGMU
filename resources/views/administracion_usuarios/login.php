@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use App\Support\Csrf;
+
 // Esta vista dibuja la pantalla de inicio de sesión.
 // El controlador solo nos manda "error" cuando algo falló en BD.
 $error = isset($error) ? (string) $error : null;
@@ -18,6 +20,9 @@ if (!empty($queryError)) {
 } elseif ($error) {
     $alert = 'Error BD: ' . $error;
 }
+
+// Generar token CSRF para el formulario
+$csrfToken = Csrf::getToken();
 ?>
 
 <!doctype html>
@@ -49,6 +54,9 @@ if (!empty($queryError)) {
 
         <!-- Formulario de login -->
         <form class="form" method="post" action="/sigmu/login">
+            <!-- Token CSRF para protección contra ataques CSRF -->
+            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+            
             <div class="field">
                 <label for="username">Usuario o email</label>
                 <input id="username" name="username" type="text" placeholder="Tu usuario o correo" required>

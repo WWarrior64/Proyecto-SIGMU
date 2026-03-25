@@ -5,15 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\SigmuService;
+use App\Support\Csrf;
+use App\Support\Session;
 use Throwable;
 
 // Este controlador es el "puente" entre el navegador y el sistema.
 // Aquí solo recibimos inputs (GET/POST), llamamos al servicio y devolvemos vistas.
 final class SigmuController
 {
+    private const SESSION_LIFETIME = 120; // 2 minutos de inactividad
+    
     public function __construct(
         private readonly SigmuService $service = new SigmuService()
     ) {
+        // Iniciar sesión con control de expiración
+        Session::start(self::SESSION_LIFETIME);
     }
 
     public function dashboard(): string
@@ -50,6 +56,12 @@ final class SigmuController
 
     public function login(): void
     {
+        // Verificar token CSRF antes de procesar
+        if (!Csrf::validate()) {
+            header('Location: /sigmu?error=token_invalido');
+            return;
+        }
+        
         // Recibimos credenciales. Aceptamos username o email (mismo input).
         $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
@@ -163,6 +175,14 @@ final class SigmuController
 
     public function resetPasswordPost(): string
     {
+        // Verificar token CSRF antes de procesar
+        if (!Csrf::validate()) {
+            return view('administracion_usuarios.reset_password', [
+                'token' => '',
+                'error' => 'Token CSRF inválido. Por favor, recarga la página e intenta de nuevo.',
+            ]);
+        }
+        
         // Guardamos la nueva contraseña si el token es válido.
         $token = (string) ($_POST['token'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
