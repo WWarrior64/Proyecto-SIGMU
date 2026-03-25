@@ -112,4 +112,132 @@ final class SigmuRepository
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Obtiene todos los tipos de activo disponibles
+     * @return array<int, array<string, mixed>>
+     */
+    public function typesActive(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT id, nombre FROM vista_tipos_activo ORDER BY nombre'
+        );
+
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    /**
+     * Obtiene todas las salas accesibles para el usuario actual
+     * @return array<int, array<string, mixed>>
+     */
+    public function todasLasSalas(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT s.id, s.nombre, s.descripcion, s.numero_piso, 
+                    e.nombre AS edificio_nombre, s.edificio_id
+             FROM vista_mis_salas s
+             JOIN edificios e ON e.id = s.edificio_id
+             ORDER BY e.nombre, s.numero_piso, s.nombre'
+        );
+
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    /**
+     * Genera un código automático para un nuevo activo
+     */
+    public function generarCodigoActivo(): string
+    {
+        // Obtener el último número de código
+        $stmt = $this->db->query(
+            'SELECT MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)) as ultimo_num 
+             FROM activos 
+             WHERE codigo LIKE "ACT-%"'
+        );
+        
+        $result = $stmt->fetch();
+        $ultimoNumero = $result ? (int) $result['ultimo_num'] : 0;
+        
+        // Generar siguiente código
+        $siguienteNumero = $ultimoNumero + 1;
+        return 'ACT-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Verifica si ya existe un activo con el código dado
+     */
+    public function existeCodigoActivo(string $codigo): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*) FROM activos WHERE codigo = :codigo'
+        );
+        $stmt->execute(['codigo' => $codigo]);
+        
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Registra un nuevo activo usando el procedimiento almacenado
+     * @return int ID del activo registrado
+     */
+    public function registrarActivo(
+        string $codigo,
+        string $nombre,
+        int $tipoActivoId,
+        string $descripcion,
+        string $estado,
+        int $salaId
+    ): int {
+        $stmt = $this->db->prepare(
+            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id)'
+        );
+        
+        $stmt->execute([
+            'codigo' => $codigo,
+            'nombre' => $nombre,
+            'tipo_id' => $tipoActivoId,
+            'descripcion' => $descripcion,
+            'estado' => $estado,
+            'sala_id' => $salaId,
+        ]);
+
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+
+        if (!$result || !isset($result['nuevo_activo_id'])) {
+            throw new RuntimeException('No se pudo obtener el ID del activo registrado.');
+        }
+
+        return (int) $result['nuevo_activo_id'];
+    }
+
+    /**
+     * Agrega una foto a un activo
+     */
+    public function agregarFotoActivo(
+        int $activoId,
+        string $rutaFoto,
+        string $descripcion = '',
+        bool $esPrincipal = false
+    ): int {
+        $stmt = $this->db->prepare(
+            'CALL sp_agregar_foto(:activo_id, :ruta, :descripcion, :es_principal)'
+        );
+        
+        $stmt->execute([
+            'activo_id' => $activoId,
+            'ruta' => $rutaFoto,
+            'descripcion' => $descripcion,
+            'es_principal' => $esPrincipal ? 1 : 0,
+        ]);
+
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+
+        if (!$result || !isset($result['nueva_foto_id'])) {
+            throw new RuntimeException('Could not get logged photo ID.');
+        }
+
+        return (int) $result['nueva_foto_id'];
+    }
 }

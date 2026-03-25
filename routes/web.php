@@ -36,3 +36,13 @@ $router->get('/sigmu/sala', static function (): string {
     $controller = new SigmuController();
     return $controller->activosPorSala();
 });
+
+$router->get('/sigmu/activo/registrar', static function (): string {
+    $controller = new SigmuController();
+    return $controller->registrarActivoGet();
+});
+
+$router->post('/sigmu/activo/registrar', static function (): string {
+    $controller = new SigmuController();
+    return $controller->registrarActivoPost();
+});

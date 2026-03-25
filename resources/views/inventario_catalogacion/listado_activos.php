@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $salaId = isset($salaId) ? (int) $salaId : 0;
 $activos = (isset($activos) && is_array($activos)) ? $activos : [];
+$success = $_GET['success'] ?? '';
 ?>
 <!doctype html>
 <html lang="es">
@@ -13,7 +14,16 @@ $activos = (isset($activos) && is_array($activos)) ? $activos : [];
 <body>
     <h1>Activos de la sala <?= (int) $salaId ?></h1>
     <p><strong>Modulo:</strong> Inventario y catalogacion — consulta por ubicacion.</p>
-    <p><a href="/sigmu">Volver a edificios</a></p>
+    <p>
+        <a href="/sigmu">Volver a edificios</a> | 
+        <a href="/sigmu/activo/registrar?sala_id=<?= $salaId ?>">Agregar Activo</a>
+    </p>
+
+    <?php if ($success): ?>
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px;">
+            <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php endif; ?>
 
     <?php if (!$activos): ?>
         <p>No hay activos para esta sala o no tienes acceso.</p>

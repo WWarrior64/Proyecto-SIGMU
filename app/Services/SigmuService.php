@@ -89,4 +89,80 @@ final class SigmuService
     {
         return $this->repository->misActivosPorSala($salaId);
     }
+
+    /**
+     * Gets all available asset types
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTiposActivo(): array
+    {
+        return $this->repository->typesActive();
+    }
+
+    /**
+     * Obtiene todas las salas accesibles para el usuario actual
+     return array(
+     */
+    public function obtenerTodasLasSalas(): array
+    {
+        return $this->repository->todasLasSalas();
+    }
+
+    /**
+     * Genera un código automático para un nuevo activo
+     */
+    public function generarCodigoActivo(): string
+    {
+        return $this->repository->generarCodigoActivo();
+    }
+
+    /**
+     * Registra un nuevo activo en el sistema
+     * @return array{success: bool, message: string, activo_id?: int}
+     */
+    public function registrarActivo(
+        string $codigo,
+        string $nombre,
+        int $tipoActivoId,
+        string $descripcion,
+        string $estado,
+        int $salaId,
+        ?string $fotoPath = null
+    ): array {
+        try {
+            // Verificar que el código no exista
+            if ($this->repository->existeCodigoActivo($codigo)) {
+                return [
+                    'success' => false,
+                    'message' => 'Ya existe un activo con el código: ' . $codigo,
+                ];
+            }
+
+            // Registrar el activo usando el procedimiento almacenado
+            $activoId = $this->repository->registrarActivo(
+                $codigo,
+                $nombre,
+                $tipoActivoId,
+                $descripcion,
+                $estado,
+                $salaId
+            );
+
+            // If a photo was provided, add it
+            if ($fotoPath !== null && $activoId > 0) {
+                $this->repository->agregarFotoActivo($activoId, $fotoPath, 'Foto principal', true);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Activo registrado exitosamente.',
+                'activo_id' => $activoId,
+            ];
+        } catch (\Throwable $exception) {
+            return [
+                'success' => false,
+                'message' => 'Error al registrar el activo: ' . $exception->getMessage(),
+            ];
+        }
+    }
 }
