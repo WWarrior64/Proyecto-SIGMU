@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// Panel principal después del login.
+// Aquí mostramos edificios accesibles según el usuario logueado.
+
 /** @var array<string, mixed> $sessionUser */
 $sessionUser = (isset($sessionUser) && is_array($sessionUser)) ? $sessionUser : [];
 /** @var array<int, array<string, mixed>> $edificios */
@@ -26,6 +29,7 @@ $error = isset($error) ? (string) $error : null;
         <p style="color: #b00020;">Error BD: <?= htmlspecialchars((string) $error, ENT_QUOTES, 'UTF-8') ?></p>
     <?php endif; ?>
 
+    <!-- Datos básicos de la sesión -->
     <p>
         Sesion activa:
         <strong><?= htmlspecialchars((string) ($sessionUser['nombre_completo'] ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
@@ -39,6 +43,7 @@ $error = isset($error) ? (string) $error : null;
     <?php endif; ?>
     <p><a href="/sigmu/logout">Cerrar sesion</a></p>
 
+    <!-- Lista de edificios: clic lleva a salas del edificio -->
     <h2>Edificios accesibles</h2>
     <?php if (!$edificios): ?>
         <p>No hay edificios asignados para este usuario.</p>

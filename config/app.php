@@ -1,5 +1,7 @@
 <?php
 
+// Configuración general de la aplicación.
+// Se alimenta del archivo .env para evitar hardcodear valores.
 return [
     'name' => $_ENV['APP_NAME'] ?? 'SIGMU',
     'env' => $_ENV['APP_ENV'] ?? 'local',
