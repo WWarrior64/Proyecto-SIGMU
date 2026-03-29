@@ -15,6 +15,7 @@ $edificio = $edificio ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIGMU - Gestión de Activos</title>
     <link rel="stylesheet" href="/assets/css/listado-activos.css">
+    <link rel="stylesheet" href="/assets/css/delete-modal.css">
 </head>
 <body>
     <!-- Header -->
@@ -129,7 +130,7 @@ $edificio = $edificio ?? null;
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </a>
-                                <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este activo? Esta acción no se puede deshacer.');">
+                                <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;">
                                     <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
                                     <button type="submit" class="action-btn action-delete" title="Eliminar">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -149,5 +150,6 @@ $edificio = $edificio ?? null;
     </main>
 
     <script src="/assets/js/listado-activos.js"></script>
+    <script src="/assets/js/delete-modal.js"></script>
 </body>
 </html>

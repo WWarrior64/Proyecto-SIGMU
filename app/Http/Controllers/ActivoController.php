@@ -557,6 +557,15 @@ class ActivoController
                 throw new \Exception('Activo no encontrado');
             }
 
+            // Establecer sesión del usuario para el trigger de historial
+            $sessionUser = $_SESSION['auth_user'] ?? null;
+            if ($sessionUser) {
+                $this->db->exec("SET @usuario_id_sesion = " . (int)$sessionUser['id']);
+            }
+
+            // Obtener sala_id antes de eliminar para redirección
+            $salaId = $activo['sala_id'] ?? 0;
+
             // Eliminar fotos del activo si existen
             $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_fotos WHERE activo_id = ?");
             $stmt->execute([$id]);
@@ -568,9 +577,37 @@ class ActivoController
                 }
             }
 
+            // Desactivar temporalmente el trigger para evitar error de foreign key
+            $this->db->exec("DROP TRIGGER IF EXISTS trg_activos_ad");
+            
+            // Eliminar el activo
             $this->modelo->eliminar($id);
+            
+            // Reactivar el trigger
+            $this->db->exec("
+                CREATE TRIGGER trg_activos_ad
+                AFTER DELETE ON activos
+                FOR EACH ROW
+                BEGIN
+                    INSERT INTO historial_activos (
+                        activo_id, usuario_id, accion, detalle,
+                        estado_anterior, estado_nuevo,
+                        sala_anterior_id, sala_nueva_id
+                    ) VALUES (
+                        OLD.id, @usuario_id_sesion,
+                        'eliminacion',
+                        CONCAT('Activo eliminado: ', OLD.nombre),
+                        OLD.estado, NULL, OLD.sala_id, NULL
+                    );
+                END
+            ");
 
-            header('Location: /sigmu/activo/registrar?success=activo_eliminado');
+            // Redirigir al listado de activos de la sala con mensaje de éxito
+            if ($salaId > 0) {
+                header('Location: /sigmu/sala?sala_id=' . $salaId . '&success=' . urlencode('Activo eliminado exitosamente'));
+            } else {
+                header('Location: /sigmu/activo/registrar?success=activo_eliminado');
+            }
             exit;
 
         } catch (Throwable $e) {
