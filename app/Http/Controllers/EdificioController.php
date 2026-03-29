@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Services\SigmuService;
 use Throwable;
 
-final class SigmuController
+final class EdificioController
 {
     public function __construct(
         private readonly SigmuService $service = new SigmuService()
@@ -40,6 +40,28 @@ final class SigmuController
             'edificios' => $edificios,
             'error' => $error,
         ]);
+    }
+
+    public function salasPorEdificio(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $edificioId = filter_input(INPUT_GET, 'edificio_id', FILTER_VALIDATE_INT);
+        if (!$edificioId) {
+            return '<h2>edificio_id invalido</h2><p><a href="/sigmu">Volver</a></p>';
+        }
+
+        try {
+            $salas = $this->service->obtenerMisSalas($edificioId);
+            return view('localizacion_asignacion.salas', [
+                'edificioId' => $edificioId,
+                'salas' => $salas,
+            ]);
+        } catch (Throwable $exception) {
+            return '<h2>Error</h2><p>' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
+        }
     }
 
     private function syncDatabaseSession(): void

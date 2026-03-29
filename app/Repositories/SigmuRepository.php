@@ -103,14 +103,20 @@ final class SigmuRepository
     public function misActivosPorSala(int $salaId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, codigo, nombre, estado, sala_id, foto_principal
-             FROM vista_mis_activos
-             WHERE sala_id = :sala_id
-             ORDER BY nombre'
+            'SELECT a.id, a.codigo, a.nombre, a.estado, a.sala_id, a.foto_principal,
+                    COALESCE(ta.nombre, "Sin tipo") as tipo,
+                    COALESCE(s.nombre, "Sin sala") as sala_nombre,
+                    COALESCE(e.nombre, "Sin edificio") as edificio_nombre
+             FROM vista_mis_activos a
+             LEFT JOIN tipos_activo ta ON a.tipo_activo_id = ta.id
+             LEFT JOIN salas s ON a.sala_id = s.id
+             LEFT JOIN edificios e ON s.edificio_id = e.id
+             WHERE a.sala_id = :sala_id
+             ORDER BY a.nombre'
         );
         $stmt->execute(['sala_id' => $salaId]);
 
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
