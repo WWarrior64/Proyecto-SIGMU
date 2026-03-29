@@ -237,6 +237,29 @@ class ActivoController
     }
 
     /**
+     * Genera código de activo basado en el nombre (endpoint AJAX)
+     */
+    public function generarCodigo(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $nombre = trim((string) ($_GET['nombre'] ?? ''));
+            
+            if (empty($nombre)) {
+                echo json_encode(['success' => false, 'message' => 'Nombre no proporcionado']);
+                return;
+            }
+            
+            $codigo = $this->sigmuService->generarCodigoActivo($nombre);
+            
+            echo json_encode(['success' => true, 'codigo' => $codigo]);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Procesa la subida de foto del activo
      */
     private function procesarFoto(array $file): string

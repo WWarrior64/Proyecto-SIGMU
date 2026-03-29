@@ -53,7 +53,13 @@ $router->post('/sigmu/activo/registrar', static function (): string {
     return $controller->registrarActivoPost();
 });
 
-// Rutas para el CRUD de activos (usando query parameters)
+// Endpoint AJAX para generar código basado en nombre del activo
+$router->get('/sigmu/activo/generar-codigo', static function (): void {
+    $controller = new ActivoController();
+    $controller->generarCodigo();
+});
+
+// Routes for asset CRUD (using query parameters)
 $router->get('/activos', static function (): string {
     $controller = new ActivoController();
     return $controller->index();

@@ -150,23 +150,85 @@ final class SigmuRepository
     }
 
     /**
-     * Genera un código automático para un nuevo activo
+     * Genera un código automático para un nuevo activo basado en su nombre
+     * Ejemplo: "Pupitre" -> "PPT-001", "Mesa" -> "MSA-001"
      */
-    public function generarCodigoActivo(): string
+    public function generarCodigoActivo(string $nombreActivo = ''): string
     {
-        // Obtener el último número de código
-        $stmt = $this->db->query(
-            'SELECT MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)) as ultimo_num 
+        if (empty($nombreActivo)) {
+            // Fallback: código genérico si no hay nombre
+            $stmt = $this->db->query(
+                'SELECT MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)) as ultimo_num 
+                 FROM activos 
+                 WHERE codigo LIKE "ACT-%"'
+            );
+            $result = $stmt->fetch();
+            $ultimoNumero = $result ? (int) $result['ultimo_num'] : 0;
+            $siguienteNumero = $ultimoNumero + 1;
+            return 'ACT-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+        }
+
+        // Generar prefijo basado en el nombre del activo
+        $prefijo = $this->generarPrefijoDesdeNombre($nombreActivo);
+        
+        // Buscar el último código con este prefijo
+        $stmt = $this->db->prepare(
+            'SELECT MAX(CAST(SUBSTRING(codigo, :longitud_prefijo + 2) AS UNSIGNED)) as ultimo_num 
              FROM activos 
-             WHERE codigo LIKE "ACT-%"'
+             WHERE codigo LIKE :patron'
         );
+        $stmt->execute([
+            'longitud_prefijo' => strlen($prefijo),
+            'patron' => $prefijo . '-%'
+        ]);
         
         $result = $stmt->fetch();
-        $ultimoNumero = $result ? (int) $result['ultimo_num'] : 0;
+        $ultimoNumero = $result ? (int) ($result['ultimo_num'] ?? 0) : 0;
         
         // Generar siguiente código
         $siguienteNumero = $ultimoNumero + 1;
-        return 'ACT-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+        return $prefijo . '-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Genera un prefijo de 3 letras basado en el nombre del activo
+     * Ejemplos: "Pupitre" -> "PPT", "Mesa" -> "MSA", "Silla de oficina" -> "SDO"
+     */
+    private function generarPrefijoDesdeNombre(string $nombre): string
+    {
+        // Limpiar y normalizar el nombre
+        $nombre = trim($nombre);
+        $nombre = strtoupper($nombre);
+        
+        // Remover acentos y caracteres especiales
+        $nombre = $this->removerAcentos($nombre);
+        
+        // Si el nombre tiene una sola palabra, tomar las primeras 3 letras
+        $palabras = preg_split('/\s+/', $nombre, -1, PREG_SPLIT_NO_EMPTY);
+        
+        if (count($palabras) === 1) {
+            // Una sola palabra: tomar primeras 3 letras
+            return substr($palabras[0], 0, 3);
+        } elseif (count($palabras) === 2) {
+            // Dos palabras: primera letra de cada palabra + segunda letra de la primera
+            return substr($palabras[0], 0, 2) . substr($palabras[1], 0, 1);
+        } else {
+            // Tres o más palabras: primera letra de las primeras 3 palabras
+            return substr($palabras[0], 0, 1) . substr($palabras[1], 0, 1) . substr($palabras[2], 0, 1);
+        }
+    }
+
+    /**
+     * Remueve acentos de una cadena
+     */
+    private function removerAcentos(string $texto): string
+    {
+        $acentos = [
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'Ñ' => 'N', 'ñ' => 'n',
+        ];
+        return strtr($texto, $acentos);
     }
 
     /**

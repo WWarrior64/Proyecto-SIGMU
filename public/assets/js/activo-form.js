@@ -54,19 +54,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Validación de longitud del nombre
+    // Validación de longitud del nombre y generación automática de código
     const nombreField = document.getElementById('nombre');
+    const codigoField = document.getElementById('codigo');
+    
     if (nombreField) {
+        let timeoutId = null;
+        
         nombreField.addEventListener('input', function() {
+            // Validar longitud
             if (this.value.length > 100) {
                 this.value = this.value.substring(0, 100);
                 alert('El nombre no puede exceder 100 caracteres');
+                return;
+            }
+            
+            // Generar código automáticamente cuando el usuario escriba el nombre
+            const nombre = this.value.trim();
+            
+            // Cancelar petición anterior si existe
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            
+            if (nombre.length >= 3) {
+                // Esperar 500ms después de que el usuario deje de escribir
+                timeoutId = setTimeout(function() {
+                    fetch('/sigmu/activo/generar-codigo?nombre=' + encodeURIComponent(nombre))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && codigoField) {
+                                codigoField.value = data.codigo;
+                                codigoField.classList.remove('error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al generar código:', error);
+                        });
+                }, 500);
+            } else if (codigoField && nombre.length === 0) {
+                // Si el nombre está vacío, limpiar el código
+                codigoField.value = '';
             }
         });
     }
 
     // Validación de formato del código
-    const codigoField = document.getElementById('codigo');
     if (codigoField) {
         codigoField.addEventListener('input', function() {
             this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '');

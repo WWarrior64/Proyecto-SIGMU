@@ -109,11 +109,11 @@ final class SigmuService
     }
 
     /**
-     * Genera un código automático para un nuevo activo
+     * Genera un código automático para un nuevo activo basado en su nombre
      */
-    public function generarCodigoActivo(): string
+    public function generarCodigoActivo(string $nombreActivo = ''): string
     {
-        return $this->repository->generarCodigoActivo();
+        return $this->repository->generarCodigoActivo($nombreActivo);
     }
 
     /**

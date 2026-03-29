@@ -105,7 +105,7 @@ $csrfToken = Csrf::getToken();
                     <div class="form-group">
                         <label for="codigo">Código: <span class="required">*</span></label>
                         <input type="text" id="codigo" name="codigo" required 
-                               placeholder="Ej: ACT-001"
+                               placeholder="Automatically generated when entering the name"
                                value="<?= htmlspecialchars($formData['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                pattern="[A-Za-z0-9\-]+"
                                title="Solo letras, números y guiones"
