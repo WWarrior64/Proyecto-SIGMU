@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EdificioController;
 use App\Http\Controllers\ActivoController;
 
+// Rutas públicas / navegación base.
 $router->get('/', static function (): string {
     $controller = new HomeController();
     return $controller->index();
@@ -19,12 +20,14 @@ $router->get('/sigmu', static function (): string {
     return $controller->dashboard();
 });
 
+// Login (POST) - valida usuario/contraseña contra tabla usuarios.
 $router->post('/sigmu/login', static function (): string {
     $controller = new AuthController();
     $controller->login();
     return '';
 });
 
+// Logout - limpia sesión PHP y también la sesión en MySQL (@usuario_id_sesion).
 $router->get('/sigmu/logout', static function (): string {
     $controller = new AuthController();
     $controller->logout();

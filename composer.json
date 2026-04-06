@@ -11,6 +11,10 @@
     }
   },
   "scripts": {
-    "serve": "php -S localhost:8000 -t public"
+    "serve": "php -S localhost:8000 -t public",
+    "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "phpunit"
+        ]
   }
 }
