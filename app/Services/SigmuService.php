@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Repositories\SigmuRepository;
 use RuntimeException;
 
+// En el service ponemos lógica de negocio sencilla y validaciones.
+// La idea es que el controlador solo reciba/mande datos, y aquí se decida qué hacer.
 final class SigmuService
 {
     public function __construct(
@@ -16,11 +18,13 @@ final class SigmuService
 
     public function iniciarSesionBd(int $userId): void
     {
+        // Esto ejecuta el SP set_usuario_sesion y deja el usuario "activo" para las vistas restringidas.
         $this->repository->setUsuarioSesion($userId);
     }
 
     public function cerrarSesionBd(): void
     {
+        // Limpia @usuario_id_sesion del lado de MySQL.
         $this->repository->limpiarUsuarioSesion();
     }
 
@@ -29,15 +33,18 @@ final class SigmuService
      */
     public function autenticar(string $login, string $password): array
     {
+        // Buscamos el usuario por username o email.
         $user = $this->repository->usuarioParaLogin($login);
         if (!$user) {
             throw new RuntimeException('Usuario o contraseña inválidos.');
         }
 
+        // No dejamos entrar usuarios desactivados.
         if (!(bool) $user['activo']) {
             throw new RuntimeException('El usuario está inactivo.');
         }
 
+        // Validación de contraseña (hash bcrypt).
         $passwordHash = (string) $user['contrasena_hash'];
         if (str_contains($passwordHash, 'REEMPLAZAR')) {
             throw new RuntimeException(
@@ -51,7 +58,7 @@ final class SigmuService
         if (($hashInfo['algo'] ?? null) !== null) {
             $isValidPassword = password_verify($password, $passwordHash);
         } else {
-            // Fallback local: permite contrasena en texto plano si aun no fue migrada.
+            // Fallback local: esto fue útil al inicio para pruebas, pero lo ideal es usar hash siempre.
             $isValidPassword = hash_equals($passwordHash, $password);
         }
 
@@ -59,6 +66,7 @@ final class SigmuService
             throw new RuntimeException('Usuario/email o contraseña inválidos.');
         }
 
+        // Validación extra: debe existir rol relacionado.
         if (empty($user['rol_nombre'])) {
             throw new RuntimeException('El usuario no tiene rol válido.');
         }
@@ -71,6 +79,7 @@ final class SigmuService
      */
     public function obtenerMisEdificios(): array
     {
+        // Se apoya en vista_mis_edificios (filtrada por fn_tiene_acceso_edificio).
         return $this->repository->misEdificios();
     }
 
@@ -79,6 +88,7 @@ final class SigmuService
      */
     public function obtenerMisSalas(int $edificioId): array
     {
+        // Se apoya en vista_mis_salas (filtrada por edificio accesible).
         return $this->repository->misSalasPorEdificio($edificioId);
     }
 
@@ -87,6 +97,82 @@ final class SigmuService
      */
     public function obtenerMisActivos(int $salaId): array
     {
+        // Se apoya en vista_mis_activos (ya incluye foto principal si existe).
         return $this->repository->misActivosPorSala($salaId);
+    }
+
+    /**
+     * @return array{success: bool, message: string, debugToken?: string}
+     */
+    public function solicitarRecuperacionPassword(string $login, bool $debugLocal = false): array
+    {
+        // Aquí cuidamos no revelar si el usuario existe o no (mensaje genérico).
+        $login = trim($login);
+        if ($login === '') {
+            return [
+                'success' => false,
+                'message' => 'Ingresa tu usuario o email.',
+            ];
+        }
+
+        $user = $this->repository->usuarioIdPorLogin($login);
+        if (!is_array($user) || empty($user['id']) || !(bool) $user['activo']) {
+            // No revelamos si el usuario existe o está activo.
+            return [
+                'success' => true,
+                'message' => 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.',
+            ];
+        }
+
+        $usuarioId = (int) $user['id'];
+        $expiresMinutes = 60;
+
+        // Guardamos el token (hash) en BD. El token plano solo lo mostramos en local para debug.
+        $token = $this->repository->crearTokenPasswordReset($usuarioId, $expiresMinutes);
+
+        return [
+            'success' => true,
+            'message' => 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.',
+            'debugToken' => $debugLocal ? $token : null,
+        ];
+    }
+
+    public function tokenPasswordResetValido(string $tokenPlain): bool
+    {
+        $tokenPlain = trim($tokenPlain);
+        if ($tokenPlain === '') {
+            return false;
+        }
+
+        return $this->repository->tokenPasswordResetEsValido($tokenPlain);
+    }
+
+    public function resetearPassword(string $tokenPlain, string $password, string $passwordConfirmation): void
+    {
+        // Validaciones simples antes de tocar BD.
+        if (trim($tokenPlain) === '') {
+            throw new RuntimeException('Token inválido.');
+        }
+
+        if (strlen($password) < 8) {
+            throw new RuntimeException('La contraseña debe tener al menos 8 caracteres.');
+        }
+
+        if ($password !== $passwordConfirmation) {
+            throw new RuntimeException('La confirmación no coincide.');
+        }
+
+        // Validamos token (existente, no usado y no expirado).
+        if (!$this->tokenPasswordResetValido($tokenPlain)) {
+            throw new RuntimeException('El token ya no es válido o ha expirado.');
+        }
+
+        // Guardamos contraseña nueva hasheada.
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $ok = $this->repository->resetearContrasenaPorToken($tokenPlain, $hash);
+
+        if (!$ok) {
+            throw new RuntimeException('No se pudo completar el restablecimiento.');
+        }
     }
 }

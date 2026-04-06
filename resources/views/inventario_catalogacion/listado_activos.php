@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+// Vista: listado de activos por sala.
+// Esta pantalla viene del flujo edificio → sala → activos.
 $salaId = isset($salaId) ? (int) $salaId : 0;
 $activos = (isset($activos) && is_array($activos)) ? $activos : [];
 ?>
@@ -18,6 +20,7 @@ $activos = (isset($activos) && is_array($activos)) ? $activos : [];
     <?php if (!$activos): ?>
         <p>No hay activos para esta sala o no tienes acceso.</p>
     <?php else: ?>
+        <!-- Tabla simple para visualizar activos. Luego aquí podemos agregar filtros/búsqueda (RF-02/RF-14). -->
         <table border="1" cellpadding="6" cellspacing="0">
             <thead>
                 <tr>

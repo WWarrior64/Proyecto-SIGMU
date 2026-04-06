@@ -61,3 +61,15 @@ Proyecto para sistema de gestión de mobiliario universitario escrito en PHP
 - **View**: `resources/views/{modulo}/*.php` (ver lista de modulos arriba)
 
 Primero entra por el controlador, luego el servicio, despues el repositorio consulta la BD y finalmente responde una vista.
+
+## Login y recuperación de contraseña (pantallas)
+
+- Pantalla de login: `GET /sigmu`
+- Recuperar contraseña:
+  - `GET /sigmu/recuperar` (formulario)
+  - `POST /sigmu/recuperar` (genera token)
+  - `GET /sigmu/reset?token=...` (formulario nueva contraseña)
+  - `POST /sigmu/reset` (actualiza contraseña)
+
+Para que el flujo funcione, crea la tabla de tokens:
+- Archivo: `database/migrations/20260325_create_password_reset_tokens.sql`

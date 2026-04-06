@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+// Vista de salas por edificio.
+// El controlador nos manda el edificioId y el listado de salas.
 $edificioId = isset($edificioId) ? (int) $edificioId : 0;
 $salas = (isset($salas) && is_array($salas)) ? $salas : [];
 ?>
@@ -18,6 +20,7 @@ $salas = (isset($salas) && is_array($salas)) ? $salas : [];
     <?php if (!$salas): ?>
         <p>No hay salas para este edificio o no tienes acceso.</p>
     <?php else: ?>
+        <!-- Cada sala lleva al listado de activos -->
         <ul>
             <?php foreach ($salas as $sala): ?>
                 <li>
