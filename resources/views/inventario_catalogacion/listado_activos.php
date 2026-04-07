@@ -7,6 +7,12 @@ $success = $_GET['success'] ?? '';
 $error = $_GET['error'] ?? '';
 $sala = $sala ?? null;
 $edificio = $edificio ?? null;
+
+// Valores por defecto para paginacion (compatibilidad con ambos metodos del controlador)
+$pagina = $pagina ?? 1;
+$totalPaginas = $totalPaginas ?? 1;
+$total = $total ?? count($activos);
+$busqueda = $busqueda ?? '';
 ?>
 <!doctype html>
 <html lang="es">
@@ -96,10 +102,11 @@ $edificio = $edificio ?? null;
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-id">ID</div>
+                    <div class="table-cell cell-id">Código</div>
                     <div class="table-cell cell-name">Nombre</div>
                     <div class="table-cell cell-type">Tipo</div>
                     <div class="table-cell cell-status">Estado</div>
+                    <div class="table-cell cell-ubicacion">Ubicación</div>
                     <div class="table-cell cell-actions">Acciones</div>
                 </div>
             </div>
@@ -116,22 +123,29 @@ $edificio = $edificio ?? null;
                 <?php else: ?>
                     <?php foreach ($activos as $activo): ?>
                         <div class="table-row">
-                            <div class="table-cell cell-id" data-label="ID"><?= (int) ($activo['id'] ?? 0) ?></div>
+                            <div class="table-cell cell-id" data-label="Código"><?= htmlspecialchars((string) ($activo['codigo'] ?? $activo['id']), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-name" data-label="Nombre"><?= htmlspecialchars((string) ($activo['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
-                            <div class="table-cell cell-type" data-label="Tipo Activo"><?= htmlspecialchars((string) ($activo['tipo'] ?? 'Sin tipo'), ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="table-cell cell-type" data-label="Tipo Activo" data-tipo-id="<?= (int) ($activo['tipo_activo_id'] ?? 0) ?>"><?= htmlspecialchars((string) ($activo['tipo'] ?? 'Sin tipo'), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-status" data-label="Estado">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                     <?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
                                 </span>
                             </div>
+                            <div class="table-cell cell-ubicacion" data-label="Ubicación"><?= htmlspecialchars((string) ($activo['sala_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-actions" data-label="Acciones">
-                                <a href="/sigmu/activo/ver?id=<?= (int) ($activo['id'] ?? 0) ?>" class="action-btn action-edit" title="Editar">
+                                <a href="/sigmu/activo/ver?id=<?= (int) ($activo['id'] ?? 0) ?>" class="action-btn action-view" title="Ver detalle">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </a>
+                                <a href="/sigmu/activo/editar?id=<?= (int) ($activo['id'] ?? 0) ?>" class="action-btn action-edit" title="Editar">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </a>
-                                <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;">
+                                <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;" class="delete-form">
                                     <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
                                     <button type="submit" class="action-btn action-delete" title="Eliminar">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -147,6 +161,44 @@ $edificio = $edificio ?? null;
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <!-- Pagination -->
+            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando <?= count($activos) ?> de <?= $total ?> activos
+                </div>
+                <div class="pagination">
+                    <?php if ($pagina > 1): ?>
+                        <a href="?pagina=<?= $pagina - 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Anterior
+                        </a>
+                    <?php endif; ?>
+
+                    <div class="pagination-pages">
+                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                            <?php if ($i == $pagina): ?>
+                                <span class="pagination-btn active"><?= $i ?></span>
+                            <?php else: ?>
+                                <a href="?pagina=<?= $i ?>&sala_id=<?= $salaId ?>" class="pagination-btn"><?= $i ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </div>
+
+                    <?php if ($pagina < $totalPaginas): ?>
+                        <a href="?pagina=<?= $pagina + 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
+                            Siguiente
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </main>
 

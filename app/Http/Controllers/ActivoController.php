@@ -260,6 +260,21 @@ class ActivoController
     }
 
     /**
+     * Obtener todos los tipos de activo para el filtro frontend
+     */
+    public function obtenerTiposActivo(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $tipos = $this->modelo->obtenerTiposActivo();
+            echo json_encode($tipos);
+        } catch (\Throwable $e) {
+            echo json_encode([]);
+        }
+    }
+
+    /**
      * Procesa la subida de foto del activo
      */
     private function procesarFoto(array $file): string
@@ -334,9 +349,24 @@ class ActivoController
         $busqueda = trim((string) ($_GET['busqueda'] ?? ''));
         $salaId = (int) ($_GET['sala_id'] ?? 0);
         $porPagina = 10;
+        
+        // Obtener filtros desde la peticion
+        $estados = $_GET['estados'] ?? [];
+        $tipos = $_GET['tipos'] ?? [];
+        
+        // Normalizar y sanitizar filtros
+        if (!is_array($estados)) $estados = [];
+        if (!is_array($tipos)) $tipos = [];
+        
+        // Filtrar solo estados validos
+        $estadosValidos = ['disponible', 'en_uso', 'reparacion', 'descartado'];
+        $estados = array_filter($estados, fn($e) => in_array($e, $estadosValidos, true));
+        
+        // Convertir tipos a entero
+        $tipos = array_filter(array_map(fn($t) => (int)$t, $tipos), fn($t) => $t > 0);
 
-        $activos = $this->modelo->listar($pagina, $porPagina, $busqueda);
-        $total = $this->modelo->contar($busqueda);
+        $activos = $this->modelo->listar($pagina, $porPagina, $busqueda, $estados, $tipos);
+        $total = $this->modelo->contar($busqueda, $estados, $tipos);
         $totalPaginas = ceil($total / $porPagina);
 
         // Get room and building information
