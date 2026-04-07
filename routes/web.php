@@ -34,6 +34,30 @@ $router->get('/sigmu/logout', static function (): string {
     return '';
 });
 
+// Recuperar contraseña - formulario
+$router->get('/sigmu/recuperar', static function (): string {
+    $controller = new AuthController();
+    return $controller->recuperarPasswordForm();
+});
+
+// Recuperar contraseña - enviar formulario
+$router->post('/sigmu/recuperar', static function (): string {
+    $controller = new AuthController();
+    return $controller->recuperarPasswordPost();
+});
+
+// Resetear contraseña - formulario con token
+$router->get('/sigmu/reset', static function (): string {
+    $controller = new AuthController();
+    return $controller->resetPasswordForm();
+});
+
+// Resetear contraseña - guardar nueva contraseña
+$router->post('/sigmu/reset', static function (): string {
+    $controller = new AuthController();
+    return $controller->resetPasswordPost();
+});
+
 // Rutas de edificios y salas
 $router->get('/sigmu/edificio', static function (): string {
     $controller = new EdificioController();

@@ -464,7 +464,7 @@ class ActivoController
         }
 
         // Obtener foto principal del activo (o cualquier foto si no hay principal)
-        $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_fotos WHERE activo_id = ? ORDER BY es_principal DESC, id DESC LIMIT 1");
+        $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? ORDER BY es_principal DESC, id DESC LIMIT 1");
         $stmt->execute([$id]);
         $fotoPrincipal = $stmt->fetchColumn();
         
@@ -525,13 +525,13 @@ class ActivoController
                 throw new \Exception('Todos los campos obligatorios deben ser completados');
             }
 
-            // Manejo de la imagen - usar tabla activo_fotos
+            // Manejo de la imagen - usar tabla activo_foto
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
                 // Subir nueva foto
                 $fotoPath = $this->subirImagen($_FILES['foto']);
                 
                 // Eliminar foto principal anterior si existe
-                $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_fotos WHERE activo_id = ? AND es_principal = TRUE");
+                $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
                 $stmt->execute([$id]);
                 $fotoAnterior = $stmt->fetchColumn();
                 
@@ -540,11 +540,11 @@ class ActivoController
                 }
                 
                 // Eliminar registro anterior de foto principal
-                $stmt = $this->db->prepare("DELETE FROM activo_fotos WHERE activo_id = ? AND es_principal = TRUE");
+                $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
                 $stmt->execute([$id]);
                 
                 // Insertar nueva foto principal
-                $stmt = $this->db->prepare("INSERT INTO activo_fotos (activo_id, ruta_foto, descripcion, es_principal) VALUES (?, ?, ?, TRUE)");
+                $stmt = $this->db->prepare("INSERT INTO activo_foto (activo_id, ruta_foto, descripcion, es_principal) VALUES (?, ?, ?, TRUE)");
                 $stmt->execute([$id, $fotoPath, 'Foto principal del activo']);
             }
 
@@ -590,7 +590,7 @@ class ActivoController
             $salaId = $activo['sala_id'] ?? 0;
 
             // Eliminar fotos del activo si existen
-            $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_fotos WHERE activo_id = ?");
+            $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ?");
             $stmt->execute([$id]);
             $fotos = $stmt->fetchAll(PDO::FETCH_COLUMN);
             
@@ -601,18 +601,18 @@ class ActivoController
             }
 
             // Desactivar temporalmente el trigger para evitar error de foreign key
-            $this->db->exec("DROP TRIGGER IF EXISTS trg_activos_ad");
+            $this->db->exec("DROP TRIGGER IF EXISTS trg_activo_ad");
             
             // Eliminar el activo
             $this->modelo->eliminar($id);
             
             // Reactivar el trigger
             $this->db->exec("
-                CREATE TRIGGER trg_activos_ad
-                AFTER DELETE ON activos
+                CREATE TRIGGER trg_activo_ad
+                AFTER DELETE ON activo
                 FOR EACH ROW
                 BEGIN
-                    INSERT INTO historial_activos (
+                    INSERT INTO historial_activo (
                         activo_id, usuario_id, accion, detalle,
                         estado_anterior, estado_nuevo,
                         sala_anterior_id, sala_nueva_id

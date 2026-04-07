@@ -29,9 +29,10 @@ $error = $_GET['error'] ?? '';
         </div>
         <div class="header-right">
             <button class="logout-btn" onclick="window.location.href='/sigmu/logout'" title="Cerrar sesión">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
+                    <path d="M6 4v16h10M6 4h10M6 4v16" />
+                    <path d="M11 12h11" />
+                    <path d="M19 8l4 4-4 4" />
                 </svg>
             </button>
         </div>

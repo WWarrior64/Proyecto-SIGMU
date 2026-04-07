@@ -24,10 +24,10 @@ class Activo
             
             $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
                            COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
-                    FROM activos a
-                    LEFT JOIN tipos_activo ta ON a.tipo_activo_id = ta.id
-                    LEFT JOIN salas s ON a.sala_id = s.id
-                    LEFT JOIN edificios e ON s.edificio_id = e.id
+                    FROM activo a
+                    LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
+                    LEFT JOIN sala s ON a.sala_id = s.id
+                    LEFT JOIN edificio e ON s.edificio_id = e.id
                     WHERE 1=1";
             
             $params = [];
@@ -57,7 +57,7 @@ class Activo
     public function contar(string $busqueda = ''): int
     {
         try {
-            $sql = "SELECT COUNT(*) as total FROM activos a LEFT JOIN tipos_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
+            $sql = "SELECT COUNT(*) as total FROM activo a LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
             $params = [];
             
             if (!empty($busqueda)) {
@@ -83,8 +83,8 @@ class Activo
         try {
             $stmt = $this->db->prepare(
                 "SELECT a.*, ta.nombre as tipo 
-                 FROM activos a 
-                 LEFT JOIN tipos_activo ta ON a.tipo_activo_id = ta.id 
+                 FROM activo a 
+                 LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id 
                  WHERE a.id = :id"
             );
             $stmt->execute([':id' => $id]);
@@ -102,7 +102,7 @@ class Activo
      */
     public function create(array $datos): int
     {
-        $sql = "INSERT INTO activos (nombre, descripcion, tipo_activo_id, estado, codigo, sala_id, usuario_creador_id, fecha_creado)
+        $sql = "INSERT INTO activo (nombre, descripcion, tipo_activo_id, estado, codigo, sala_id, usuario_creador_id, fecha_creado)
                 VALUES (:nombre, :descripcion, :tipo_activo_id, :estado, :codigo, :sala_id, :usuario_creador_id, :fecha_creado)";
         
         $stmt = $this->db->prepare($sql);
@@ -125,7 +125,7 @@ class Activo
      */
     public function actualizar(int $id, array $datos): bool
     {
-        $sql = "UPDATE activos SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
+        $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
                 estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
                 WHERE id = :id";
         
@@ -147,7 +147,7 @@ class Activo
      */
     public function eliminar(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM activos WHERE id = :id");
+        $stmt = $this->db->prepare("DELETE FROM activo WHERE id = :id");
         return $stmt->execute([':id' => $id]);
     }
 
@@ -157,7 +157,7 @@ class Activo
     public function obtenerHabitaciones(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id, nombre FROM salas ORDER BY nombre");
+            $stmt = $this->db->query("SELECT id, nombre FROM sala ORDER BY nombre");
             return $stmt->fetchAll();
         } catch (\PDOException $e) {
             // Si la tabla no existe, retornar array vacío
@@ -171,7 +171,7 @@ class Activo
     public function obtenerTiposActivo(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id, nombre FROM tipos_activo ORDER BY nombre");
+            $stmt = $this->db->query("SELECT id, nombre FROM tipo_activo ORDER BY nombre");
             return $stmt->fetchAll();
         } catch (\PDOException $e) {
             // Si la tabla no existe, retornar array vacío
@@ -188,8 +188,8 @@ class Activo
             $stmt = $this->db->prepare(
                 "SELECT s.id, s.nombre as sala_nombre, s.numero_piso, 
                         e.id as edificio_id, e.nombre as edificio_nombre
-                 FROM salas s
-                 LEFT JOIN edificios e ON s.edificio_id = e.id
+                 FROM sala s
+                 LEFT JOIN edificio e ON s.edificio_id = e.id
                  WHERE s.id = :sala_id"
             );
             $stmt->execute([':sala_id' => $salaId]);

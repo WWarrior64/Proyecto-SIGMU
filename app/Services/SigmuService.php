@@ -174,6 +174,10 @@ final class SigmuService
                 'success' => false,
                 'message' => 'Error al registrar el activo: ' . $exception->getMessage(),
             ];
+        }
+    }
+
+    /**
      * @return array{success: bool, message: string, debugToken?: string}
      */
     public function solicitarRecuperacionPassword(string $login, bool $debugLocal = false): array

@@ -54,8 +54,8 @@ final class SigmuRepository
                 r.nombre AS rol_nombre,
                 r.ver_todo,
                 u.activo
-             FROM usuarios u
-             JOIN roles r ON r.id = u.rol_id
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
              WHERE u.username = :login OR u.email = :login
              LIMIT 1'
         );
@@ -117,9 +117,9 @@ final class SigmuRepository
                     COALESCE(s.nombre, "Sin sala") as sala_nombre,
                     COALESCE(e.nombre, "Sin edificio") as edificio_nombre
              FROM vista_mis_activos a
-             LEFT JOIN tipos_activo ta ON a.tipo_activo_id = ta.id
-             LEFT JOIN salas s ON a.sala_id = s.id
-             LEFT JOIN edificios e ON s.edificio_id = e.id
+             LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
+             LEFT JOIN sala s ON a.sala_id = s.id
+             LEFT JOIN edificio e ON s.edificio_id = e.id
              WHERE a.sala_id = :sala_id
              ORDER BY a.nombre'
         );
@@ -151,7 +151,7 @@ final class SigmuRepository
             'SELECT s.id, s.nombre, s.descripcion, s.numero_piso, 
                     e.nombre AS edificio_nombre, s.edificio_id
              FROM vista_mis_salas s
-             JOIN edificios e ON e.id = s.edificio_id
+             JOIN edificio e ON e.id = s.edificio_id
              ORDER BY e.nombre, s.numero_piso, s.nombre'
         );
 
@@ -168,7 +168,7 @@ final class SigmuRepository
             // Fallback: código genérico si no hay nombre
             $stmt = $this->db->query(
                 'SELECT MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)) as ultimo_num 
-                 FROM activos 
+                 FROM activo 
                  WHERE codigo LIKE "ACT-%"'
             );
             $result = $stmt->fetch();
@@ -183,7 +183,7 @@ final class SigmuRepository
         // Buscar el último código con este prefijo
         $stmt = $this->db->prepare(
             'SELECT MAX(CAST(SUBSTRING(codigo, :longitud_prefijo + 2) AS UNSIGNED)) as ultimo_num 
-             FROM activos 
+             FROM activo 
              WHERE codigo LIKE :patron'
         );
         $stmt->execute([
@@ -246,7 +246,7 @@ final class SigmuRepository
     public function existeCodigoActivo(string $codigo): bool
     {
         $stmt = $this->db->prepare(
-            'SELECT COUNT(*) FROM activos WHERE codigo = :codigo'
+            'SELECT COUNT(*) FROM activo WHERE codigo = :codigo'
         );
         $stmt->execute(['codigo' => $codigo]);
         
@@ -298,7 +298,7 @@ final class SigmuRepository
         bool $esPrincipal = false
     ): int {
         $stmt = $this->db->prepare(
-            'CALL sp_agregar_foto(:activo_id, :ruta, :descripcion, :es_principal)'
+            'CALL sp_agregar_foto_activo(:activo_id, :ruta, :descripcion, :es_principal)'
         );
         
         $stmt->execute([
@@ -326,7 +326,7 @@ final class SigmuRepository
         // Consulta rápida (solo id/activo) para recuperación de contraseña.
         $stmt = $this->db->prepare(
             'SELECT id, activo
-             FROM usuarios
+             FROM usuario
              WHERE username = :login OR email = :login
              LIMIT 1'
         );
@@ -385,7 +385,7 @@ final class SigmuRepository
         $tokenHash = hash('sha256', $tokenPlain);
 
         $stmt = $this->db->prepare(
-            'UPDATE usuarios u
+            'UPDATE usuario u
              JOIN password_reset_tokens prt ON prt.usuario_id = u.id
              SET u.contrasena_hash = :new_hash,
                  prt.used_at = NOW()
