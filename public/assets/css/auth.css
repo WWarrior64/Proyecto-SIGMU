@@ -1,0 +1,227 @@
+/* Pantallas de autenticación (login + recuperación de contraseña)
+   La idea aquí es que todo quede centrado y se parezca al prototipo.
+*/
+
+:root{
+  /* Colores institucionales */
+  --unicaes-red: #6b0000;
+  --unicaes-red-2: #3a0000;
+  --unicaes-gold: #f0b429;
+  --unicaes-gold-2: #e0a51c;
+  --text: #1b1b1b;
+}
+
+html, body{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  color: var(--text);
+  background: var(--unicaes-red-2);
+  /* Evitamos scroll vertical por los overlays del fondo */
+  overflow: hidden;
+}
+
+.auth-bg{
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 2.2vh, 24px) clamp(12px, 2vw, 16px);
+  position: relative;
+  overflow: hidden;
+  /* Usamos el fondo institucional + un overlay para que el contenido sea legible */
+  background-image:
+    linear-gradient(135deg, rgba(58,0,0,0.92) 0%, rgba(58,0,0,0.88) 45%, rgba(107,0,0,0.92) 100%),
+    url("/assets/img/fondo_login.jpeg");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Franja diagonal estilo prototipo */
+.auth-bg::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg,
+    rgba(255,255,255,0.00) 0%,
+    rgba(255,255,255,0.00) 35%,
+    rgba(0,0,0,0.28) 36%,
+    rgba(0,0,0,0.28) 58%,
+    rgba(255,255,255,0.00) 59%
+  );
+  transform: rotate(-10deg) scale(1.35);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.auth-card{
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 8px;
+  /* Sombra suave para separar del fondo */
+  box-shadow: 0 18px 45px rgba(0,0,0,0.25);
+  padding: 30px 26px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-brand{
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.unicaes-badge{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.unicaes-logo{
+  width: min(320px, 100%);
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.sigmu-title{
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  color: var(--unicaes-red);
+}
+
+.auth-divider{
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+  margin: 14px 0;
+}
+
+.auth-subtitle{
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.form{
+  display: grid;
+  gap: 12px;
+  /* Esto evita que los inputs queden pegados al borde del card */
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.field label{
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.field input{
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 12px;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 140ms ease;
+}
+
+.field input:focus{
+  border-color: rgba(240,180,41,0.95);
+  box-shadow: 0 0 0 4px rgba(240,180,41,0.18);
+}
+
+.btn{
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  background: var(--unicaes-gold);
+  color: #1c1c1c;
+  transition: transform 70ms ease, background 140ms ease;
+}
+
+.btn-inline{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-icon{
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
+.btn:hover{
+  background: var(--unicaes-gold-2);
+}
+
+.btn:active{
+  transform: translateY(1px);
+}
+
+.btn-ghost{
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.18);
+  color: #1c1c1c;
+  font-weight: 700;
+}
+
+.auth-links{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.auth-links a{
+  color: var(--unicaes-red);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.auth-links a:hover{
+  text-decoration: underline;
+}
+
+.auth-alert{
+  background: rgba(176,0,32,0.08);
+  border: 1px solid rgba(176,0,32,0.25);
+  color: rgba(120,0,22,1);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* Ajuste de responsividad */
+@media (max-width: 420px){
+  .auth-card{
+    padding: 22px 16px;
+    border-radius: 10px;
+  }
+  .unicaes-logo{
+    width: min(280px, 100%);
+    height: auto;
+  }
+  .sigmu-title{
+    font-size: 24px;
+  }
+}
+

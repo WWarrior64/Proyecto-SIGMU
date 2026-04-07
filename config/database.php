@@ -1,5 +1,7 @@
 <?php
 
+// Configuración de base de datos.
+// Por ahora solo usamos MySQL con PDO.
 return [
     'driver' => 'mysql',
     'host' => $_ENV['DB_HOST'] ?? '127.0.0.1',

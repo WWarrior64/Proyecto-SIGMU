@@ -5,33 +5,23 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\SigmuService;
-use App\Support\Csrf;
-use App\Support\Session;
 use Throwable;
 
-// Este controlador es el "puente" entre el navegador y el sistema.
-// Aquí solo recibimos inputs (GET/POST), llamamos al servicio y devolvemos vistas.
-final class SigmuController
+final class EdificioController
 {
-    private const SESSION_LIFETIME = 120; // 2 minutos de inactividad
-    
     public function __construct(
         private readonly SigmuService $service = new SigmuService()
     ) {
-        // Iniciar sesión con control de expiración
-        Session::start(self::SESSION_LIFETIME);
     }
 
     public function dashboard(): string
     {
-        // Si hay sesión, cargamos el panel. Si no, mostramos login.
         $error = null;
         $sessionUser = $this->getSessionUser();
         $edificios = [];
 
         if ($sessionUser) {
             try {
-                // Sincronizamos la sesión de BD para que las vistas restringidas funcionen.
                 $this->syncDatabaseSession();
                 $edificios = $this->service->obtenerMisEdificios();
             } catch (Throwable $exception) {
@@ -40,13 +30,11 @@ final class SigmuController
         }
 
         if (!$sessionUser) {
-            // Vista: login con identidad UNICAES.
             return view('administracion_usuarios.login', [
                 'error' => $error,
             ]);
         }
 
-        // Vista: panel de edificios accesibles para el usuario.
         return view('localizacion_asignacion.panel_edificios', [
             'sessionUser' => $sessionUser,
             'edificios' => $edificios,
@@ -54,10 +42,30 @@ final class SigmuController
         ]);
     }
 
+    public function salasPorEdificio(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $edificioId = filter_input(INPUT_GET, 'edificio_id', FILTER_VALIDATE_INT);
+        if (!$edificioId) {
+            return '<h2>edificio_id invalido</h2><p><a href="/sigmu">Volver</a></p>';
+        }
+
+        try {
+            $salas = $this->service->obtenerMisSalas($edificioId);
+            return view('localizacion_asignacion.salas', [
+                'edificioId' => $edificioId,
+                'salas' => $salas,
+            ]);
+        } catch (Throwable $exception) {
+            return '<h2>Error</h2><p>' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
+        }
+    }
 
     private function syncDatabaseSession(): void
     {
-        // Sin esto, tus vistas (vista_mis_*) no "saben" qué usuario está navegando.
         $userId = $this->getSessionUser()['id'] ?? null;
         if (is_int($userId) && $userId > 0) {
             $this->service->iniciarSesionBd($userId);
@@ -75,16 +83,13 @@ final class SigmuController
 
     private function requireAuth(): bool
     {
-        // Guard simple: si no hay usuario, regresamos al login.
         $user = $this->getSessionUser();
         if (!$user || empty($user['id'])) {
             header('Location: /sigmu?error=debes_iniciar_sesion');
             return false;
         }
 
-        // Si sí hay usuario, sincronizamos la sesión de BD y seguimos.
         $this->syncDatabaseSession();
         return true;
     }
-
 }
