@@ -1,0 +1,205 @@
+/*
+*  SIGMU - PANEL ADMINISTRADOR
+*  Universidad Catolica de El Salvador
+*  Versión 2.0
+*  Ajustado a medidas estandar del proyecto
+*/
+
+:root {
+    --unicaes-red: #9a2018;
+    --unicaes-red-dark: #7a1912;
+    --unicaes-red-light: #b7241b;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --text-dark: #424242;
+    --bg-gray: #f3f3f3;
+    --bg-white: #ffffff;
+    --border-color: #E0E0E0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+}
+
+/* BARRA SUPERIOR - IGUAL A TODAS LAS PANTALLAS */
+.header-bar {
+    background-color: var(--unicaes-red);
+    color: white;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
+}
+
+.menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+}
+
+.header-title {
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* CONTENIDO PRINCIPAL */
+.main-container {
+    background-color: var(--bg-gray);
+    min-height: calc(100vh - 64px);
+    padding: 32px 24px;
+    width: 100%;
+}
+
+.content-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #cccccc;
+}
+
+/* GRID DE BOTONES MENU */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 180px);
+    gap: 32px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.menu-card {
+    background-color: var(--bg-gray);
+    border: 2px solid var(--unicaes-red);
+    border-radius: var(--radius-md);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.menu-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(154, 32, 24, 0.15);
+    background-color: #fafafa;
+}
+
+.menu-icon {
+    width: 56px;
+    height: 56px;
+    opacity: 0.6;
+    stroke: #707070;
+}
+
+.menu-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #707070;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .menu-grid {
+        grid-template-columns: repeat(2, 160px);
+        gap: 24px;
+    }
+    
+    .header-title {
+        font-size: 22px;
+    }
+    
+    .main-container {
+        padding: 20px 16px;
+    }
+    
+    .content-card {
+        padding: 24px;
+    }
+    
+    .page-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-grid {
+        grid-template-columns: 1fr;
+        max-width: 220px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
