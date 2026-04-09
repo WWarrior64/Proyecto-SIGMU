@@ -99,7 +99,7 @@ $usuarios = $service->obtenerTodosUsuarios();
             <div id="filterPanel" style="display: none; margin-bottom: 24px; padding: 16px; background: #f8f8f8; border-radius: 8px; border: 1px solid #ddd;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                     <div>
-                        <label style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Rol:</label>
+                        <label for="filterRol" style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Rol:</label>
                         <select id="filterRol" style="width: 100%; padding: 8px 12px; border: 1px solid #9E9E9E; border-radius: 6px;">
                             <option value="">Todos los Roles</option>
                             <option value="Administrador">Administrador</option>
@@ -108,7 +108,7 @@ $usuarios = $service->obtenerTodosUsuarios();
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Estado:</label>
+                        <label for="filterEstado" style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Estado:</label>
                         <select id="filterEstado" style="width: 100%; padding: 8px 12px; border: 1px solid #9E9E9E; border-radius: 6px;">
                             <option value="">Todos los Estados</option>
                             <option value="Activo">Solo Activos</option>
@@ -116,7 +116,7 @@ $usuarios = $service->obtenerTodosUsuarios();
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight: 600; margin-bottom: 8px; display: block;">&nbsp;</label>
+                        <label for="resetFilters" style="font-weight: 600; margin-bottom: 8px; display: block;">&nbsp;</label>
                         <button id="resetFilters" style="width: 100%; padding: 8px 12px; background: #9E9E9E; color: white; border: none; border-radius: 6px; cursor: pointer;">Limpiar Filtros</button>
                     </div>
                 </div>

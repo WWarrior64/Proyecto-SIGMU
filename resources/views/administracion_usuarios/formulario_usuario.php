@@ -98,17 +98,23 @@ if ($modo === 'editar' && $usuario_id) {
                             $fotoUsuario = null;
                             if ($modo === 'editar') {
                                 $fotoUsuario = $service->obtenerFotoUsuario($usuario['id']);
+                            } else {
+                                $fotoUsuario = null;
                             }
-                            
-                            if ($fotoUsuario): 
-                            ?>
+
+                            if ($fotoUsuario) {
+                                ?>
                                 <img src="<?= htmlspecialchars($fotoUsuario['ruta_foto']) ?>" alt="Foto perfil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                            <?php else: ?>
+                                <?php
+                            } else {
+                                ?>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
-                            <?php endif; ?>
+                                <?php
+                            }
+                            ?>
                         </div>
                         <button type="button" class="avatar-edit-btn" title="<?= $modo === 'editar' ? 'Cambiar foto' : 'Subir foto' ?>">
                             ✏️
@@ -120,27 +126,27 @@ if ($modo === 'editar' && $usuario_id) {
                         
                         <?php if ($modo === 'editar'): ?>
                         <div class="form-group">
-                            <label>ID</label>
+                            <label for="id">ID</label>
                             <input type="text" value="<?= $usuario['id'] ?>" disabled>
                         </div>
                         <?php endif; ?>
 
                         <div class="form-group">
-                            <label>Nombre completo</label>
+                            <label for="nombre_completo">Nombre completo</label>
                             <input type="text" name="nombre_completo" 
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['nombre_completo']) : '' ?>"
                                    required>
                         </div>
 
                         <div class="form-group">
-                            <label>Username</label>
+                            <label for="username">Username</label>
                             <input type="text" name="username" 
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['username']) : '' ?>"
                                    required>
                         </div>
 
                         <div class="form-group">
-                            <label>Rol</label>
+                            <label for="rol_id">Rol</label>
                             <select name="rol_id" required>
                                 <option value="">Seleccionar rol</option>
                                 <?php foreach ($roles as $rol): ?>
@@ -153,7 +159,7 @@ if ($modo === 'editar' && $usuario_id) {
                         </div>
 
                         <div class="form-group">
-                            <label>Estado</label>
+                            <label for="estado">Estado</label>
                             <select name="activo" required>
                                 <option value="1" <?= $modo === 'editar' && $usuario['activo'] ? 'selected' : '' ?>>Activo</option>
                                 <option value="0" <?= $modo === 'editar' && !$usuario['activo'] ? 'selected' : '' ?>>Inactivo</option>
@@ -161,7 +167,7 @@ if ($modo === 'editar' && $usuario_id) {
                         </div>
 
                         <div class="form-group">
-                            <label>Email</label>
+                            <label for="email">Email</label>
                             <input type="email" name="email" 
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['email']) : '' ?>"
                                    required>
@@ -169,19 +175,19 @@ if ($modo === 'editar' && $usuario_id) {
 
                         <?php if ($modo === 'editar'): ?>
                         <div class="form-group">
-                            <label>Fecha creado</label>
+                            <label for="fecha_creado">Fecha creado</label>
                             <input type="text" value="<?= date('d-m-Y', strtotime($usuario['fecha_creado'])) ?>" disabled>
                         </div>
                         <?php endif; ?>
 
                         <?php if ($modo === 'crear'): ?>
                         <div class="form-group">
-                            <label>Contraseña</label>
+                            <label for="contrasena">Contraseña</label>
                             <input type="password" name="contrasena" required>
                         </div>
                         <?php else: ?>
                         <div class="form-group">
-                            <label>Contraseña <small>(dejar vacio para mantener)</small></label>
+                            <label for="contrasena">Contraseña <small>(dejar vacio para mantener)</small></label>
                             <input type="password" name="contrasena">
                         </div>
                         <?php endif; ?>
