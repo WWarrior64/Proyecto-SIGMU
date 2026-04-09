@@ -49,7 +49,6 @@ if ($modo === 'editar' && $usuario_id) {
         <div class="header-left">
             <button class="menu-btn">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">USUARIOS</h1>
         </div>
         <div class="header-right">
             <button class="icon-btn" title="Opciones Administrador">🔑</button>

@@ -45,7 +45,6 @@ $usuarios = $service->obtenerTodosUsuarios();
         <div class="header-left">
             <button class="menu-btn">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">USUARIOS</h1>
         </div>
         <div class="header-right">
             <button class="icon-btn" title="Opciones Administrador">🔑</button>
@@ -138,10 +137,17 @@ $usuarios = $service->obtenerTodosUsuarios();
                 <?php foreach ($usuarios as $usuario): ?>
                 <div class="user-item">
                     <div class="user-avatar">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
+                        <?php
+                        $foto = $service->obtenerFotoUsuario($usuario['id']);
+                        if ($foto): 
+                        ?>
+                            <img src="<?= htmlspecialchars($foto['ruta_foto']) ?>" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <?php else: ?>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        <?php endif; ?>
                     </div>
                     <div class="user-username"><?= htmlspecialchars($usuario['username']) ?></div>
                     <div class="user-role"><?= htmlspecialchars($usuario['rol_nombre']) ?></div>
