@@ -76,7 +76,7 @@ $usuarios = $service->obtenerTodosUsuarios();
                 <h2 class="page-title">USUARIOS</h2>
                 <div class="header-actions">
                     <button class="btn btn-secondary">ADMINISTRAR ESPACIOS</button>
-                    <button class="btn btn-primary">+</button>
+                    <button class="btn btn-primary" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=crear'">+</button>
                 </div>
             </div>
 
@@ -147,7 +147,7 @@ $usuarios = $service->obtenerTodosUsuarios();
                     <div class="user-role"><?= htmlspecialchars($usuario['rol_nombre']) ?></div>
                     <div class="user-status"><?= $usuario['activo'] ? '✅ Activo' : '❌ Inactivo' ?></div>
                     <div class="user-actions">
-                        <button class="icon-btn edit-btn" title="Editar usuario">
+                        <button class="icon-btn edit-btn" title="Editar usuario" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=editar&id=<?= $usuario['id'] ?>'">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>

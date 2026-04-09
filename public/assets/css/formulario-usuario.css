@@ -1,0 +1,155 @@
+/* =============================================
+   FORMULARIO USUARIO - SIGMU
+   Estilos exclusivos para el formulario unificado
+   ============================================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin: 32px 0;
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar svg {
+    width: 64px;
+    height: 64px;
+    color: #9e9e9e;
+}
+
+.avatar-edit-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 1px solid #bdbdbd;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.avatar-edit-btn:hover {
+    background-color: #f5f5f5;
+    transform: scale(1.05);
+}
+
+.fields-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #424242;
+    font-size: 15px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 16px;
+    border: 1px solid #9e9e9e;
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #9C1C1C;
+    box-shadow: 0 0 0 2px rgba(156, 28, 28, 0.1);
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.form-actions .btn {
+    padding: 12px 24px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+    transition: background 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 140px;
+}
+
+.form-actions .btn-secondary {
+    background-color: #9E9E9E;
+    color: white;
+}
+
+.form-actions .btn-secondary:hover {
+    background-color: #757575;
+}
+
+.form-actions .btn-primary {
+    background-color: #FFC107;
+    color: #212121;
+    width: auto;
+    height: auto;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 12px 24px;
+}
+
+.form-actions .btn-primary:hover {
+    background-color: #FFB300;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #eeeeee;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .fields-container {
+        grid-template-columns: 1fr;
+    }
+}

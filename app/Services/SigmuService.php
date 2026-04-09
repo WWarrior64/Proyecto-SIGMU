@@ -281,4 +281,36 @@ final class SigmuService
     {
         return $this->repository->cambiarEstadoUsuario($usuarioId, true);
     }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @return array<string, mixed>|null
+     */
+    public function obtenerUsuarioPorId(int $usuarioId): ?array
+    {
+        return $this->repository->obtenerUsuarioPorId($usuarioId);
+    }
+
+    /**
+     * Obtiene todos los roles del sistema
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerRoles(): array
+    {
+        return $this->repository->obtenerRoles();
+    }
+
+    /**
+     * Cambia la contraseña de un usuario (solo administrador)
+     */
+    public function cambiarContrasena(int $usuarioId, string $nuevaContrasena): bool
+    {
+        $passwordHash = password_hash($nuevaContrasena, PASSWORD_BCRYPT);
+        return $this->repository->cambiarContrasena($usuarioId, $passwordHash);
+    }
+
+    public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
+    {
+        return $this->repository->agregarFotoUsuario($usuarioId, $rutaFoto, $descripcion);
+    }
 }

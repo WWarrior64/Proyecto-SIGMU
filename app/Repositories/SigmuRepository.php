@@ -23,9 +23,14 @@ final class SigmuRepository
     public function setUsuarioSesion(int $userId): void
     {
         // En tu BD esto setea la variable @usuario_id_sesion (vía stored procedure).
-        $stmt = $this->db->prepare('CALL set_usuario_sesion(:user_id)');
-        $stmt->execute(['user_id' => $userId]);
-        $stmt->closeCursor();
+        try {
+            $stmt = $this->db->prepare('CALL set_usuario_sesion(:user_id)');
+            $stmt->execute(['user_id' => $userId]);
+            $stmt->closeCursor();
+        } catch (\Throwable $e) {
+            // No romper toda la pagina si falla la sesion BD
+            error_log('Error al iniciar sesion BD: ' . $e->getMessage());
+        }
     }
 
     public function limpiarUsuarioSesion(): void
@@ -469,5 +474,75 @@ final class SigmuRepository
         ]);
         
         return $stmt->rowCount() > 0;
+    }
+
+    public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
+    {
+        $stmt = $this->db->prepare("CALL sp_agregar_foto_usuario(:usuario_id, :ruta, :descripcion)");
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'ruta' => $rutaFoto,
+            'descripcion' => $descripcion
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return (int) $result['nueva_foto_id'] ?? 0;
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @return array<string, mixed>|null
+     */
+    public function obtenerUsuarioPorId(int $usuarioId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 
+                u.id,
+                u.username,
+                u.email,
+                u.nombre_completo,
+                u.rol_id,
+                r.nombre AS rol_nombre,
+                u.activo,
+                u.fecha_creado
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             WHERE u.id = :id
+             LIMIT 1'
+        );
+        
+        $stmt->execute(['id' => $usuarioId]);
+        $usuario = $stmt->fetch();
+        
+        return is_array($usuario) ? $usuario : null;
+    }
+
+    /**
+     * Obtiene todos los roles del sistema
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerRoles(): array
+    {
+        $stmt = $this->db->query('SELECT id, nombre, descripcion FROM vista_roles ORDER BY id');
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    /**
+     * Cambia la contraseña de un usuario
+     */
+    public function cambiarContrasena(int $usuarioId, string $passwordHash): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_cambiar_contrasena(:id, :passhash)");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'passhash' => $passwordHash
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
     }
 }
