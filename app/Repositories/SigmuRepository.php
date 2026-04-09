@@ -476,8 +476,40 @@ final class SigmuRepository
         return $stmt->rowCount() > 0;
     }
 
+    public function obtenerFotoUsuario(int $usuarioId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto FROM usuario_foto WHERE usuario_id = :usuario_id ORDER BY id DESC LIMIT 1");
+        $stmt->execute(['usuario_id' => $usuarioId]);
+        
+        $foto = $stmt->fetch();
+        return is_array($foto) ? $foto : null;
+    }
+
+    public function eliminarFotoUsuario(int $fotoId): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_eliminar_foto_usuario(:foto_id)");
+        $stmt->execute(['foto_id' => $fotoId]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_eliminadas']) && $result['filas_eliminadas'] > 0;
+    }
+
     public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
     {
+        // Eliminar fotos anteriores antes de agregar la nueva
+        $fotoAnterior = $this->obtenerFotoUsuario($usuarioId);
+        if ($fotoAnterior) {
+            $this->eliminarFotoUsuario($fotoAnterior['id']);
+            
+            // Eliminar archivo fisico del servidor
+            $rutaCompleta = __DIR__ . '/../../public' . $fotoAnterior['ruta_foto'];
+            if (file_exists($rutaCompleta)) {
+                unlink($rutaCompleta);
+            }
+        }
+
         $stmt = $this->db->prepare("CALL sp_agregar_foto_usuario(:usuario_id, :ruta, :descripcion)");
         $stmt->execute([
             'usuario_id' => $usuarioId,

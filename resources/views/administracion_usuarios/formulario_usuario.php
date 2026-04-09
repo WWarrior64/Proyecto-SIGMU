@@ -95,10 +95,21 @@ if ($modo === 'editar' && $usuario_id) {
                     <!-- AVATAR -->
                     <div class="avatar-container">
                         <div class="avatar">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
+                            <?php
+                            $fotoUsuario = null;
+                            if ($modo === 'editar') {
+                                $fotoUsuario = $service->obtenerFotoUsuario($usuario['id']);
+                            }
+                            
+                            if ($fotoUsuario): 
+                            ?>
+                                <img src="<?= htmlspecialchars($fotoUsuario['ruta_foto']) ?>" alt="Foto perfil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <?php else: ?>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            <?php endif; ?>
                         </div>
                         <button type="button" class="avatar-edit-btn" title="<?= $modo === 'editar' ? 'Cambiar foto' : 'Subir foto' ?>">
                             ✏️

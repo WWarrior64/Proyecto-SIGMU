@@ -7,13 +7,15 @@ namespace App\Services;
 use App\Repositories\SigmuRepository;
 use RuntimeException;
 
-// En el service ponemos lógica de negocio sencilla y validaciones.
+// In the service we put simple business logic and validations.
 // La idea es que el controlador solo reciba/mande datos, y aquí se decida qué hacer.
 final class SigmuService
 {
-    public function __construct(
-        private readonly SigmuRepository $repository = new SigmuRepository()
-    ) {
+    private readonly SigmuRepository $repository;
+
+    public function __construct(?SigmuRepository $repository = null)
+    {
+        $this->repository = $repository ?? new SigmuRepository();
     }
 
     public function iniciarSesionBd(int $userId): void
@@ -227,7 +229,7 @@ final class SigmuService
     {
         // Validaciones simples antes de tocar BD.
         if (trim($tokenPlain) === '') {
-            throw new RuntimeException('Token inválido.');
+            throw new RuntimeException('Invalid token.');
         }
 
         if (strlen($password) < 8) {
@@ -307,6 +309,11 @@ final class SigmuService
     {
         $passwordHash = password_hash($nuevaContrasena, PASSWORD_BCRYPT);
         return $this->repository->cambiarContrasena($usuarioId, $passwordHash);
+    }
+
+    public function obtenerFotoUsuario(int $usuarioId): ?array
+    {
+        return $this->repository->obtenerFotoUsuario($usuarioId);
     }
 
     public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
