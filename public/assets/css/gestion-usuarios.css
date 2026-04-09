@@ -1,0 +1,341 @@
+/*
+*  SIGMU - GESTIÓN DE USUARIOS
+*  Vista exclusiva para listado de usuarios
+*  Diseño ajustado al mockup oficial
+*/
+
+:root {
+    --unicaes-red: #9C1C1C;
+    --unicaes-red-hover: #b71c1c;
+    --bg-main: #F5F5F5;
+    --bg-card: #ffffff;
+    --bg-item: #f1f1f1;
+    --text-primary: #212121;
+    --text-secondary: #616161;
+    --border-color: #9E9E9E;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+}
+
+/* HEADER BARRA SUPERIOR */
+.header-bar {
+    background-color: var(--unicaes-red);
+    color: white;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.logo {
+    height: 42px;
+    width: auto;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 6px;
+}
+
+/* CONTENIDO GENERAL */
+body {
+    background-color: var(--bg-main);
+}
+
+.back-container {
+    padding: 12px 24px 4px 24px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 6px;
+    font-size: 20px;
+}
+
+.main-container {
+    padding: 0 24px 24px 24px;
+}
+
+.content-card {
+    background: var(--bg-card);
+    border-radius: 0;
+    padding: 20px 24px;
+    max-width: 100%;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* ENCABEZADO CON TITULO Y BOTONES */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #cccccc;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    border: none;
+    letter-spacing: 0.5px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.btn {
+    padding: 10px 18px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: var(--unicaes-red);
+    color: white;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    padding: 0;
+}
+
+.btn-secondary {
+    background: var(--unicaes-red);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* BARRA DE BUSQUEDA Y FILTROS */
+.filters-bar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding: 10px 14px;
+    padding-right: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    width: 240px;
+    font-size: 0.95rem;
+}
+
+.search-box svg {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 12px;
+}
+
+.filter-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* LISTADO DE USUARIOS */
+.users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.user-item {
+    display: grid;
+    grid-template-columns: 60px 2fr 1fr 1fr 60px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-item);
+    border-radius: var(--radius-md);
+    gap: 8px;
+    border: 2px solid var(--border-color);
+    min-height: 52px;
+}
+
+.user-item.header {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.user-item.header .user-avatar {
+    display: none;
+}
+
+.user-item.header .user-username {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    padding-left: 60px;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.user-avatar svg {
+    width: 28px;
+    height: 28px;
+}
+
+.user-username {
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: 1rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.user-status {
+    font-size: 1rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.user-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.edit-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: white;
+}
+
+.edit-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--text-primary);
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .user-item {
+        grid-template-columns: 60px 1fr 1fr 60px;
+    }
+    .user-status {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .main-container {
+        padding: 0 16px 16px 16px;
+    }
+    
+    .back-container {
+        padding: 12px 16px 4px 16px;
+    }
+    
+    .page-title {
+        font-size: 28px;
+    }
+    
+    .user-item {
+        grid-template-columns: 50px 1fr 50px;
+    }
+    .user-role {
+        display: none;
+    }
+    
+    .filters-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -401,4 +401,73 @@ final class SigmuRepository
 
         return $stmt->rowCount() > 0;
     }
+
+    /**
+     * Obtiene todos los usuarios del sistema (vista administrador)
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodosUsuarios(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT 
+                u.id,
+                u.username,
+                u.email,
+                u.nombre_completo,
+                u.rol_id,
+                r.nombre AS rol_nombre,
+                u.activo,
+                u.fecha_creado
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             ORDER BY u.nombre_completo'
+        );
+
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    public function registrarUsuario(string $username, string $email, string $passwordHash, string $nombreCompleto, int $rolId): int
+    {
+        $stmt = $this->db->prepare("CALL sp_registrar_usuario(:username, :email, :passhash, :nombre, :rol_id)");
+        $stmt->execute([
+            'username' => $username,
+            'email' => $email,
+            'passhash' => $passwordHash,
+            'nombre' => $nombreCompleto,
+            'rol_id' => $rolId
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return (int) $result['nuevo_usuario_id'] ?? 0;
+    }
+
+    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_editar_usuario(:id, :email, :nombre, :rol_id, :activo)");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'email' => $email,
+            'nombre' => $nombreCompleto,
+            'rol_id' => $rolId,
+            'activo' => $activo
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
+    }
+
+    public function cambiarEstadoUsuario(int $usuarioId, bool $activo): bool
+    {
+        $stmt = $this->db->prepare("UPDATE usuario SET activo = :activo WHERE id = :id");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'activo' => $activo
+        ]);
+        
+        return $stmt->rowCount() > 0;
+    }
 }

@@ -20,6 +20,11 @@ $router->get('/sigmu', static function (): string {
     return $controller->dashboard();
 });
 
+$router->get('/sigmu/admin/usuarios', static function (): string {
+    require_once __DIR__ . '/../resources/views/administracion_usuarios/gestion_usuarios.php';
+    return '';
+});
+
 // Login (POST) - valida usuario/contraseña contra tabla usuarios.
 $router->post('/sigmu/login', static function (): string {
     $controller = new AuthController();
@@ -59,6 +64,11 @@ $router->post('/sigmu/reset', static function (): string {
 });
 
 // Rutas de edificios y salas
+$router->get('/sigmu/edificios', static function (): string {
+    $controller = new EdificioController();
+    return $controller->dashboard();
+});
+
 $router->get('/sigmu/edificio', static function (): string {
     $controller = new EdificioController();
     return $controller->salasPorEdificio();

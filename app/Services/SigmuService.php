@@ -251,4 +251,34 @@ final class SigmuService
             throw new RuntimeException('No se pudo completar el restablecimiento.');
         }
     }
+
+    /**
+     * Obtiene todos los usuarios del sistema (solo Administrador)
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodosUsuarios(): array
+    {
+        return $this->repository->obtenerTodosUsuarios();
+    }
+
+    public function registrarUsuario(string $username, string $email, string $password, string $nombreCompleto, int $rolId): int
+    {
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        return $this->repository->registrarUsuario($username, $email, $passwordHash, $nombreCompleto, $rolId);
+    }
+
+    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    {
+        return $this->repository->editarUsuario($usuarioId, $email, $nombreCompleto, $rolId, $activo);
+    }
+
+    public function desactivarUsuario(int $usuarioId): bool
+    {
+        return $this->repository->cambiarEstadoUsuario($usuarioId, false);
+    }
+
+    public function activarUsuario(int $usuarioId): bool
+    {
+        return $this->repository->cambiarEstadoUsuario($usuarioId, true);
+    }
 }
