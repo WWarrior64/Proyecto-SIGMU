@@ -129,6 +129,13 @@ $router->post('/sigmu/activo/actualizar', static function (): string {
     return '';
 });
 
+$router->post('/sigmu/activo/dar-baja', static function (): string {
+    $id = (int) ($_POST['id'] ?? 0);
+    $controller = new ActivoController();
+    return $controller->darDeBaja($id);
+    return '';
+});
+
 $router->post('/sigmu/activo/eliminar', static function (): string {
     $id = (int) ($_POST['id'] ?? 0);
     $controller = new ActivoController();

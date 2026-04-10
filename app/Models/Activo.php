@@ -49,16 +49,10 @@ class Activo
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
             
-            // 🎯 Filtro por ESTADO (admite multiples valores al mismo tiempo)
-            if (!empty($estados) && is_array($estados)) {
-                $placeholders = [];
-                foreach ($estados as $idx => $estado) {
-                    $key = ":estado_{$idx}";
-                    $placeholders[] = $key;
-                    $params[$key] = $estado;
-                }
-                $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
-            }
+            // ✅ ✅ ✅ SE ELIMINA EL FILTRO SERVIDOR:
+            // Ahora TODOS LOS ACTIVOS (incluidos descartados) se envian al cliente
+            // El filtrado se hace 100% en el navegador con Javascript
+            // Esto permite mostrar ocultar activos descartados sin recargar la pagina
             
             // 🎯 Filtro por TIPO DE ACTIVO (admite multiples valores al mismo tiempo)
             if (!empty($tipos) && is_array($tipos)) {
@@ -125,6 +119,7 @@ class Activo
             }
             
             // 🎯 Filtro por ESTADO
+            // ✅ MISMO COMPORTAMIENTO EN EL CONTADOR PARA PAGINACION
             if (!empty($estados) && is_array($estados)) {
                 $placeholders = [];
                 foreach ($estados as $idx => $estado) {
@@ -133,6 +128,9 @@ class Activo
                     $params[$key] = $estado;
                 }
                 $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
+            } else {
+                // Ningun filtro marcado: excluir solo descartado
+                $sql .= " AND a.estado != 'descartado'";
             }
             
             // 🎯 Filtro por TIPO DE ACTIVO
@@ -221,6 +219,40 @@ class Activo
             ':sala_id' => $datos['sala_id'] ?? $datos['habitacion_id'] ?? 1,
             ':fecha_actualizado' => $datos['fecha_actualizado'] ?? date('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * Dar de baja un activo (cambia estado a descartado SIN eliminar)
+     */
+    public function darDeBaja(int $id, int $usuarioId): bool
+    {
+        try {
+            $this->db->beginTransaction();
+            
+            // Establecer usuario de sesion para el trigger
+            $this->db->exec("SET @usuario_id_sesion = " . (int)$usuarioId);
+            
+            // Actualizar estado
+            $stmt = $this->db->prepare("UPDATE activo SET estado = 'descartado', fecha_actualizado = NOW() WHERE id = :id");
+            $resultado = $stmt->execute([':id' => $id]);
+            
+            // Registrar en historial manualmente
+            $stmtHistorial = $this->db->prepare("
+                INSERT INTO historial_activo 
+                (activo_id, usuario_id, accion, detalle, estado_anterior, estado_nuevo)
+                SELECT id, ?, 'retiro', 'Activo dado de baja definitivamente', estado, 'descartado'
+                FROM activo WHERE id = ?
+            ");
+            $stmtHistorial->execute([$usuarioId, $id]);
+            
+            $this->db->commit();
+            
+            return $resultado;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            error_log("Error en darDeBaja: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

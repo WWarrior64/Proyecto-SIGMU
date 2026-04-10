@@ -636,6 +636,53 @@ class ActivoController
     }
 
     /**
+     * Dar de baja un activo (cambia estado a descartado)
+     */
+    public function darDeBaja(int $id)
+    {
+        try {
+            if (!$this->requireAuth()) {
+                return '';
+            }
+            
+            $sessionUser = $_SESSION['auth_user'] ?? null;
+            if (!$sessionUser) {
+                throw new \Exception('Debe iniciar sesión');
+            }
+            
+            // Verificar permisos
+            $usuarioRol = $sessionUser['rol_nombre'] ?? '';
+            if (!in_array($usuarioRol, ['Administrador', 'Responsable de Area'])) {
+                throw new \Exception('No tiene permiso para dar de baja activos');
+            }
+            
+            $activo = $this->modelo->obtenerPorId($id);
+            if (!$activo) {
+                throw new \Exception('Activo no encontrado');
+            }
+            
+            if ($activo['estado'] === 'descartado') {
+                throw new \Exception('El activo ya se encuentra dado de baja');
+            }
+            
+            // Ejecutar baja
+            $resultado = $this->modelo->darDeBaja($id, (int)$sessionUser['id']);
+            
+            if ($resultado) {
+                header('Location: /sigmu/sala?sala_id=' . $activo['sala_id'] . '&success=Activo dado de baja exitosamente');
+            } else {
+                header('Location: /sigmu/activo/ver?id=' . $id . '&error=Error al dar de baja el activo');
+            }
+            
+            exit;
+            
+        } catch (Throwable $e) {
+            header('Location: /sigmu/activo/ver?id=' . $id . '&error=' . urlencode($e->getMessage()));
+            exit;
+        }
+    }
+
+    /**
      * Eliminar un activo
      */
     public function destroy(int $id)
