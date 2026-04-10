@@ -11,6 +11,7 @@ $error = $_GET['error'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIGMU - Detalle del Activo</title>
     <link rel="stylesheet" href="/assets/css/ver-activo.css">
+    <link rel="stylesheet" href="/assets/css/historial-activo.css">
 </head>
 <body>
     <!-- Header -->
@@ -58,14 +59,19 @@ $error = $_GET['error'] ?? '';
 
         <?php if ($activo): ?>
             <!-- Section Header -->
-            <div class="section-header">
-                <h1 class="section-title"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <a href="/sigmu/activo/editar?id=<?= (int) $activo['id'] ?>" class="edit-btn" title="Editar activo">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </a>
+            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <h1 class="section-title" style="margin: 0; flex: 1;"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <a href="/sigmu/activo/editar?id=<?= (int) $activo['id'] ?>" class="edit-btn" title="Editar activo" style="margin: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </a>
+                    <a href="/sigmu/activo/historial?id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Ver historial de cambios" style="margin: 0;">
+                        <span>📋</span> Historial
+                    </a>
+                </div>
             </div>
 
             <!-- Content Grid -->
@@ -86,8 +92,10 @@ $error = $_GET['error'] ?? '';
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
                                 <span>Imagen no disponible</span>
-                            </div>
-                        <?php else: ?>
+            </div>
+
+
+        <?php else: ?>
                             <div class="image-placeholder">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -180,5 +188,6 @@ $error = $_GET['error'] ?? '';
     </main>
 
     <script src="/assets/js/ver-activo.js"></script>
+    <script src="/assets/js/historial-activo.js"></script>
 </body>
 </html>

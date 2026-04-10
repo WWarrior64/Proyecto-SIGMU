@@ -201,4 +201,70 @@ class Activo
             return null;
         }
     }
+
+    /**
+     * Obtener historial de cambios de un activo con todos los campos + BUSQUEDA Y FILTROS
+     */
+    public function obtenerHistorial(int $activoId, string $busqueda = '', string $filtroAccion = '', string $filtroEstado = ''): array
+    {
+        try {
+            $sql = "
+                SELECT 
+                    h.id, 
+                    h.fecha, 
+                    h.accion, 
+                    h.detalle,
+                    h.estado_anterior,
+                    h.estado_nuevo,
+                    h.sala_anterior_id,
+                    h.sala_nueva_id,
+                    u.nombre_completo as usuario_nombre,
+                    u.username as usuario_username,
+                    sa.nombre as sala_anterior_nombre,
+                    sn.nombre as sala_nueva_nombre
+                FROM historial_activo h
+                LEFT JOIN usuario u ON h.usuario_id = u.id
+                LEFT JOIN sala sa ON h.sala_anterior_id = sa.id
+                LEFT JOIN sala sn ON h.sala_nueva_id = sn.id
+                WHERE h.activo_id = :activo_id
+            ";
+
+            $params = [':activo_id' => $activoId];
+
+            // ✅ Busqueda general
+            if (!empty($busqueda)) {
+                $sql .= " AND (
+                    h.detalle LIKE :busqueda OR
+                    h.accion LIKE :busqueda OR
+                    h.estado_anterior LIKE :busqueda OR
+                    h.estado_nuevo LIKE :busqueda OR
+                    u.nombre_completo LIKE :busqueda OR
+                    u.username LIKE :busqueda OR
+                    sa.nombre LIKE :busqueda OR
+                    sn.nombre LIKE :busqueda
+                )";
+                $params[':busqueda'] = '%' . $busqueda . '%';
+            }
+
+            // ✅ Filtro por Accion
+            if (!empty($filtroAccion)) {
+                $sql .= " AND h.accion = :accion";
+                $params[':accion'] = $filtroAccion;
+            }
+
+            // ✅ Filtro por Estado
+            if (!empty($filtroEstado)) {
+                $sql .= " AND (h.estado_anterior = :estado OR h.estado_nuevo = :estado)";
+                $params[':estado'] = $filtroEstado;
+            }
+
+            $sql .= " ORDER BY h.fecha DESC, h.id DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            return [];
+        }
+    }
 }
