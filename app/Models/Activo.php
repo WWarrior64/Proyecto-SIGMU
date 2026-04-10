@@ -23,18 +23,23 @@ class Activo
      * @param array $estados Array de estados a filtrar (vacio = todos)
      * @param array $tipos Array de tipos de activo a filtrar (vacio = todos)
      */
-    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = []): array
+    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = [], string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
     {
         try {
             $offset = ($pagina - 1) * $porPagina;
             
-            $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
-                           COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
-                    FROM activo a
-                    LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
-                    LEFT JOIN sala s ON a.sala_id = s.id
-                    LEFT JOIN edificio e ON s.edificio_id = e.id
-                    WHERE 1=1";
+        // Validar campos de ordenamiento permitidos
+        $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado', 'sala_nombre', 'fecha_creado'];
+        $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'id';
+        $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
+
+        $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
+                       COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
+                FROM activo a
+                LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
+                LEFT JOIN sala s ON a.sala_id = s.id
+                LEFT JOIN edificio e ON s.edificio_id = e.id
+                WHERE 1=1";
             
             $params = [];
             
@@ -66,7 +71,19 @@ class Activo
                 $sql .= " AND a.tipo_activo_id IN (" . implode(',', $placeholders) . ")";
             }
             
-            $sql .= " ORDER BY a.id DESC LIMIT :limit OFFSET :offset";
+        // Mapear nombres de campo frontend a nombres reales de tabla
+        $camposMap = [
+            'id' => 'a.id',
+            'codigo' => 'a.codigo',
+            'nombre' => 'a.nombre',
+            'tipo' => 'ta.nombre',
+            'estado' => 'a.estado',
+            'sala_nombre' => 's.nombre',
+            'fecha_creado' => 'a.fecha_creado'
+        ];
+        
+        $campoOrden = $camposMap[$ordenarPor] ?? 'a.id';
+        $sql .= " ORDER BY $campoOrden $ordenDireccion LIMIT :limit OFFSET :offset";
             $params[':limit'] = $porPagina;
             $params[':offset'] = $offset;
             

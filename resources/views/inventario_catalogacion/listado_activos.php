@@ -13,6 +13,8 @@ $pagina = $pagina ?? 1;
 $totalPaginas = $totalPaginas ?? 1;
 $total = $total ?? count($activos);
 $busqueda = $busqueda ?? '';
+$ordenarPor = $ordenarPor ?? 'id';
+$ordenDireccion = $ordenDireccion ?? 'DESC';
 ?>
 <!doctype html>
 <html lang="es">
@@ -102,11 +104,36 @@ $busqueda = $busqueda ?? '';
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-id">Código</div>
-                    <div class="table-cell cell-name">Nombre</div>
-                    <div class="table-cell cell-type">Tipo</div>
-                    <div class="table-cell cell-status">Estado</div>
-                    <div class="table-cell cell-ubicacion">Ubicación</div>
+                    <div class="table-cell cell-id sortable" data-sort="codigo">
+                        Código
+                        <span class="sort-icon <?= $ordenarPor === 'codigo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'codigo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-name sortable" data-sort="nombre">
+                        Nombre
+                        <span class="sort-icon <?= $ordenarPor === 'nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-type sortable" data-sort="tipo">
+                        Tipo
+                        <span class="sort-icon <?= $ordenarPor === 'tipo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'tipo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-status sortable" data-sort="estado">
+                        Estado
+                        <span class="sort-icon <?= $ordenarPor === 'estado' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'estado' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-ubicacion sortable" data-sort="sala_nombre">
+                        Ubicación
+                        <span class="sort-icon <?= $ordenarPor === 'sala_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
                     <div class="table-cell cell-actions">Acciones</div>
                 </div>
             </div>
@@ -201,6 +228,100 @@ $busqueda = $busqueda ?? '';
             <?php endif; ?>
         </div>
     </main>
+
+    <script>
+    // Sistema de ordenamiento
+    console.log('✅ Script de ordenamiento cargado');
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        console.log('🔍 Encontrados', sortableHeaders.length, 'encabezados ordenables');
+        
+        sortableHeaders.forEach(header => {
+            header.style.cursor = 'pointer';
+            header.style.userSelect = 'none';
+            
+            header.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const sortField = this.getAttribute('data-sort');
+                console.log('👉 Click en ordenar por:', sortField);
+                
+                // Obtener URL actual
+                let baseUrl = window.location.pathname;
+                let queryString = window.location.search.substring(1);
+                let params = {};
+                
+                // Parsear parametros manualmente
+                if (queryString.length > 0) {
+                    let pairs = queryString.split('&');
+                    for (let i = 0; i < pairs.length; i++) {
+                        let pair = pairs[i].split('=');
+                        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+                    }
+                }
+                
+                // Si ya estamos ordenando por este campo, invertir la dirección
+                if (params['ordenar_por'] === sortField) {
+                    params['orden_direccion'] = params['orden_direccion'] === 'ASC' ? 'DESC' : 'ASC';
+                } else {
+                    params['ordenar_por'] = sortField;
+                    params['orden_direccion'] = 'ASC';
+                }
+                
+                // Resetear a pagina 1
+                params['pagina'] = '1';
+                
+                // Construir nueva URL
+                let newQuery = [];
+                for (let key in params) {
+                    newQuery.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+                }
+                
+                let finalUrl = baseUrl;
+                if (newQuery.length > 0) {
+                    finalUrl += '?' + newQuery.join('&');
+                }
+                
+                console.log('🔄 Redirigiendo a:', finalUrl);
+                window.location.href = finalUrl;
+            });
+            
+            // Efecto hover
+            header.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+            });
+            
+            header.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+    });
+    </script>
+    
+    <style>
+    .sortable {
+        position: relative;
+        transition: background-color 0.15s ease;
+    }
+    
+    .sort-icon {
+        margin-left: 6px;
+        opacity: 0.4;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .sort-icon.active {
+        opacity: 1;
+        color: #3b82f6;
+    }
+    
+    .sortable:hover .sort-icon {
+        opacity: 0.7;
+    }
+    </style>
 
     <script src="/assets/js/listado-activos.js"></script>
     <script src="/assets/js/delete-modal.js"></script>
