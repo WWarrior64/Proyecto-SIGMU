@@ -211,6 +211,7 @@ $historial = $historial ?? [];
     </main>
 
     <script src="/assets/js/listado-activos.js"></script>
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/historial-activo.js"></script>
 </body>
 </html>

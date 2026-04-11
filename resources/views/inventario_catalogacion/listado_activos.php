@@ -29,7 +29,7 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-            <button class="menu-btn" id="menuBtn">
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -333,6 +333,7 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
     }
     </style>
 
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/listado-activos.js"></script>
     <script src="/assets/js/delete-modal.js"></script>
 </body>
