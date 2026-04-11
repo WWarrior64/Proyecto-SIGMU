@@ -229,21 +229,31 @@ class Activo
         try {
             $this->db->beginTransaction();
             
-            // Establecer usuario de sesion para el trigger
-            $this->db->exec("SET @usuario_id_sesion = " . (int)$usuarioId);
+            // Obtener datos actuales del activo ANTES de actualizar
+            $activo = $this->obtenerPorId($id);
+            if (!$activo) {
+                return false;
+            }
             
             // Actualizar estado
             $stmt = $this->db->prepare("UPDATE activo SET estado = 'descartado', fecha_actualizado = NOW() WHERE id = :id");
             $resultado = $stmt->execute([':id' => $id]);
             
-            // Registrar en historial manualmente
+            // ✅ Registrar en historial CORRECTAMENTE con TODOS los campos
             $stmtHistorial = $this->db->prepare("
                 INSERT INTO historial_activo 
-                (activo_id, usuario_id, accion, detalle, estado_anterior, estado_nuevo)
-                SELECT id, ?, 'retiro', 'Activo dado de baja definitivamente', estado, 'descartado'
-                FROM activo WHERE id = ?
+                (activo_id, usuario_id, accion, detalle, estado_anterior, estado_nuevo, sala_anterior_id, sala_nueva_id)
+                VALUES (?, ?, 'retiro', CONCAT('Activo dado de baja definitivamente: ', ?), ?, ?, ?, ?)
             ");
-            $stmtHistorial->execute([$usuarioId, $id]);
+            $stmtHistorial->execute([
+                $id,
+                $usuarioId,
+                $activo['nombre'],
+                $activo['estado'],
+                'descartado',
+                $activo['sala_id'],
+                $activo['sala_id']
+            ]);
             
             $this->db->commit();
             

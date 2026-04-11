@@ -60,11 +60,21 @@ class ActivoController
                 $edificio = $primerActivo['edificio_nombre'] ?? null;
             }
             
+            // Obtener ID del edificio para el boton regresar
+            $edificio_id = 0;
+            if ($salaId > 0) {
+                $salaInfo = $this->modelo->obtenerSalaConEdificio($salaId);
+                if ($salaInfo) {
+                    $edificio_id = $salaInfo['edificio_id'];
+                }
+            }
+
             return view('inventario_catalogacion.listado_activos', [
                 'salaId' => $salaId,
                 'activos' => $activos,
                 'sala' => $sala,
                 'edificio' => $edificio,
+                'edificio_id' => $edificio_id,
                 'ordenarPor' => $ordenarPor,
                 'ordenDireccion' => $ordenDireccion
             ]);
@@ -429,6 +439,15 @@ class ActivoController
             $sala = $primerActivo['sala_nombre'] ?? 'Sin sala';
         }
 
+        // Obtener ID del edificio para el boton regresar
+        $edificio_id = 0;
+        if ($salaId > 0) {
+            $salaInfo = $this->modelo->obtenerSalaConEdificio($salaId);
+            if ($salaInfo) {
+                $edificio_id = $salaInfo['edificio_id'];
+            }
+        }
+
         return view('inventario_catalogacion.listado_activos', [
             'activos' => $activos,
             'pagina' => $pagina,
@@ -437,6 +456,7 @@ class ActivoController
             'total' => $total,
             'sala' => $sala,
             'edificio' => $edificio,
+            'edificio_id' => $edificio_id,
             'salaId' => $salaId,
             'ordenarPor' => $ordenarPor,
             'ordenDireccion' => $ordenDireccion

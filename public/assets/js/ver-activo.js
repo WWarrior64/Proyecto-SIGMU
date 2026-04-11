@@ -8,7 +8,38 @@ document.addEventListener('DOMContentLoaded', function() {
     initMenu();
     initImageInteraction();
     initAnimations();
+    initModalDarBaja();
 });
+
+/**
+ * Modal confirmación Dar de Baja Activo
+ */
+function initModalDarBaja() {
+    const btnDarBaja = document.getElementById('btnDarBaja');
+    const modalConfirmacion = document.getElementById('modalConfirmacionBaja');
+    const btnCerrarModal = document.getElementById('btnCerrarModal');
+    const btnCancelarBaja = document.getElementById('btnCancelarBaja');
+    
+    if (btnDarBaja) {
+        btnDarBaja.addEventListener('click', function() {
+            modalConfirmacion.style.display = 'flex';
+        });
+    }
+    
+    const cerrarModal = function() {
+        modalConfirmacion.style.display = 'none';
+    };
+    
+    if (btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if (btnCancelarBaja) btnCancelarBaja.addEventListener('click', cerrarModal);
+    
+    // Cerrar al hacer click fuera del modal
+    modalConfirmacion.addEventListener('click', function(e) {
+        if (e.target === modalConfirmacion) {
+            cerrarModal();
+        }
+    });
+}
 
 /**
  * Menu functionality

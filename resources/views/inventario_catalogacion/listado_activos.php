@@ -53,6 +53,16 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
 
     <!-- Main Content -->
     <main class="main-content">
+    
+        <!-- Back Button -->
+        <div class="back-button">
+            <button class="back-btn" onclick="window.location.href='/sigmu/edificio?edificio_id=<?= (int) ($edificio_id ?? 0) ?>'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
+        </div>
         <!-- Section Header -->
         <div class="section-header">
             <h1 class="section-title">

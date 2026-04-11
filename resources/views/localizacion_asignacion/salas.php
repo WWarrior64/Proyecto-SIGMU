@@ -13,9 +13,18 @@ $salas = (isset($salas) && is_array($salas)) ? $salas : [];
     <title>SIGMU - Localizacion | Salas por edificio (RF-07 a RF-09)</title>
 </head>
 <body>
+    <!-- Back Button -->
+    <div class="back-button" style="margin: 20px 0;">
+        <button class="back-btn" onclick="window.location.href='/sigmu/edificios'" style="background: none; border: none; cursor: pointer; padding: 8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+    </div>
+    
     <h1>Salas del edificio <?= (int) $edificioId ?></h1>
     <p><strong>Modulo:</strong> Localizacion y asignacion.</p>
-    <p><a href="/sigmu">Volver a edificios</a></p>
 
     <?php if (!$salas): ?>
         <p>No hay salas para este edificio o no tienes acceso.</p>

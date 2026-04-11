@@ -29,7 +29,7 @@ $csrfToken = Csrf::getToken();
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-            <button class="menu-btn" onclick="history.back()">
+            <button class="menu-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) $salaId ?>'">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -177,7 +177,7 @@ $csrfToken = Csrf::getToken();
 
                 <!-- Botones -->
                 <div class="form-actions">
-                    <button type="button" class="btn btn-cancel" onclick="history.back()">CANCELAR</button>
+                    <button type="button" class="btn btn-cancel" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) $salaId ?>'">CANCELAR</button>
                     <button type="submit" class="btn btn-submit">AGREGAR</button>
                 </div>
             </form>

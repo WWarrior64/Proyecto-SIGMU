@@ -271,6 +271,8 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
         http_response_code(500);
         return json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+});
+
 // Historial de cambios del activo
 $router->get('/sigmu/activo/historial', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
