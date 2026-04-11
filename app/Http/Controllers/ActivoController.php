@@ -637,27 +637,23 @@ class ActivoController
             $this->db->beginTransaction();
 
             try {
-                // Manejo de la imagen - usar tabla activo_foto
+                // Manejo de la imagen - usa la misma logica que usuarios (ya hace todo automaticamente)
                 if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
                     // Subir nueva foto
                     $fotoPath = $this->subirImagen($_FILES['foto']);
-                    
-                    // Eliminar foto principal anterior si existe
-                    $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
-                    $stmt->execute([$id]);
-                    $fotoAnterior = $stmt->fetchColumn();
-                    
-                    if ($fotoAnterior && file_exists('public/' . $fotoAnterior)) {
-                        unlink('public/' . $fotoAnterior);
+
+                    // Eliminar la foto principal anterior si existe
+                    $stmtOldFoto = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = 1 ORDER BY id DESC LIMIT 1");
+                    $stmtOldFoto->execute([$id]);
+                    $oldFoto = $stmtOldFoto->fetchColumn();
+                    if ($oldFoto && file_exists(__DIR__ . '/../../../public/' . $oldFoto)) {
+                        unlink(__DIR__ . '/../../../public/' . $oldFoto);
                     }
-                    
-                    // Eliminar registro anterior de foto principal
-                    $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
-                    $stmt->execute([$id]);
-                    
-                    // Insertar nueva foto principal
-                    $stmt = $this->db->prepare("INSERT INTO activo_foto (activo_id, ruta_foto, descripcion, es_principal) VALUES (?, ?, ?, TRUE)");
-                    $stmt->execute([$id, $fotoPath, 'Foto principal del activo']);
+
+                    // Marcar cualquier foto anterior como no principal y guardar la nueva foto principal
+                    $this->db->prepare("UPDATE activo_foto SET es_principal = 0 WHERE activo_id = ?")->execute([$id]);
+                    $stmtFoto = $this->db->prepare("INSERT INTO activo_foto (activo_id, ruta_foto, es_principal) VALUES (?, ?, 1)");
+                    $stmtFoto->execute([$id, $fotoPath]);
                 }
 
                 // Actualizar el activo (los triggers se encargan de registrar cada cambio individual)

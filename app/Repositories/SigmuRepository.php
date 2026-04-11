@@ -296,12 +296,44 @@ final class SigmuRepository
     /**
      * Agrega una foto a un activo
      */
+    public function obtenerFotoActivoPrincipal(int $activoId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = 1 ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$activoId]);
+        
+        $foto = $stmt->fetch();
+        return is_array($foto) ? $foto : null;
+    }
+
+    public function eliminarFotoActivo(int $fotoId): bool
+    {
+        $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE id = ?");
+        $stmt->execute([$fotoId]);
+        $rutaFoto = $stmt->fetchColumn();
+
+        // ✅ Eliminar archivo fisico del servidor
+        if ($rutaFoto && file_exists('public/' . $rutaFoto)) {
+            unlink('public/' . $rutaFoto);
+        }
+
+        $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE id = ?");
+        return $stmt->execute([$fotoId]);
+    }
+
     public function agregarFotoActivo(
         int $activoId,
         string $rutaFoto,
         string $descripcion = '',
         bool $esPrincipal = false
     ): int {
+        // ✅ MISMA LOGICA QUE USUARIOS: eliminar foto anterior PRIMERO
+        if ($esPrincipal) {
+            $fotoAnterior = $this->obtenerFotoActivoPrincipal($activoId);
+            if ($fotoAnterior) {
+                $this->eliminarFotoActivo($fotoAnterior['id']);
+            }
+        }
+
         $stmt = $this->db->prepare(
             'CALL sp_agregar_foto_activo(:activo_id, :ruta, :descripcion, :es_principal)'
         );
