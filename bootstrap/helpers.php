@@ -35,3 +35,40 @@ if (!function_exists('view')) {
         return (string) ob_get_clean();
     }
 }
+
+/**
+ * ✅ TIMEOUT DE SESION POR INACTIVIDAD
+ * 100% nativo PHP, sin dependencias, sin composer, se ejecuta AUTOMATICAMENTE en TODAS las paginas
+ */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ✅ Tiempo de inactividad permitido: 15 MINUTOS (900 segundos)
+define('SESSION_TIMEOUT', 900);
+
+// Si hay sesion iniciada
+if (isset($_SESSION['auth_user'])) {
+
+    // Si ya tenemos tiempo de ultima actividad
+    if (isset($_SESSION['ultima_actividad'])) {
+        
+        // Calcular tiempo transcurrido
+        $tiempo_transcurrido = time() - $_SESSION['ultima_actividad'];
+        
+        // Si paso mas tiempo del permitido: CERRAR SESION
+        if ($tiempo_transcurrido > SESSION_TIMEOUT) {
+            
+            // Destruir sesion completamente
+            session_unset();
+            session_destroy();
+            
+            // Redirigir al login con mensaje
+            header('Location: /sigmu/login?timeout=1');
+            exit;
+        }
+    }
+    
+    // Actualizar tiempo de ultima actividad EN CADA CARGA DE PAGINA
+    $_SESSION['ultima_actividad'] = time();
+}
