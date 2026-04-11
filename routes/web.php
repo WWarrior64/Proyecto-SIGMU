@@ -142,3 +142,10 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
     $controller->destroy($id);
     return '';
 });
+
+// Historial de cambios del activo
+$router->get('/sigmu/activo/historial', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new ActivoController();
+    return $controller->historial($id);
+});

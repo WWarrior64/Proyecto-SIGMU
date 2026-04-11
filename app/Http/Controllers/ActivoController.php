@@ -753,6 +753,38 @@ class ActivoController
     }
 
     /**
+     * Mostrar historial de cambios de un activo
+     */
+    public function historial(int $id)
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $activo = $this->modelo->obtenerPorId($id);
+        
+        if (!$activo) {
+            header('Location: /sigmu/activo?error=activo_no_encontrado');
+            exit;
+        }
+
+        // ✅ Obtener parametros de busqueda y filtros
+        $busqueda = trim((string) ($_GET['busqueda'] ?? ''));
+        $filtroAccion = trim((string) ($_GET['accion'] ?? ''));
+        $filtroEstado = trim((string) ($_GET['estado'] ?? ''));
+
+        $historial = $this->modelo->obtenerHistorial($id, $busqueda, $filtroAccion, $filtroEstado);
+
+        return view('inventario_catalogacion.historial_activo', [
+            'activo' => $activo,
+            'historial' => $historial,
+            'busqueda' => $busqueda,
+            'filtroAccion' => $filtroAccion,
+            'filtroEstado' => $filtroEstado
+        ]);
+    }
+
+    /**
      * Subir imagen al servidor
      */
     private function subirImagen(array $file): ?string
