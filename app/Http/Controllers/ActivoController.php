@@ -200,20 +200,44 @@ class ActivoController
                 $fotoPath = $this->procesarFoto($_FILES['foto']);
             }
 
-            // Registrar el activo
-            $resultado = $this->sigmuService->registrarActivo(
-                $codigo,
-                $nombre,
-                $tipoActivoId,
-                $descripcion,
-                $estado,
-                $salaId,
-                $fotoPath
-            );
+            // Obtener cantidad de activos a crear
+            $cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_VALIDATE_INT) ?: 1;
+
+            // Limitar a maximo 100 para no sobrecargar
+            if ($cantidad < 1) $cantidad = 1;
+            if ($cantidad > 100) $cantidad = 100;
+
+            if ($cantidad === 1) {
+                // Registrar un solo activo
+                $resultado = $this->sigmuService->registrarActivo(
+                    $codigo,
+                    $nombre,
+                    $tipoActivoId,
+                    $descripcion,
+                    $estado,
+                    $salaId,
+                    $fotoPath
+                );
+
+                $mensaje = $resultado['message'];
+            } else {
+                // Registrar multiples activos iguales con codigos diferentes
+                $resultado = $this->sigmuService->registrarMultiplesActivos(
+                    $cantidad,
+                    $nombre,
+                    $tipoActivoId,
+                    $descripcion,
+                    $estado,
+                    $salaId,
+                    $fotoPath
+                );
+
+                $mensaje = $resultado['message'];
+            }
 
             if ($resultado['success']) {
                 // Redirigir al listado de activos de la sala con mensaje de éxito
-                header('Location: /sigmu/sala?sala_id=' . $salaId . '&success=' . urlencode('Activo registrado exitosamente con ID: ' . $resultado['activo_id']));
+                header('Location: /sigmu/sala?sala_id=' . $salaId . '&success=' . urlencode($mensaje));
                 return '';
             } else {
                 return $this->registrarActivoGetWithError($resultado['message'], [
@@ -223,6 +247,7 @@ class ActivoController
                     'descripcion' => $descripcion,
                     'estado' => $estado,
                     'sala_id' => $salaId,
+                    'cantidad' => $cantidad
                 ]);
             }
         } catch (Throwable $exception) {

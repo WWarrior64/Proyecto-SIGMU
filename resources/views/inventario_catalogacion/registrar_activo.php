@@ -148,6 +148,15 @@ $csrfToken = Csrf::getToken();
                                value="<?= htmlspecialchars($formData['fecha_actualizado'] ?? date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>"
                                class="input-date" disabled>
                     </div>
+
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad: <span class="required">*</span></label>
+                        <input type="number" id="cantidad" name="cantidad" required 
+                               min="1" max="100" step="1" value="1"
+                               placeholder="1"
+                               value="<?= htmlspecialchars($formData['cantidad'] ?? '1', ENT_QUOTES, 'UTF-8') ?>">
+                        <small class="form-hint">Cantidad de activos iguales a crear (max 100)</small>
+                    </div>
                 </div>
 
                 <!-- Descripción -->

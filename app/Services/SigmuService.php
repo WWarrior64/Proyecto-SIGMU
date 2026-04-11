@@ -180,6 +180,44 @@ final class SigmuService
     }
 
     /**
+     * Registrar multiples activos iguales con codigos automaticos diferentes
+     */
+    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, ?string $fotoPath = null): array
+    {
+        try {
+            $creados = 0;
+            $errores = 0;
+            $ultimoError = '';
+
+            for ($i = 0; $i < $cantidad; $i++) {
+                // Generar codigo unico automatico para CADA activo
+                $codigo = $this->generarCodigoActivo($nombre);
+
+                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPath);
+
+                if ($resultado['success']) {
+                    $creados++;
+                } else {
+                    $errores++;
+                    $ultimoError = $resultado['message'];
+                }
+            }
+
+            return [
+                'success' => $creados > 0,
+                'creados' => $creados,
+                'errores' => $errores,
+                'message' => "Se registraron $creados activos correctamente" . ($errores > 0 ? ". Errores: $errores. Ultimo error: $ultimoError" : "")
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al registrar activos multiples: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * @return array{success: bool, message: string, debugToken?: string}
      */
     public function solicitarRecuperacionPassword(string $login, bool $debugLocal = false): array
