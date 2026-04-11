@@ -356,7 +356,7 @@ final class SigmuRepository
 
         // Insertamos el token con expiración.
         $stmt = $this->db->prepare(
-            'INSERT INTO password_reset_tokens (usuario_id, token_hash, expires_at)
+            'INSERT INTO password_reset_token (usuario_id, token_hash, expires_at)
              VALUES (:usuario_id, :token_hash, :expires_at)'
         );
         $stmt->execute([
@@ -374,7 +374,7 @@ final class SigmuRepository
         $tokenHash = hash('sha256', $tokenPlain);
         $stmt = $this->db->prepare(
             'SELECT 1
-             FROM password_reset_tokens
+             FROM password_reset_token
              WHERE token_hash = :token_hash
                AND used_at IS NULL
                AND expires_at > NOW()
@@ -391,7 +391,7 @@ final class SigmuRepository
 
         $stmt = $this->db->prepare(
             'UPDATE usuario u
-             JOIN password_reset_tokens prt ON prt.usuario_id = u.id
+             JOIN password_reset_token prt ON prt.usuario_id = u.id
              SET u.contrasena_hash = :new_hash,
                  prt.used_at = NOW()
              WHERE prt.token_hash = :token_hash

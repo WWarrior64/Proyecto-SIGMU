@@ -1,0 +1,258 @@
+/* ==================================================
+   HISTORIAL ACTIVO - CSS
+   ================================================== */
+
+/* GRID: 70px | 280px | 130px | 130px | 120px | 120px | 1fr */
+/* La columna de usuario toma el espacio restante con 1fr */
+.historial-table .table-header .table-row,
+.historial-table .table-row {
+    display: grid !important;
+    grid-template-columns: 70px 1fr 130px 130px 120px 120px 220px !important;
+    gap: 12px;
+    padding: 14px 20px;
+    align-items: center;
+    min-height: 60px;
+}
+
+/* CELDAS BASE */
+.table-cell {
+    font-size: 13.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Acción/Detalle necesita wrap porque badge + texto van en línea */
+.cell-name {
+    white-space: normal !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+}
+
+/* ACTION BADGE */
+.action-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+}
+
+.action-registro      { background-color: #E8F5E9; color: #2E7D32; }
+.action-modificacion  { background-color: #FFF3E0; color: #E65100; }
+.action-traslado      { background-color: #E3F2FD; color: #1565C0; }
+.action-cambio_estado { background-color: #F3E5F5; color: #7B1FA2; }
+.action-mantenimiento { background-color: #E0F7FA; color: #00838F; }
+.action-retiro        { background-color: #FFEBEE; color: #C62828; }
+.action-eliminacion   { background-color: #FFEBEE; color: #B71C1C; }
+
+/* DETALLE */
+.detail-text {
+    font-size: 13.5px;
+    color: var(--text-primary);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* ESTADO */
+.status-changes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.status-only {
+    display: flex;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.status-old   { color: #dc3545; white-space: nowrap; }
+.status-new   { color: #28a745; white-space: nowrap; }
+.status-arrow { color: #9E9E9E; font-weight: bold; }
+
+/* SALAS */
+.sala-anterior,
+.sala-nueva {
+    display: block;
+    font-size: 13px;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sala-anterior { color: #dc3545; }
+.sala-nueva    { color: #28a745; font-weight: 500; }
+
+/* EMPTY VALUE */
+.empty-value {
+    display: block;
+    color: #BDBDBD;
+    font-size: 13px;
+    text-align: center;
+    width: 100%;
+}
+
+/* FECHA */
+.cell-date {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.time-text {
+    font-size: 11px;
+    color: #9E9E9E;
+    font-family: monospace;
+    display: block;
+    margin-top: 2px;
+}
+
+/* USUARIO */
+.cell-user {
+    overflow: hidden;
+    min-width: 0;
+}
+
+.user-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.user-avatar-small {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #1E88E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.user-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.user-fullname {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
+}
+
+.user-username {
+    font-size: 11px;
+    color: #9E9E9E;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* BOTÓN HISTORIAL */
+.btn-historial {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-dark);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-left: 12px;
+}
+
+.btn-historial:hover {
+    background: var(--bg-gray);
+    border-color: var(--text-secondary);
+}
+
+/* BACK BUTTON */
+.back-button {
+    margin-bottom: 16px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background-color: var(--bg-white);
+    color: var(--text-primary);
+}
+
+/* ASSET INFO BAR */
+.asset-info-bar {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+}
+
+.asset-info-bar span {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1400px) {
+    .historial-table .table-header .table-row,
+    .historial-table .table-row {
+        grid-template-columns: 60px 1fr 120px 120px 110px 110px 200px !important;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .historial-table .table-header .table-row,
+    .historial-table .table-row {
+        grid-template-columns: 50px 1fr 110px 110px 100px 100px 180px !important;
+        gap: 8px;
+        padding: 12px 12px;
+    }
+}

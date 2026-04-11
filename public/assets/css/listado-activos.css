@@ -252,7 +252,7 @@ body {
 
 .table-header .table-row {
     display: grid;
-    grid-template-columns: 80px 1fr 150px 120px 100px;
+    grid-template-columns: 80px minmax(200px, 1fr) 150px 120px 150px 140px;
     gap: 16px;
     padding: 16px 20px;
 }
@@ -272,7 +272,7 @@ body {
 
 .table-row {
     display: grid;
-    grid-template-columns: 80px 1fr 150px 120px 100px;
+    grid-template-columns: 80px minmax(200px, 1fr) 150px 120px 150px 140px;
     gap: 16px;
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
@@ -300,6 +300,9 @@ body {
 
 .cell-name {
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cell-type {
@@ -410,7 +413,7 @@ body {
 @media (max-width: 1024px) {
     .table-header .table-row,
     .table-row {
-        grid-template-columns: 60px 1fr 120px 100px 80px;
+        grid-template-columns: 60px minmax(150px, 1fr) 110px 100px 120px 120px;
         gap: 12px;
     }
 }
