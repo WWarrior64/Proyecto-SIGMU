@@ -326,7 +326,7 @@ final class SigmuRepository
         string $descripcion = '',
         bool $esPrincipal = false
     ): int {
-        // ✅ MISMA LOGICA QUE USUARIOS: eliminar foto anterior PRIMERO
+        // ✅ Logica IGUAL que usuarios: si es principal, desmarcar todos los anteriores
         if ($esPrincipal) {
             $fotoAnterior = $this->obtenerFotoActivoPrincipal($activoId);
             if ($fotoAnterior) {
@@ -351,6 +351,19 @@ final class SigmuRepository
         if (!$result || !isset($result['nueva_foto_id'])) {
             throw new RuntimeException('Could not get logged photo ID.');
         }
+
+        // ✅ REGISTRAR CAMBIO DE FOTO EN EL HISTORIAL
+        $stmtHistorial = $this->db->prepare("
+            INSERT INTO historial_activo 
+            (activo_id, usuario_id, accion, detalle, fecha)
+            VALUES (?, ?, 'modificacion', ?, NOW())
+        ");
+
+        $stmtHistorial->execute([
+            $activoId,
+            isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0,
+            'Se actualizó la foto principal del activo'
+        ]);
 
         return (int) $result['nueva_foto_id'];
     }

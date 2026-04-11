@@ -12,6 +12,9 @@ class Activo
     public function __construct()
     {
         $this->db = Database::connection();
+        
+        // ✅ ELIMINAMOS EL TRIGGER QUE CREA REGISTROS DUPLICADOS
+        $this->db->exec("DROP TRIGGER IF EXISTS trg_activo_au");
     }
 
     /**
@@ -200,25 +203,102 @@ class Activo
     }
 
     /**
-     * Actualizar un activo existente
+     * Actualizar un activo existente CON REGISTRO INDIVIDUAL DE CADA CAMBIO EN EL HISTORIAL
      */
     public function actualizar(int $id, array $datos): bool
     {
-        $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
-                estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
-                WHERE id = :id";
-        
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre' => $datos['nombre'],
-            ':descripcion' => $datos['descripcion'] ?? '',
-            ':tipo_activo_id' => $datos['tipo_activo_id'] ?? $datos['tipo'] ?? 1,
-            ':estado' => $datos['estado'],
-            ':codigo' => $datos['codigo'],
-            ':sala_id' => $datos['sala_id'] ?? $datos['habitacion_id'] ?? 1,
-            ':fecha_actualizado' => $datos['fecha_actualizado'] ?? date('Y-m-d H:i:s')
-        ]);
+        try {
+            // ✅ Obtener datos ANTES de actualizar
+            $anterior = $this->obtenerPorId($id);
+            if (!$anterior) {
+                return false;
+            }
+
+            // ✅ Lista de campos a comparar con sus nombres para el historial
+            $campos = [
+                'nombre'          => 'Nombre',
+                'descripcion'     => 'Descripción',
+                'tipo_activo_id'  => 'Tipo de activo',
+                'estado'          => 'Estado',
+                'codigo'          => 'Código',
+                'sala_id'         => 'Sala/ubicación'
+            ];
+
+            $cambios = [];
+
+            // ✅ Comparar cada campo y detectar cambios
+            foreach ($campos as $campo => $nombre) {
+                $valorNuevo = $datos[$campo] ?? '';
+                $valorAnterior = $anterior[$campo] ?? '';
+
+                if ((string)$valorNuevo !== (string)$valorAnterior) {
+                    $cambios[] = [
+                        'campo' => $campo,
+                        'nombre' => $nombre,
+                        'anterior' => $valorAnterior,
+                        'nuevo' => $valorNuevo
+                    ];
+                }
+            }
+
+            // ✅ Ejecutar actualizacion
+            $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
+                    estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
+                    WHERE id = :id";
+            
+            $stmt = $this->db->prepare($sql);
+            $actualizado = $stmt->execute([
+                ':id' => $id,
+                ':nombre' => $datos['nombre'],
+                ':descripcion' => $datos['descripcion'] ?? '',
+                ':tipo_activo_id' => $datos['tipo_activo_id'] ?? $datos['tipo'] ?? 1,
+                ':estado' => $datos['estado'],
+                ':codigo' => $datos['codigo'],
+                ':sala_id' => $datos['sala_id'] ?? $datos['habitacion_id'] ?? 1,
+                ':fecha_actualizado' => $datos['fecha_actualizado'] ?? date('Y-m-d H:i:s')
+            ]);
+
+            // ✅ Registrar CADA CAMBIO INDIVIDUALMENTE en el historial
+            if ($actualizado && !empty($cambios)) {
+                $usuarioId = isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0;
+
+                foreach ($cambios as $cambio) {
+                    $detalle = sprintf('Se modificó %s: "%s" → "%s"',
+                        $cambio['nombre'],
+                        $cambio['anterior'],
+                        $cambio['nuevo']
+                    );
+
+                    // ✅ Si es cambio de estado: usamos accion 'cambio_estado' en lugar de 'modificacion'
+                    $accion = $cambio['campo'] === 'estado' ? 'cambio_estado' : 'modificacion';
+
+                    $stmtHistorial = $this->db->prepare("
+                        INSERT INTO historial_activo 
+                        (activo_id, usuario_id, accion, detalle, 
+                         estado_anterior, estado_nuevo, 
+                         sala_anterior_id, sala_nueva_id, fecha)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+
+                    $stmtHistorial->execute([
+                        $id,
+                        $usuarioId,
+                        $accion,
+                        $detalle,
+                        $cambio['campo'] === 'estado' ? $cambio['anterior'] : $anterior['estado'],
+                        $cambio['campo'] === 'estado' ? $cambio['nuevo'] : $datos['estado'],
+                        $cambio['campo'] === 'sala_id' ? $cambio['anterior'] : $anterior['sala_id'],
+                        $cambio['campo'] === 'sala_id' ? $cambio['nuevo'] : $datos['sala_id']
+                    ]);
+                }
+            }
+
+            return $actualizado;
+
+        } catch (\PDOException $e) {
+            error_log("Error en actualizar activo: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

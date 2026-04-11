@@ -659,6 +659,23 @@ class ActivoController
                 // Actualizar el activo (los triggers se encargan de registrar cada cambio individual)
                 $this->modelo->actualizar($id, $nuevosDatos);
 
+                // ✅ ✅ ✅ REGISTRAMOS EL CAMBIO DE FOTO EN EL HISTORIAL AQUI
+                // Lo hacemos DESPUES del UPDATE para que no lo borre el trigger
+                if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                    $usuarioId = isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0;
+                    $stmtHistorial = $this->db->prepare("
+                        INSERT INTO historial_activo 
+                        (activo_id, usuario_id, accion, detalle, fecha)
+                        VALUES (?, ?, 'modificacion', ?, NOW())
+                    ");
+
+                    $stmtHistorial->execute([
+                        $id,
+                        $usuarioId,
+                        'Se actualizó la foto principal del activo'
+                    ]);
+                }
+
                 // Confirmar transacción
                 $this->db->commit();
 
