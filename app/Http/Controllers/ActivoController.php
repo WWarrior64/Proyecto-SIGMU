@@ -637,7 +637,7 @@ class ActivoController
             $this->db->beginTransaction();
 
             try {
-                // Manejo de la imagen - usa la misma logica que usuarios (ya hace todo automaticamente)
+                // Manejo de la imagen
                 if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
                     // Subir nueva foto
                     $fotoPath = $this->subirImagen($_FILES['foto']);
