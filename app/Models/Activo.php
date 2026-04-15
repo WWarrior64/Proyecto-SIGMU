@@ -12,57 +12,139 @@ class Activo
     public function __construct()
     {
         $this->db = Database::connection();
+        
+        // ✅ ELIMINAMOS EL TRIGGER QUE CREA REGISTROS DUPLICADOS
+        $this->db->exec("DROP TRIGGER IF EXISTS trg_activo_au");
     }
 
     /**
-     * Listar todos los activos con paginación y búsqueda
+     * Listar todos los activos con paginación, búsqueda y filtros combinados
+     * 
+     * @param int $pagina Numero de pagina
+     * @param int $porPagina Registros por pagina
+     * @param string $busqueda Texto de busqueda
+     * @param array $estados Array de estados a filtrar (vacio = todos)
+     * @param array $tipos Array de tipos de activo a filtrar (vacio = todos)
      */
-    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = ''): array
+    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = [], string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
     {
         try {
             $offset = ($pagina - 1) * $porPagina;
             
-            $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
-                           COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
-                    FROM activo a
-                    LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
-                    LEFT JOIN sala s ON a.sala_id = s.id
-                    LEFT JOIN edificio e ON s.edificio_id = e.id
-                    WHERE 1=1";
+        // Validar campos de ordenamiento permitidos
+        $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado', 'sala_nombre', 'fecha_creado'];
+        $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'id';
+        $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
+
+        $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
+                       COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
+                FROM activo a
+                LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
+                LEFT JOIN sala s ON a.sala_id = s.id
+                LEFT JOIN edificio e ON s.edificio_id = e.id
+                WHERE 1=1";
             
             $params = [];
             
+            // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
             
-            $sql .= " ORDER BY a.id DESC LIMIT :limit OFFSET :offset";
+            // ✅ ✅ ✅ SE ELIMINA EL FILTRO SERVIDOR:
+            // Ahora TODOS LOS ACTIVOS (incluidos descartados) se envian al cliente
+            // El filtrado se hace 100% en el navegador con Javascript
+            // Esto permite mostrar ocultar activos descartados sin recargar la pagina
+            
+            // 🎯 Filtro por TIPO DE ACTIVO (admite multiples valores al mismo tiempo)
+            if (!empty($tipos) && is_array($tipos)) {
+                $placeholders = [];
+                foreach ($tipos as $idx => $tipoId) {
+                    $key = ":tipo_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = (int)$tipoId;
+                }
+                $sql .= " AND a.tipo_activo_id IN (" . implode(',', $placeholders) . ")";
+            }
+            
+        // Mapear nombres de campo frontend a nombres reales de tabla
+        $camposMap = [
+            'id' => 'a.id',
+            'codigo' => 'a.codigo',
+            'nombre' => 'a.nombre',
+            'tipo' => 'ta.nombre',
+            'estado' => 'a.estado',
+            'sala_nombre' => 's.nombre',
+            'fecha_creado' => 'a.fecha_creado'
+        ];
+        
+        $campoOrden = $camposMap[$ordenarPor] ?? 'a.id';
+        $sql .= " ORDER BY $campoOrden $ordenDireccion LIMIT :limit OFFSET :offset";
             $params[':limit'] = $porPagina;
             $params[':offset'] = $offset;
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
+            
+            // Bind de parametros integer correctamente (evita error de tipo en MySQL)
+            $stmt->bindParam(':limit', $porPagina, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            
+            // Bind del resto de parametros
+            foreach ($params as $key => $value) {
+                if ($key !== ':limit' && $key !== ':offset') {
+                    $stmt->bindValue($key, $value);
+                }
+            }
+            
+            $stmt->execute();
             
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar array vacío
+            error_log("Error en Activo::listar: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Contar total de activos para paginación
+     * Contar total de activos para paginación con filtros aplicados
      */
-    public function contar(string $busqueda = ''): int
+    public function contar(string $busqueda = '', array $estados = [], array $tipos = []): int
     {
         try {
             $sql = "SELECT COUNT(*) as total FROM activo a LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
             $params = [];
             
+            // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
+            }
+            
+            // 🎯 Filtro por ESTADO
+            // ✅ MISMO COMPORTAMIENTO EN EL CONTADOR PARA PAGINACION
+            if (!empty($estados) && is_array($estados)) {
+                $placeholders = [];
+                foreach ($estados as $idx => $estado) {
+                    $key = ":estado_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = $estado;
+                }
+                $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
+            } else {
+                // Ningun filtro marcado: excluir solo descartado
+                $sql .= " AND a.estado != 'descartado'";
+            }
+            
+            // 🎯 Filtro por TIPO DE ACTIVO
+            if (!empty($tipos) && is_array($tipos)) {
+                $placeholders = [];
+                foreach ($tipos as $idx => $tipoId) {
+                    $key = ":tipo_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = (int)$tipoId;
+                }
+                $sql .= " AND a.tipo_activo_id IN (" . implode(',', $placeholders) . ")";
             }
             
             $stmt = $this->db->prepare($sql);
@@ -70,7 +152,7 @@ class Activo
             
             return (int) $stmt->fetchColumn();
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar 0
+            error_log("Error en Activo::contar: " . $e->getMessage());
             return 0;
         }
     }
@@ -121,25 +203,146 @@ class Activo
     }
 
     /**
-     * Actualizar un activo existente
+     * Actualizar un activo existente CON REGISTRO INDIVIDUAL DE CADA CAMBIO EN EL HISTORIAL
      */
     public function actualizar(int $id, array $datos): bool
     {
-        $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
-                estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
-                WHERE id = :id";
-        
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre' => $datos['nombre'],
-            ':descripcion' => $datos['descripcion'] ?? '',
-            ':tipo_activo_id' => $datos['tipo_activo_id'] ?? $datos['tipo'] ?? 1,
-            ':estado' => $datos['estado'],
-            ':codigo' => $datos['codigo'],
-            ':sala_id' => $datos['sala_id'] ?? $datos['habitacion_id'] ?? 1,
-            ':fecha_actualizado' => $datos['fecha_actualizado'] ?? date('Y-m-d H:i:s')
-        ]);
+        try {
+            // ✅ Obtener datos ANTES de actualizar
+            $anterior = $this->obtenerPorId($id);
+            if (!$anterior) {
+                return false;
+            }
+
+            // ✅ Lista de campos a comparar con sus nombres para el historial
+            $campos = [
+                'nombre'          => 'Nombre',
+                'descripcion'     => 'Descripción',
+                'tipo_activo_id'  => 'Tipo de activo',
+                'estado'          => 'Estado',
+                'codigo'          => 'Código',
+                'sala_id'         => 'Sala/ubicación'
+            ];
+
+            $cambios = [];
+
+            // ✅ Comparar cada campo y detectar cambios
+            foreach ($campos as $campo => $nombre) {
+                $valorNuevo = $datos[$campo] ?? '';
+                $valorAnterior = $anterior[$campo] ?? '';
+
+                if ((string)$valorNuevo !== (string)$valorAnterior) {
+                    $cambios[] = [
+                        'campo' => $campo,
+                        'nombre' => $nombre,
+                        'anterior' => $valorAnterior,
+                        'nuevo' => $valorNuevo
+                    ];
+                }
+            }
+
+            // ✅ Ejecutar actualizacion
+            $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
+                    estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
+                    WHERE id = :id";
+            
+            $stmt = $this->db->prepare($sql);
+            $actualizado = $stmt->execute([
+                ':id' => $id,
+                ':nombre' => $datos['nombre'],
+                ':descripcion' => $datos['descripcion'] ?? '',
+                ':tipo_activo_id' => $datos['tipo_activo_id'] ?? $datos['tipo'] ?? 1,
+                ':estado' => $datos['estado'],
+                ':codigo' => $datos['codigo'],
+                ':sala_id' => $datos['sala_id'] ?? $datos['habitacion_id'] ?? 1,
+                ':fecha_actualizado' => $datos['fecha_actualizado'] ?? date('Y-m-d H:i:s')
+            ]);
+
+            // ✅ Registrar CADA CAMBIO INDIVIDUALMENTE en el historial
+            if ($actualizado && !empty($cambios)) {
+                $usuarioId = isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0;
+
+                foreach ($cambios as $cambio) {
+                    $detalle = sprintf('Se modificó %s: "%s" → "%s"',
+                        $cambio['nombre'],
+                        $cambio['anterior'],
+                        $cambio['nuevo']
+                    );
+
+                    // ✅ Si es cambio de estado: usamos accion 'cambio_estado' en lugar de 'modificacion'
+                    $accion = $cambio['campo'] === 'estado' ? 'cambio_estado' : 'modificacion';
+
+                    $stmtHistorial = $this->db->prepare("
+                        INSERT INTO historial_activo 
+                        (activo_id, usuario_id, accion, detalle, 
+                         estado_anterior, estado_nuevo, 
+                         sala_anterior_id, sala_nueva_id, fecha)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+
+                    $stmtHistorial->execute([
+                        $id,
+                        $usuarioId,
+                        $accion,
+                        $detalle,
+                        $cambio['campo'] === 'estado' ? $cambio['anterior'] : $anterior['estado'],
+                        $cambio['campo'] === 'estado' ? $cambio['nuevo'] : $datos['estado'],
+                        $cambio['campo'] === 'sala_id' ? $cambio['anterior'] : $anterior['sala_id'],
+                        $cambio['campo'] === 'sala_id' ? $cambio['nuevo'] : $datos['sala_id']
+                    ]);
+                }
+            }
+
+            return $actualizado;
+
+        } catch (\PDOException $e) {
+            error_log("Error en actualizar activo: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Dar de baja un activo (cambia estado a descartado SIN eliminar)
+     */
+    public function darDeBaja(int $id, int $usuarioId): bool
+    {
+        try {
+            $this->db->beginTransaction();
+            
+            // Obtener datos actuales del activo ANTES de actualizar
+            $activo = $this->obtenerPorId($id);
+            if (!$activo) {
+                return false;
+            }
+            
+            // Actualizar estado
+            $stmt = $this->db->prepare("UPDATE activo SET estado = 'descartado', fecha_actualizado = NOW() WHERE id = :id");
+            $resultado = $stmt->execute([':id' => $id]);
+            
+            // ✅ Registrar en historial CORRECTAMENTE con TODOS los campos
+            $stmtHistorial = $this->db->prepare("
+                INSERT INTO historial_activo 
+                (activo_id, usuario_id, accion, detalle, estado_anterior, estado_nuevo, sala_anterior_id, sala_nueva_id)
+                VALUES (?, ?, 'retiro', CONCAT('Activo dado de baja definitivamente: ', ?), ?, ?, ?, ?)
+            ");
+            $stmtHistorial->execute([
+                $id,
+                $usuarioId,
+                $activo['nombre'],
+                $activo['estado'],
+                'descartado',
+                $activo['sala_id'],
+                $activo['sala_id']
+            ]);
+            
+            $this->db->commit();
+            
+            return $resultado;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            error_log("Error en darDeBaja: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -199,6 +402,72 @@ class Activo
         } catch (\PDOException $e) {
             // Si la tabla no existe, retornar null
             return null;
+        }
+    }
+
+    /**
+     * Obtener historial de cambios de un activo con todos los campos + BUSQUEDA Y FILTROS
+     */
+    public function obtenerHistorial(int $activoId, string $busqueda = '', string $filtroAccion = '', string $filtroEstado = ''): array
+    {
+        try {
+            $sql = "
+                SELECT 
+                    h.id, 
+                    h.fecha, 
+                    h.accion, 
+                    h.detalle,
+                    h.estado_anterior,
+                    h.estado_nuevo,
+                    h.sala_anterior_id,
+                    h.sala_nueva_id,
+                    u.nombre_completo as usuario_nombre,
+                    u.username as usuario_username,
+                    sa.nombre as sala_anterior_nombre,
+                    sn.nombre as sala_nueva_nombre
+                FROM historial_activo h
+                LEFT JOIN usuario u ON h.usuario_id = u.id
+                LEFT JOIN sala sa ON h.sala_anterior_id = sa.id
+                LEFT JOIN sala sn ON h.sala_nueva_id = sn.id
+                WHERE h.activo_id = :activo_id
+            ";
+
+            $params = [':activo_id' => $activoId];
+
+            // ✅ Busqueda general
+            if (!empty($busqueda)) {
+                $sql .= " AND (
+                    h.detalle LIKE :busqueda OR
+                    h.accion LIKE :busqueda OR
+                    h.estado_anterior LIKE :busqueda OR
+                    h.estado_nuevo LIKE :busqueda OR
+                    u.nombre_completo LIKE :busqueda OR
+                    u.username LIKE :busqueda OR
+                    sa.nombre LIKE :busqueda OR
+                    sn.nombre LIKE :busqueda
+                )";
+                $params[':busqueda'] = '%' . $busqueda . '%';
+            }
+
+            // ✅ Filtro por Accion
+            if (!empty($filtroAccion)) {
+                $sql .= " AND h.accion = :accion";
+                $params[':accion'] = $filtroAccion;
+            }
+
+            // ✅ Filtro por Estado
+            if (!empty($filtroEstado)) {
+                $sql .= " AND (h.estado_anterior = :estado OR h.estado_nuevo = :estado)";
+                $params[':estado'] = $filtroEstado;
+            }
+
+            $sql .= " ORDER BY h.fecha DESC, h.id DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            return [];
         }
     }
 }

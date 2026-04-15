@@ -33,7 +33,23 @@ class ActivoController
         }
 
         try {
-            $activos = $this->sigmuService->obtenerMisActivos($salaId);
+            // Obtener parametros de ordenamiento
+            $ordenarPor = trim((string) ($_GET['ordenar_por'] ?? 'id'));
+            $ordenDireccion = trim((string) ($_GET['orden_direccion'] ?? 'DESC'));
+            
+            // Validar campos permitidos
+            $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado'];
+            $ordenarPor = in_array($ordenarPor, $camposPermitidos) ? $ordenarPor : 'id';
+            $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
+            
+            // Obtener activos ya ordenados directamente desde el modelo
+            $activos = $this->modelo->listar(1, 100, '', [], [], $ordenarPor, $ordenDireccion);
+            // Filtrar solo los de esta sala
+            $activos = array_filter($activos, function($a) use ($salaId) {
+                return (int)$a['sala_id'] === (int)$salaId;
+            });
+            // Reindexar array
+            $activos = array_values($activos);
             
             // Obtener información de la sala y edificio
             $sala = null;
@@ -44,11 +60,23 @@ class ActivoController
                 $edificio = $primerActivo['edificio_nombre'] ?? null;
             }
             
+            // Obtener ID del edificio para el boton regresar
+            $edificio_id = 0;
+            if ($salaId > 0) {
+                $salaInfo = $this->modelo->obtenerSalaConEdificio($salaId);
+                if ($salaInfo) {
+                    $edificio_id = $salaInfo['edificio_id'];
+                }
+            }
+
             return view('inventario_catalogacion.listado_activos', [
                 'salaId' => $salaId,
                 'activos' => $activos,
                 'sala' => $sala,
                 'edificio' => $edificio,
+                'edificio_id' => $edificio_id,
+                'ordenarPor' => $ordenarPor,
+                'ordenDireccion' => $ordenDireccion
             ]);
         } catch (Throwable $exception) {
             return '<h2>Error</h2><p>' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
@@ -172,20 +200,44 @@ class ActivoController
                 $fotoPath = $this->procesarFoto($_FILES['foto']);
             }
 
-            // Registrar el activo
-            $resultado = $this->sigmuService->registrarActivo(
-                $codigo,
-                $nombre,
-                $tipoActivoId,
-                $descripcion,
-                $estado,
-                $salaId,
-                $fotoPath
-            );
+            // Obtener cantidad de activos a crear
+            $cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_VALIDATE_INT) ?: 1;
+
+            // Limitar a maximo 100 para no sobrecargar
+            if ($cantidad < 1) $cantidad = 1;
+            if ($cantidad > 100) $cantidad = 100;
+
+            if ($cantidad === 1) {
+                // Registrar un solo activo
+                $resultado = $this->sigmuService->registrarActivo(
+                    $codigo,
+                    $nombre,
+                    $tipoActivoId,
+                    $descripcion,
+                    $estado,
+                    $salaId,
+                    $fotoPath
+                );
+
+                $mensaje = $resultado['message'];
+            } else {
+                // Registrar multiples activos iguales con codigos diferentes
+                $resultado = $this->sigmuService->registrarMultiplesActivos(
+                    $cantidad,
+                    $nombre,
+                    $tipoActivoId,
+                    $descripcion,
+                    $estado,
+                    $salaId,
+                    $fotoPath
+                );
+
+                $mensaje = $resultado['message'];
+            }
 
             if ($resultado['success']) {
                 // Redirigir al listado de activos de la sala con mensaje de éxito
-                header('Location: /sigmu/sala?sala_id=' . $salaId . '&success=' . urlencode('Activo registrado exitosamente con ID: ' . $resultado['activo_id']));
+                header('Location: /sigmu/sala?sala_id=' . $salaId . '&success=' . urlencode($mensaje));
                 return '';
             } else {
                 return $this->registrarActivoGetWithError($resultado['message'], [
@@ -195,6 +247,7 @@ class ActivoController
                     'descripcion' => $descripcion,
                     'estado' => $estado,
                     'sala_id' => $salaId,
+                    'cantidad' => $cantidad
                 ]);
             }
         } catch (Throwable $exception) {
@@ -256,6 +309,21 @@ class ActivoController
             echo json_encode(['success' => true, 'codigo' => $codigo]);
         } catch (\Throwable $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Obtener todos los tipos de activo para el filtro frontend
+     */
+    public function obtenerTiposActivo(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $tipos = $this->modelo->obtenerTiposActivo();
+            echo json_encode($tipos);
+        } catch (\Throwable $e) {
+            echo json_encode([]);
         }
     }
 
@@ -334,9 +402,29 @@ class ActivoController
         $busqueda = trim((string) ($_GET['busqueda'] ?? ''));
         $salaId = (int) ($_GET['sala_id'] ?? 0);
         $porPagina = 10;
+        $ordenarPor = trim((string) ($_GET['ordenar_por'] ?? 'id'));
+        $ordenDireccion = trim((string) ($_GET['orden_direccion'] ?? 'DESC'));
+        
+        // Obtener filtros desde la peticion
+        $estados = $_GET['estados'] ?? [];
+        $tipos = $_GET['tipos'] ?? [];
+        
+        // Normalizar y sanitizar filtros
+        if (!is_array($estados)) $estados = [];
+        if (!is_array($tipos)) $tipos = [];
+        
+        // Filtrar solo estados validos
+        $estadosValidos = ['disponible', 'en_uso', 'reparacion', 'descartado'];
+        $estados = array_filter($estados, fn($e) => in_array($e, $estadosValidos, true));
+        
+        // Convertir tipos a entero
+        $tipos = array_filter(array_map(fn($t) => (int)$t, $tipos), fn($t) => $t > 0);
 
-        $activos = $this->modelo->listar($pagina, $porPagina, $busqueda);
-        $total = $this->modelo->contar($busqueda);
+        // Debug: Mostrar valores recibidos
+        error_log("ORDENAMIENTO: ordenarPor = $ordenarPor | ordenDireccion = $ordenDireccion");
+        
+        $activos = $this->modelo->listar($pagina, $porPagina, $busqueda, $estados, $tipos, $ordenarPor, $ordenDireccion);
+        $total = $this->modelo->contar($busqueda, $estados, $tipos);
         $totalPaginas = ceil($total / $porPagina);
 
         // Get room and building information
@@ -376,6 +464,15 @@ class ActivoController
             $sala = $primerActivo['sala_nombre'] ?? 'Sin sala';
         }
 
+        // Obtener ID del edificio para el boton regresar
+        $edificio_id = 0;
+        if ($salaId > 0) {
+            $salaInfo = $this->modelo->obtenerSalaConEdificio($salaId);
+            if ($salaInfo) {
+                $edificio_id = $salaInfo['edificio_id'];
+            }
+        }
+
         return view('inventario_catalogacion.listado_activos', [
             'activos' => $activos,
             'pagina' => $pagina,
@@ -384,7 +481,10 @@ class ActivoController
             'total' => $total,
             'sala' => $sala,
             'edificio' => $edificio,
-            'salaId' => $salaId
+            'edificio_id' => $edificio_id,
+            'salaId' => $salaId,
+            'ordenarPor' => $ordenarPor,
+            'ordenDireccion' => $ordenDireccion
         ]);
     }
 
@@ -498,7 +598,7 @@ class ActivoController
     }
 
     /**
-     * Actualizar un activo existente
+     * Actualizar un activo existente con registro de historial detallado
      */
     public function update(int $id)
     {
@@ -508,63 +608,134 @@ class ActivoController
                 throw new \Exception('Activo no encontrado');
             }
 
-            // Establecer sesión del usuario para el trigger de historial
             $sessionUser = $_SESSION['auth_user'] ?? null;
-            if ($sessionUser) {
-                $this->db->exec("SET @usuario_id_sesion = " . (int)$sessionUser['id']);
+            if (!$sessionUser) {
+                throw new \Exception('Debe iniciar sesión para modificar activos');
             }
 
-            $nombre = trim((string) ($_POST['nombre'] ?? ''));
-            $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
-            $tipo_activo_id = (int) ($_POST['tipo_activo_id'] ?? 0);
-            $estado = trim((string) ($_POST['estado'] ?? ''));
-            $codigo = trim((string) ($_POST['codigo'] ?? ''));
-            $sala_id = (int) ($_POST['sala_id'] ?? 0);
+            // Establecer sesión del usuario para los triggers
+            $this->db->exec("SET @usuario_id_sesion = " . (int)$sessionUser['id']);
 
-            if (empty($nombre) || $tipo_activo_id <= 0 || empty($estado) || empty($codigo) || $sala_id <= 0) {
-                throw new \Exception('Todos los campos obligatorios deben ser completados');
-            }
-
-            // Manejo de la imagen - usar tabla activo_foto
-            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-                // Subir nueva foto
-                $fotoPath = $this->subirImagen($_FILES['foto']);
-                
-                // Eliminar foto principal anterior si existe
-                $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
-                $stmt->execute([$id]);
-                $fotoAnterior = $stmt->fetchColumn();
-                
-                if ($fotoAnterior && file_exists('public/' . $fotoAnterior)) {
-                    unlink('public/' . $fotoAnterior);
-                }
-                
-                // Eliminar registro anterior de foto principal
-                $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE activo_id = ? AND es_principal = TRUE");
-                $stmt->execute([$id]);
-                
-                // Insertar nueva foto principal
-                $stmt = $this->db->prepare("INSERT INTO activo_foto (activo_id, ruta_foto, descripcion, es_principal) VALUES (?, ?, ?, TRUE)");
-                $stmt->execute([$id, $fotoPath, 'Foto principal del activo']);
-            }
-
-            $datos = [
-                'nombre' => $nombre,
-                'descripcion' => $descripcion,
-                'tipo_activo_id' => $tipo_activo_id,
-                'estado' => $estado,
-                'codigo' => $codigo,
-                'sala_id' => $sala_id,
+            $nuevosDatos = [
+                'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+                'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+                'tipo_activo_id' => (int) ($_POST['tipo_activo_id'] ?? 0),
+                'estado' => trim((string) ($_POST['estado'] ?? '')),
+                'codigo' => trim((string) ($_POST['codigo'] ?? '')),
+                'sala_id' => (int) ($_POST['sala_id'] ?? 0),
                 'fecha_actualizado' => date('Y-m-d H:i:s')
             ];
 
-            $this->modelo->actualizar($id, $datos);
+            // Validar campos obligatorios
+            if (empty($nuevosDatos['nombre']) || $nuevosDatos['tipo_activo_id'] <= 0 || 
+                empty($nuevosDatos['estado']) || empty($nuevosDatos['codigo']) || 
+                $nuevosDatos['sala_id'] <= 0) {
+                throw new \Exception('Todos los campos obligatorios deben ser completados');
+            }
 
-            header('Location: /sigmu/activo/ver?id=' . $id . '&success=activo_actualizado');
-            exit;
+            // Iniciar transacción para asegurar integridad
+            $this->db->beginTransaction();
+
+            try {
+                // Manejo de la imagen
+                if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                    // Subir nueva foto
+                    $fotoPath = $this->subirImagen($_FILES['foto']);
+
+                    // Eliminar la foto principal anterior si existe
+                    $stmtOldFoto = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = 1 ORDER BY id DESC LIMIT 1");
+                    $stmtOldFoto->execute([$id]);
+                    $oldFoto = $stmtOldFoto->fetchColumn();
+                    if ($oldFoto && file_exists(__DIR__ . '/../../../public/' . $oldFoto)) {
+                        unlink(__DIR__ . '/../../../public/' . $oldFoto);
+                    }
+
+                    // Marcar cualquier foto anterior como no principal y guardar la nueva foto principal
+                    $this->db->prepare("UPDATE activo_foto SET es_principal = 0 WHERE activo_id = ?")->execute([$id]);
+                    $stmtFoto = $this->db->prepare("INSERT INTO activo_foto (activo_id, ruta_foto, es_principal) VALUES (?, ?, 1)");
+                    $stmtFoto->execute([$id, $fotoPath]);
+                }
+
+                // Actualizar el activo (los triggers se encargan de registrar cada cambio individual)
+                $this->modelo->actualizar($id, $nuevosDatos);
+
+                // ✅ ✅ ✅ REGISTRAMOS EL CAMBIO DE FOTO EN EL HISTORIAL AQUI
+                // Lo hacemos DESPUES del UPDATE para que no lo borre el trigger
+                if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                    $usuarioId = isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0;
+                    $stmtHistorial = $this->db->prepare("
+                        INSERT INTO historial_activo 
+                        (activo_id, usuario_id, accion, detalle, fecha)
+                        VALUES (?, ?, 'modificacion', ?, NOW())
+                    ");
+
+                    $stmtHistorial->execute([
+                        $id,
+                        $usuarioId,
+                        'Se actualizó la foto principal del activo'
+                    ]);
+                }
+
+                // Confirmar transacción
+                $this->db->commit();
+
+                header('Location: /sigmu/activo/ver?id=' . $id . '&success=activo_actualizado');
+                exit;
+
+            } catch (Throwable $e) {
+                $this->db->rollBack();
+                throw $e;
+            }
 
         } catch (Throwable $e) {
             header('Location: /sigmu/activo/editar?id=' . $id . '&error=' . urlencode($e->getMessage()));
+            exit;
+        }
+    }
+
+    /**
+     * Dar de baja un activo (cambia estado a descartado)
+     */
+    public function darDeBaja(int $id)
+    {
+        try {
+            if (!$this->requireAuth()) {
+                return '';
+            }
+            
+            $sessionUser = $_SESSION['auth_user'] ?? null;
+            if (!$sessionUser) {
+                throw new \Exception('Debe iniciar sesión');
+            }
+            
+            // Verificar permisos
+            $usuarioRol = $sessionUser['rol_nombre'] ?? '';
+            if (!in_array($usuarioRol, ['Administrador', 'Responsable de Area'])) {
+                throw new \Exception('No tiene permiso para dar de baja activos');
+            }
+            
+            $activo = $this->modelo->obtenerPorId($id);
+            if (!$activo) {
+                throw new \Exception('Activo no encontrado');
+            }
+            
+            if ($activo['estado'] === 'descartado') {
+                throw new \Exception('El activo ya se encuentra dado de baja');
+            }
+            
+            // Ejecutar baja
+            $resultado = $this->modelo->darDeBaja($id, (int)$sessionUser['id']);
+            
+            if ($resultado) {
+                header('Location: /sigmu/sala?sala_id=' . $activo['sala_id'] . '&success=Activo dado de baja exitosamente');
+            } else {
+                header('Location: /sigmu/activo/ver?id=' . $id . '&error=Error al dar de baja el activo');
+            }
+            
+            exit;
+            
+        } catch (Throwable $e) {
+            header('Location: /sigmu/activo/ver?id=' . $id . '&error=' . urlencode($e->getMessage()));
             exit;
         }
     }
@@ -637,6 +808,38 @@ class ActivoController
             header('Location: /sigmu/activo/registrar?error=' . urlencode($e->getMessage()));
             exit;
         }
+    }
+
+    /**
+     * Mostrar historial de cambios de un activo
+     */
+    public function historial(int $id)
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $activo = $this->modelo->obtenerPorId($id);
+        
+        if (!$activo) {
+            header('Location: /sigmu/activo?error=activo_no_encontrado');
+            exit;
+        }
+
+        // ✅ Obtener parametros de busqueda y filtros
+        $busqueda = trim((string) ($_GET['busqueda'] ?? ''));
+        $filtroAccion = trim((string) ($_GET['accion'] ?? ''));
+        $filtroEstado = trim((string) ($_GET['estado'] ?? ''));
+
+        $historial = $this->modelo->obtenerHistorial($id, $busqueda, $filtroAccion, $filtroEstado);
+
+        return view('inventario_catalogacion.historial_activo', [
+            'activo' => $activo,
+            'historial' => $historial,
+            'busqueda' => $busqueda,
+            'filtroAccion' => $filtroAccion,
+            'filtroEstado' => $filtroEstado
+        ]);
     }
 
     /**

@@ -46,7 +46,16 @@ final class SigmuController
             ]);
         }
 
-        // Vista: panel de edificios accesibles para el usuario.
+        // ✅ REDIRECCION SEGUN ROL DE USUARIO
+        // Si es ADMINISTRADOR mostrar panel exclusivo
+        if ($sessionUser['rol_nombre'] === 'Administrador') {
+            return view('administracion_usuarios.inicio', [
+                'sessionUser' => $sessionUser,
+                'error' => $error,
+            ]);
+        }
+
+        // Para demas roles mostrar panel normal de edificios
         return view('localizacion_asignacion.panel_edificios', [
             'sessionUser' => $sessionUser,
             'edificios' => $edificios,

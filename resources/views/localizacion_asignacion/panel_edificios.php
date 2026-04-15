@@ -18,6 +18,18 @@ $error = isset($error) ? (string) $error : null;
     <title>SIGMU - Localizacion | Edificios (RF-07 a RF-09)</title>
 </head>
 <body>
+    <?php if (isset($sessionUser['rol_nombre']) && $sessionUser['rol_nombre'] === 'Administrador'): ?>
+    <!-- Back Button Solo para Administradores -->
+    <div class="back-button" style="margin: 20px 0;">
+        <button class="back-btn" onclick="window.location.href='/sigmu'" style="background: none; border: none; cursor: pointer; padding: 8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+    </div>
+    <?php endif; ?>
+    
     <h1>SIGMU</h1>
     <p><strong>Modulo:</strong> Localizacion y asignacion — jerarquia edificio &rarr; sala &rarr; activos.</p>
 

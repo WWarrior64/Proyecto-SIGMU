@@ -11,12 +11,13 @@ $error = $_GET['error'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIGMU - Detalle del Activo</title>
     <link rel="stylesheet" href="/assets/css/ver-activo.css">
+    <link rel="stylesheet" href="/assets/css/historial-activo.css">
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-            <button class="menu-btn" id="menuBtn">
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -42,7 +43,7 @@ $error = $_GET['error'] ?? '';
     <main class="main-content">
         <!-- Back Button -->
         <div class="back-button">
-            <button class="back-btn" onclick="history.back()">
+            <button class="back-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) ($activo['sala_id'] ?? 0) ?>'">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
@@ -58,14 +59,37 @@ $error = $_GET['error'] ?? '';
 
         <?php if ($activo): ?>
             <!-- Section Header -->
-            <div class="section-header">
-                <h1 class="section-title"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <a href="/sigmu/activo/editar?id=<?= (int) $activo['id'] ?>" class="edit-btn" title="Editar activo">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </a>
+            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <h1 class="section-title" style="margin: 0; flex: 1;"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <a href="/sigmu/activo/editar?id=<?= (int) $activo['id'] ?>" class="edit-btn" title="Editar activo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </a>
+                    
+                    <a href="/sigmu/activo/historial?id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Ver historial de cambios">
+                        <span>📋</span> Historial
+                    </a>
+                    
+                    <?php 
+                        // Mostrar botón dar de baja solo si usuario tiene permisos y activo no esta descartado
+                        $usuarioRol = $_SESSION['auth_user']['rol_nombre'] ?? '';
+                        $puedeDarBaja = in_array($usuarioRol, ['Administrador', 'Responsable de Area']);
+                        
+                        if ($puedeDarBaja && $activo['estado'] !== 'descartado'): 
+                    ?>
+                    <button class="edit-btn delete-btn" id="btnDarBaja" title="Dar de baja activo" style="background-color: #dc2626;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- Content Grid -->
@@ -86,8 +110,10 @@ $error = $_GET['error'] ?? '';
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
                                 <span>Imagen no disponible</span>
-                            </div>
-                        <?php else: ?>
+            </div>
+
+
+        <?php else: ?>
                             <div class="image-placeholder">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -179,6 +205,37 @@ $error = $_GET['error'] ?? '';
         <?php endif; ?>
     </main>
 
+    <?php if ($activo): ?>
+    <!-- Modal Confirmación Dar de Baja -->
+    <div id="modalConfirmacionBaja" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>⚠️ Confirmar Dar de Baja</h3>
+                <button class="modal-close" id="btnCerrarModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Está a punto de dar de baja este activo:</p>
+                <p style="font-weight: bold; font-size: 16px; margin: 12px 0; color: #dc2626;">
+                    <?= htmlspecialchars($activo['nombre'] ?? 'Activo') ?>
+                </p>
+                <p>El activo cambiará su estado a <strong>descartado</strong> y no aparecerá en el listado general.</p>
+                <p>Esta acción es reversible mediante el filtro de estado.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnCancelarBaja">Cancelar</button>
+                <form method="POST" action="/sigmu/activo/dar-baja" style="display: inline;">
+                    <input type="hidden" name="id" value="<?= (int)$activo['id'] ?>">
+                    <button type="submit" class="btn btn-danger">Confirmar Dar de Baja</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+
+
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/ver-activo.js"></script>
+    <script src="/assets/js/historial-activo.js"></script>
 </body>
 </html>

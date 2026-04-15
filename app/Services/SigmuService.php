@@ -7,13 +7,15 @@ namespace App\Services;
 use App\Repositories\SigmuRepository;
 use RuntimeException;
 
-// En el service ponemos lógica de negocio sencilla y validaciones.
+// In the service we put simple business logic and validations.
 // La idea es que el controlador solo reciba/mande datos, y aquí se decida qué hacer.
 final class SigmuService
 {
-    public function __construct(
-        private readonly SigmuRepository $repository = new SigmuRepository()
-    ) {
+    private readonly SigmuRepository $repository;
+
+    public function __construct(?SigmuRepository $repository = null)
+    {
+        $this->repository = $repository ?? new SigmuRepository();
     }
 
     public function iniciarSesionBd(int $userId): void
@@ -178,6 +180,44 @@ final class SigmuService
     }
 
     /**
+     * Registrar multiples activos iguales con codigos automaticos diferentes
+     */
+    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, ?string $fotoPath = null): array
+    {
+        try {
+            $creados = 0;
+            $errores = 0;
+            $ultimoError = '';
+
+            for ($i = 0; $i < $cantidad; $i++) {
+                // Generar codigo unico automatico para CADA activo
+                $codigo = $this->generarCodigoActivo($nombre);
+
+                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPath);
+
+                if ($resultado['success']) {
+                    $creados++;
+                } else {
+                    $errores++;
+                    $ultimoError = $resultado['message'];
+                }
+            }
+
+            return [
+                'success' => $creados > 0,
+                'creados' => $creados,
+                'errores' => $errores,
+                'message' => "Se registraron $creados activos correctamente" . ($errores > 0 ? ". Errores: $errores. Ultimo error: $ultimoError" : "")
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al registrar activos multiples: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * @return array{success: bool, message: string, debugToken?: string}
      */
     public function solicitarRecuperacionPassword(string $login, bool $debugLocal = false): array
@@ -227,7 +267,7 @@ final class SigmuService
     {
         // Validaciones simples antes de tocar BD.
         if (trim($tokenPlain) === '') {
-            throw new RuntimeException('Token inválido.');
+            throw new RuntimeException('Invalid token.');
         }
 
         if (strlen($password) < 8) {
@@ -250,5 +290,72 @@ final class SigmuService
         if (!$ok) {
             throw new RuntimeException('No se pudo completar el restablecimiento.');
         }
+    }
+
+    /**
+     * Obtiene todos los usuarios del sistema (solo Administrador)
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodosUsuarios(): array
+    {
+        return $this->repository->obtenerTodosUsuarios();
+    }
+
+    public function registrarUsuario(string $username, string $email, string $password, string $nombreCompleto, int $rolId): int
+    {
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        return $this->repository->registrarUsuario($username, $email, $passwordHash, $nombreCompleto, $rolId);
+    }
+
+    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    {
+        return $this->repository->editarUsuario($usuarioId, $email, $nombreCompleto, $rolId, $activo);
+    }
+
+    public function desactivarUsuario(int $usuarioId): bool
+    {
+        return $this->repository->cambiarEstadoUsuario($usuarioId, false);
+    }
+
+    public function activarUsuario(int $usuarioId): bool
+    {
+        return $this->repository->cambiarEstadoUsuario($usuarioId, true);
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @return array<string, mixed>|null
+     */
+    public function obtenerUsuarioPorId(int $usuarioId): ?array
+    {
+        return $this->repository->obtenerUsuarioPorId($usuarioId);
+    }
+
+    /**
+     * Obtiene todos los roles del sistema
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerRoles(): array
+    {
+        return $this->repository->obtenerRoles();
+    }
+
+    /**
+     * Cambia la contraseña de un usuario (solo administrador)
+     */
+    public function cambiarContrasena(int $usuarioId, string $nuevaContrasena): bool
+    {
+        $passwordHash = password_hash($nuevaContrasena, PASSWORD_BCRYPT);
+        return $this->repository->cambiarContrasena($usuarioId, $passwordHash);
+    }
+
+    public function obtenerFotoUsuario(int $usuarioId): ?array
+    {
+        return $this->repository->obtenerFotoUsuario($usuarioId);
+    }
+
+    public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
+    {
+        return $this->repository->agregarFotoUsuario($usuarioId, $rutaFoto, $descripcion);
     }
 }

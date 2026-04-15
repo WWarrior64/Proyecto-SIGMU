@@ -23,9 +23,14 @@ final class SigmuRepository
     public function setUsuarioSesion(int $userId): void
     {
         // En tu BD esto setea la variable @usuario_id_sesion (vía stored procedure).
-        $stmt = $this->db->prepare('CALL set_usuario_sesion(:user_id)');
-        $stmt->execute(['user_id' => $userId]);
-        $stmt->closeCursor();
+        try {
+            $stmt = $this->db->prepare('CALL set_usuario_sesion(:user_id)');
+            $stmt->execute(['user_id' => $userId]);
+            $stmt->closeCursor();
+        } catch (\Throwable $e) {
+            // No romper toda la pagina si falla la sesion BD
+            error_log('Error al iniciar sesion BD: ' . $e->getMessage());
+        }
     }
 
     public function limpiarUsuarioSesion(): void
@@ -291,12 +296,44 @@ final class SigmuRepository
     /**
      * Agrega una foto a un activo
      */
+    public function obtenerFotoActivoPrincipal(int $activoId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto FROM activo_foto WHERE activo_id = ? AND es_principal = 1 ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$activoId]);
+        
+        $foto = $stmt->fetch();
+        return is_array($foto) ? $foto : null;
+    }
+
+    public function eliminarFotoActivo(int $fotoId): bool
+    {
+        $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE id = ?");
+        $stmt->execute([$fotoId]);
+        $rutaFoto = $stmt->fetchColumn();
+
+        // ✅ Eliminar archivo fisico del servidor
+        if ($rutaFoto && file_exists('public/' . $rutaFoto)) {
+            unlink('public/' . $rutaFoto);
+        }
+
+        $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE id = ?");
+        return $stmt->execute([$fotoId]);
+    }
+
     public function agregarFotoActivo(
         int $activoId,
         string $rutaFoto,
         string $descripcion = '',
         bool $esPrincipal = false
     ): int {
+        // ✅ Logica IGUAL que usuarios: si es principal, desmarcar todos los anteriores
+        if ($esPrincipal) {
+            $fotoAnterior = $this->obtenerFotoActivoPrincipal($activoId);
+            if ($fotoAnterior) {
+                $this->eliminarFotoActivo($fotoAnterior['id']);
+            }
+        }
+
         $stmt = $this->db->prepare(
             'CALL sp_agregar_foto_activo(:activo_id, :ruta, :descripcion, :es_principal)'
         );
@@ -314,6 +351,19 @@ final class SigmuRepository
         if (!$result || !isset($result['nueva_foto_id'])) {
             throw new RuntimeException('Could not get logged photo ID.');
         }
+
+        // ✅ REGISTRAR CAMBIO DE FOTO EN EL HISTORIAL
+        $stmtHistorial = $this->db->prepare("
+            INSERT INTO historial_activo 
+            (activo_id, usuario_id, accion, detalle, fecha)
+            VALUES (?, ?, 'modificacion', ?, NOW())
+        ");
+
+        $stmtHistorial->execute([
+            $activoId,
+            isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0,
+            'Se actualizó la foto principal del activo'
+        ]);
 
         return (int) $result['nueva_foto_id'];
     }
@@ -351,7 +401,7 @@ final class SigmuRepository
 
         // Insertamos el token con expiración.
         $stmt = $this->db->prepare(
-            'INSERT INTO password_reset_tokens (usuario_id, token_hash, expires_at)
+            'INSERT INTO password_reset_token (usuario_id, token_hash, expires_at)
              VALUES (:usuario_id, :token_hash, :expires_at)'
         );
         $stmt->execute([
@@ -369,7 +419,7 @@ final class SigmuRepository
         $tokenHash = hash('sha256', $tokenPlain);
         $stmt = $this->db->prepare(
             'SELECT 1
-             FROM password_reset_tokens
+             FROM password_reset_token
              WHERE token_hash = :token_hash
                AND used_at IS NULL
                AND expires_at > NOW()
@@ -386,7 +436,7 @@ final class SigmuRepository
 
         $stmt = $this->db->prepare(
             'UPDATE usuario u
-             JOIN password_reset_tokens prt ON prt.usuario_id = u.id
+             JOIN password_reset_token prt ON prt.usuario_id = u.id
              SET u.contrasena_hash = :new_hash,
                  prt.used_at = NOW()
              WHERE prt.token_hash = :token_hash
@@ -400,5 +450,176 @@ final class SigmuRepository
         ]);
 
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Obtiene todos los usuarios del sistema (vista administrador)
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodosUsuarios(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT 
+                u.id,
+                u.username,
+                u.email,
+                u.nombre_completo,
+                u.rol_id,
+                r.nombre AS rol_nombre,
+                u.activo,
+                u.fecha_creado
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             ORDER BY u.nombre_completo'
+        );
+
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    public function registrarUsuario(string $username, string $email, string $passwordHash, string $nombreCompleto, int $rolId): int
+    {
+        $stmt = $this->db->prepare("CALL sp_registrar_usuario(:username, :email, :passhash, :nombre, :rol_id)");
+        $stmt->execute([
+            'username' => $username,
+            'email' => $email,
+            'passhash' => $passwordHash,
+            'nombre' => $nombreCompleto,
+            'rol_id' => $rolId
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return (int) $result['nuevo_usuario_id'] ?? 0;
+    }
+
+    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_editar_usuario(:id, :email, :nombre, :rol_id, :activo)");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'email' => $email,
+            'nombre' => $nombreCompleto,
+            'rol_id' => $rolId,
+            'activo' => $activo
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
+    }
+
+    public function cambiarEstadoUsuario(int $usuarioId, bool $activo): bool
+    {
+        $stmt = $this->db->prepare("UPDATE usuario SET activo = :activo WHERE id = :id");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'activo' => $activo
+        ]);
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    public function obtenerFotoUsuario(int $usuarioId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto FROM usuario_foto WHERE usuario_id = :usuario_id ORDER BY id DESC LIMIT 1");
+        $stmt->execute(['usuario_id' => $usuarioId]);
+        
+        $foto = $stmt->fetch();
+        return is_array($foto) ? $foto : null;
+    }
+
+    public function eliminarFotoUsuario(int $fotoId): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_eliminar_foto_usuario(:foto_id)");
+        $stmt->execute(['foto_id' => $fotoId]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_eliminadas']) && $result['filas_eliminadas'] > 0;
+    }
+
+    public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
+    {
+        // Eliminar fotos anteriores antes de agregar la nueva
+        $fotoAnterior = $this->obtenerFotoUsuario($usuarioId);
+        if ($fotoAnterior) {
+            $this->eliminarFotoUsuario($fotoAnterior['id']);
+            
+            // Eliminar archivo fisico del servidor
+            $rutaCompleta = __DIR__ . '/../../public' . $fotoAnterior['ruta_foto'];
+            if (file_exists($rutaCompleta)) {
+                unlink($rutaCompleta);
+            }
+        }
+
+        $stmt = $this->db->prepare("CALL sp_agregar_foto_usuario(:usuario_id, :ruta, :descripcion)");
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'ruta' => $rutaFoto,
+            'descripcion' => $descripcion
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return (int) $result['nueva_foto_id'] ?? 0;
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @return array<string, mixed>|null
+     */
+    public function obtenerUsuarioPorId(int $usuarioId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 
+                u.id,
+                u.username,
+                u.email,
+                u.nombre_completo,
+                u.rol_id,
+                r.nombre AS rol_nombre,
+                u.activo,
+                u.fecha_creado
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             WHERE u.id = :id
+             LIMIT 1'
+        );
+        
+        $stmt->execute(['id' => $usuarioId]);
+        $usuario = $stmt->fetch();
+        
+        return is_array($usuario) ? $usuario : null;
+    }
+
+    /**
+     * Obtiene todos los roles del sistema
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerRoles(): array
+    {
+        $stmt = $this->db->query('SELECT id, nombre, descripcion FROM vista_roles ORDER BY id');
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    /**
+     * Cambia la contraseña de un usuario
+     */
+    public function cambiarContrasena(int $usuarioId, string $passwordHash): bool
+    {
+        $stmt = $this->db->prepare("CALL sp_cambiar_contrasena(:id, :passhash)");
+        $stmt->execute([
+            'id' => $usuarioId,
+            'passhash' => $passwordHash
+        ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
     }
 }
