@@ -14,6 +14,12 @@
     min-height: 60px;
 }
 
+/* HISTORIAL GENERAL: 8 COLUMNAS (añade columna Activo) */
+.historial-general-table .table-header .table-row,
+.historial-general-table .table-row {
+    grid-template-columns: 180px 60px 180px 1fr 130px 130px 130px 130px !important;
+}
+
 /* CELDAS BASE */
 .table-cell {
     font-size: 13.5px;

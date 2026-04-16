@@ -269,8 +269,26 @@ class Activo
                         $cambio['nuevo']
                     );
 
-                    // ✅ Si es cambio de estado: usamos accion 'cambio_estado' en lugar de 'modificacion'
-                    $accion = $cambio['campo'] === 'estado' ? 'cambio_estado' : 'modificacion';
+                    // ✅ Detectar tipo de accion correctamente
+                    if ($cambio['campo'] === 'estado') {
+                        $accion = 'cambio_estado';
+                    } elseif ($cambio['campo'] === 'sala_id') {
+                        $accion = 'traslado';
+                        
+                        // ✅ Reemplazar IDs de sala por nombres ANTES de grabar
+                        $salaAnterior = $this->obtenerSalaConEdificio((int)$cambio['anterior']);
+                        $salaNueva = $this->obtenerSalaConEdificio((int)$cambio['nuevo']);
+                        
+                        if ($salaAnterior && $salaNueva) {
+                            $detalle = sprintf('Se modificó %s: "%s" → "%s"',
+                                $cambio['nombre'],
+                                $salaAnterior['sala_nombre'],
+                                $salaNueva['sala_nombre']
+                            );
+                        }
+                    } else {
+                        $accion = 'modificacion';
+                    }
 
                     $stmtHistorial = $this->db->prepare("
                         INSERT INTO historial_activo 
@@ -465,7 +483,33 @@ class Activo
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ✅ Compatibilidad con registros antiguos: reemplazar IDs por nombres
+            foreach ($historial as &$registro) {
+                // Reemplazar IDs de sala por nombres en registros antiguos
+                if (!empty($registro['detalle'])) {
+                    // Reemplazar sala anterior
+                    if (!empty($registro['sala_anterior_id']) && !empty($registro['sala_anterior_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_anterior_id'] . '"',
+                            '"' . $registro['sala_anterior_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                    // Reemplazar sala nueva
+                    if (!empty($registro['sala_nueva_id']) && !empty($registro['sala_nueva_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_nueva_id'] . '"',
+                            '"' . $registro['sala_nueva_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                }
+            }
+            unset($registro);
+
+            return $historial;
         } catch (\PDOException $e) {
             return [];
         }

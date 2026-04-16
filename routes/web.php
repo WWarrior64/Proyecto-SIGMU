@@ -9,6 +9,7 @@ use App\Http\Controllers\SigmuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EdificioController;
 use App\Http\Controllers\ActivoController;
+use App\Http\Controllers\HistorialController;
 
 // Rutas públicas / navegación base.
 $router->get('/', static function (): string {
@@ -278,4 +279,10 @@ $router->get('/sigmu/activo/historial', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
     return $controller->historial($id);
+});
+
+// Historial General de Cambios
+$router->get('/sigmu/historial', static function (): string {
+    $controller = new \App\Http\Controllers\HistorialController();
+    return $controller->index();
 });
