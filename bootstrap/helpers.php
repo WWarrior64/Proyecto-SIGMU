@@ -28,47 +28,89 @@ if (!function_exists('view')) {
             return 'View not found: ' . $viewPath;
         }
 
+        // ✅ AGREGAR AUTOMATICAMENTE DATOS DEL USUARIO A TODAS LAS VISTAS
+        if (isset($_SESSION['auth_user'])) {
+            $data['authUser'] = $_SESSION['auth_user'];
+            
+            // Cargar foto de perfil si existe y no está en sesión
+            if (!isset($data['authUser']['foto'])) {
+                try {
+                    $db = \App\Support\Database::connection();
+                    $stmt = $db->prepare("SELECT ruta_foto FROM usuario_foto WHERE usuario_id = ? ORDER BY id DESC LIMIT 1");
+                    $stmt->execute([$_SESSION['auth_user']['id']]);
+                    $foto = $stmt->fetchColumn();
+                    if ($foto) {
+                        $data['authUser']['foto'] = $foto;
+                    }
+                } catch (Throwable $e) {
+                    // Silenciar error si no existe la tabla o no hay foto
+                }
+            }
+        }
+
         // Pasamos $data a variables sueltas para usarlas en la vista.
         extract($data, EXTR_SKIP);
         ob_start();
         require $viewPath;
-        return (string) ob_get_clean();
+        $output = (string) ob_get_clean();
+
+        // ✅ AUTO-RECARGA POR EXPIRACIÓN (JS)
+        // Inyectamos el script que cerrará la sesión automáticamente al cumplirse el tiempo
+        if (isset($_SESSION['auth_user']) && isset($_SESSION['ultima_actividad'])) {
+            $timeoutMs = defined('SESSION_TIMEOUT') ? SESSION_TIMEOUT * 1000 : 900000;
+            $elapsedMs = (time() - $_SESSION['ultima_actividad']) * 1000;
+            $remainingMs = max(0, $timeoutMs - $elapsedMs);
+            
+            $userData = json_encode($data['authUser'] ?? []);
+            
+            $script = "
+            <script>
+                // Datos del usuario para el menú lateral
+                window.authUser = {$userData};
+                
+                // Lógica de auto-recarga al expirar la sesión
+                (function() {
+                    const remaining = {$remainingMs};
+                    console.log('Sesión expira en: ' + (remaining/1000) + 's');
+                    
+                    setTimeout(function() {
+                        console.log('Sesión expirada. Recargando...');
+                        window.location.reload();
+                    }, remaining + 1000); // 1 segundo de margen
+                })();
+            </script>";
+            
+            $output .= $script;
+        }
+
+        return $output;
     }
 }
 
 /**
- * ✅ TIMEOUT DE SESION POR INACTIVIDAD
- * 100% nativo PHP, sin dependencias, sin composer, se ejecuta AUTOMATICAMENTE en TODAS las paginas
+ * ✅ TIMEOUT DE SESION POR INACTIVIDAD (Nativo)
  */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ✅ Tiempo de inactividad permitido: 15 MINUTOS (900 segundos)
-define('SESSION_TIMEOUT', 900);
+// Tiempo de inactividad permitido: 15 MINUTOS (900 segundos)
+if (!defined('SESSION_TIMEOUT')) {
+    define('SESSION_TIMEOUT', 900);
+}
 
-// Si hay sesion iniciada
 if (isset($_SESSION['auth_user'])) {
-
-    // Si ya tenemos tiempo de ultima actividad
     if (isset($_SESSION['ultima_actividad'])) {
-        
-        // Calcular tiempo transcurrido
         $tiempo_transcurrido = time() - $_SESSION['ultima_actividad'];
         
-        // Si paso mas tiempo del permitido: CERRAR SESION
         if ($tiempo_transcurrido > SESSION_TIMEOUT) {
-            
-            // Destruir sesion completamente
             session_unset();
             session_destroy();
-            
-            // Redirigir al login con mensaje
-            header('Location: /sigmu/login?timeout=1');
+            // Redirigir al dashboard que mostrará el login con el parámetro correcto
+            header('Location: /sigmu?timeout=1');
             exit;
         }
     }
-    
-    // Actualizar tiempo de ultima actividad EN CADA CARGA DE PAGINA
+    // Actualizar marca de tiempo
     $_SESSION['ultima_actividad'] = time();
 }

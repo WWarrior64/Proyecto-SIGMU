@@ -24,8 +24,7 @@ $router->get('/sigmu', static function (): string {
 });
 
 $router->get('/sigmu/admin/usuarios', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/gestion_usuarios.php';
-    return '';
+    return view('administracion_usuarios.gestion_usuarios');
 });
 
 // Login (POST) - valida usuario/contraseña contra tabla usuarios.
@@ -158,13 +157,11 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
 
 // RUTAS ADMINISTRACION USUARIOS
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/gestion_usuarios.php';
-    return '';
+    return view('administracion_usuarios.gestion_usuarios');
 });
 
 $router->get('/sigmu/administracion_usuarios/formulario_usuario', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/formulario_usuario.php';
-    return '';
+    return view('administracion_usuarios.formulario_usuario');
 });
 
 $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function (): string {

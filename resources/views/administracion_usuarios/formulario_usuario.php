@@ -47,7 +47,7 @@ if ($modo === 'editar' && $usuario_id) {
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
         </div>
         <div class="header-right">
@@ -210,7 +210,7 @@ if ($modo === 'editar' && $usuario_id) {
         </div>
     </main>
 
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/formulario-usuario.js"></script>
-
-</body>
+    </body>
 </html>
