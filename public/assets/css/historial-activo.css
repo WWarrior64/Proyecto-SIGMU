@@ -65,10 +65,12 @@
     font-size: 13.5px;
     color: var(--text-primary);
     font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
     min-width: 0;
+    line-height: 1.4;
 }
 
 /* ESTADO */
