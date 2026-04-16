@@ -622,4 +622,21 @@ final class SigmuRepository
         
         return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
     }
+
+    /**
+     * Permite a un usuario editar su propio perfil (nombre y email)
+     */
+    public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE usuario SET email = :email, nombre_completo = :nombre 
+             WHERE id = :id"
+        );
+        
+        return $stmt->execute([
+            'id' => $usuarioId,
+            'email' => $email,
+            'nombre' => $nombreCompleto
+        ]);
+    }
 }

@@ -41,6 +41,18 @@ $router->get('/sigmu/logout', static function (): string {
     return '';
 });
 
+// Perfil de usuario
+$router->get('/sigmu/perfil', static function (): string {
+    $controller = new \App\Http\Controllers\UserController();
+    return $controller->perfil();
+});
+
+$router->post('/sigmu/perfil/actualizar', static function (): string {
+    $controller = new \App\Http\Controllers\UserController();
+    $controller->actualizarPerfil();
+    return '';
+});
+
 // Recuperar contraseña - formulario
 $router->get('/sigmu/recuperar', static function (): string {
     $controller = new AuthController();
