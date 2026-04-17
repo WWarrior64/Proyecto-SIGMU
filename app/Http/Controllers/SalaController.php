@@ -49,8 +49,11 @@ final class SalaController
             $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
             
             // Filtros (opcional en esta vista)
-            $estados = $_GET['estados'] ?? [];
-            $tipos = $_GET['tipos'] ?? [];
+            $estados = (array)($_GET['estados'] ?? []);
+            $tipos = array_filter(array_map('intval', (array)($_GET['tipos'] ?? [])));
+            
+            // Obtener todos los tipos de activo para el filtro del frontend
+            $todosLosTipos = $this->activoModelo->obtenerTiposActivo();
 
             // Obtener activos de la sala (Filtrado en BD)
             $activos = $this->activoModelo->listar($pagina, $porPagina, $busqueda, $estados, $tipos, $salaId, $ordenarPor, $ordenDireccion);
@@ -82,7 +85,10 @@ final class SalaController
                 'edificio' => $edificioNombre,
                 'edificio_id' => $edificioId,
                 'ordenarPor' => $ordenarPor,
-                'ordenDireccion' => $ordenDireccion
+                'ordenDireccion' => $ordenDireccion,
+                'tiposDisponibles' => $todosLosTipos,
+                'estadosSeleccionados' => $estados,
+                'tiposSeleccionados' => $tipos
             ]);
         } catch (Throwable $exception) {
             return '<h2>Error</h2><p>' . htmlspecialchars($exception->getMessage()) . '</p>';

@@ -56,6 +56,20 @@ class Activo
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
+
+            // 🎯 Filtro por ESTADO
+            if (!empty($estados) && is_array($estados)) {
+                $placeholders = [];
+                foreach ($estados as $idx => $estado) {
+                    $key = ":estado_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = $estado;
+                }
+                $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
+            } else {
+                // Ningun filtro marcado: excluir solo descartado
+                $sql .= " AND a.estado != 'descartado'";
+            }
             
             // 🎯 Filtro por TIPO DE ACTIVO
             if (!empty($tipos) && is_array($tipos)) {
@@ -127,7 +141,6 @@ class Activo
             }
             
             // 🎯 Filtro por ESTADO
-            // ✅ MISMO COMPORTAMIENTO EN EL CONTADOR PARA PAGINACION
             if (!empty($estados) && is_array($estados)) {
                 $placeholders = [];
                 foreach ($estados as $idx => $estado) {
