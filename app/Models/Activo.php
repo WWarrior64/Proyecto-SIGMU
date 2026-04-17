@@ -26,7 +26,7 @@ class Activo
      * @param array $estados Array de estados a filtrar (vacio = todos)
      * @param array $tipos Array de tipos de activo a filtrar (vacio = todos)
      */
-    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = [], string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
+    public function listar(int $pagina = 1, int $porPagina = 50, string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0, string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
     {
         try {
             $offset = ($pagina - 1) * $porPagina;
@@ -46,18 +46,18 @@ class Activo
             
             $params = [];
             
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
+            
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
             
-            // ✅ ✅ ✅ SE ELIMINA EL FILTRO SERVIDOR:
-            // Ahora TODOS LOS ACTIVOS (incluidos descartados) se envian al cliente
-            // El filtrado se hace 100% en el navegador con Javascript
-            // Esto permite mostrar ocultar activos descartados sin recargar la pagina
-            
-            // 🎯 Filtro por TIPO DE ACTIVO (admite multiples valores al mismo tiempo)
+            // 🎯 Filtro por TIPO DE ACTIVO
             if (!empty($tipos) && is_array($tipos)) {
                 $placeholders = [];
                 foreach ($tipos as $idx => $tipoId) {
@@ -86,7 +86,7 @@ class Activo
             
             $stmt = $this->db->prepare($sql);
             
-            // Bind de parametros integer correctamente (evita error de tipo en MySQL)
+            // Bind de parametros integer correctamente
             $stmt->bindParam(':limit', $porPagina, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             
@@ -109,11 +109,16 @@ class Activo
     /**
      * Contar total de activos para paginación con filtros aplicados
      */
-    public function contar(string $busqueda = '', array $estados = [], array $tipos = []): int
+    public function contar(string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0): int
     {
         try {
             $sql = "SELECT COUNT(*) as total FROM activo a LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
             $params = [];
+            
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
             
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {

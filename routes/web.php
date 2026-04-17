@@ -8,8 +8,10 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SigmuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EdificioController;
+use App\Http\Controllers\SalaController;
 use App\Http\Controllers\ActivoController;
 use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\TipoActivoController;
 
 // Rutas públicas / navegación base.
 $router->get('/', static function (): string {
@@ -88,56 +90,28 @@ $router->get('/sigmu/edificio', static function (): string {
     return $controller->salasPorEdificio();
 });
 
-// Rutas de activos
+// Rutas de salas (NUEVO)
 $router->get('/sigmu/sala', static function (): string {
-    $controller = new ActivoController();
-    return $controller->activosPorSala();
+    $controller = new SalaController();
+    return $controller->activos();
 });
 
-$router->get('/sigmu/activo/registrar', static function (): string {
-    $controller = new ActivoController();
-    return $controller->registrarActivoGet();
-});
-
-$router->post('/sigmu/activo/registrar', static function (): string {
-    $controller = new ActivoController();
-    return $controller->registrarActivoPost();
-});
-
-// Endpoint AJAX para generar código basado en nombre del activo
-$router->get('/sigmu/activo/generar-codigo', static function (): void {
-    $controller = new ActivoController();
-    $controller->generarCodigo();
-});
-
-// Endpoint AJAX para obtener tipos de activo (filtros)
-$router->get('/sigmu/activo/tipos', static function (): void {
-    $controller = new ActivoController();
-    $controller->obtenerTiposActivo();
-});
-
-// Routes for asset CRUD (using query parameters)
-$router->get('/activos', static function (): string {
-    $controller = new ActivoController();
-    return $controller->index();
-});
-
-$router->get('/activos/create', static function (): string {
-    $controller = new ActivoController();
-    return $controller->create();
-});
-
-$router->post('/activos', static function (): string {
-    $controller = new ActivoController();
-    $controller->store();
-    return '';
-});
-
-// Rutas adicionales para compatibilidad con vistas
+// Rutas de activos (CRUD REESTRUCTURADO)
 $router->get('/sigmu/activo/ver', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
     return $controller->show($id);
+});
+
+$router->get('/sigmu/activo/registrar', static function (): string {
+    $controller = new ActivoController();
+    return $controller->create();
+});
+
+$router->post('/sigmu/activo/registrar', static function (): string {
+    $controller = new ActivoController();
+    $controller->store();
+    return '';
 });
 
 $router->get('/sigmu/activo/editar', static function (): string {
@@ -156,7 +130,7 @@ $router->post('/sigmu/activo/actualizar', static function (): string {
 $router->post('/sigmu/activo/dar-baja', static function (): string {
     $id = (int) ($_POST['id'] ?? 0);
     $controller = new ActivoController();
-    return $controller->darDeBaja($id);
+    $controller->darDeBaja($id);
     return '';
 });
 
@@ -165,6 +139,23 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
     $controller = new ActivoController();
     $controller->destroy($id);
     return '';
+});
+
+$router->get('/sigmu/activo/historial', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new ActivoController();
+    return $controller->historial($id);
+});
+
+// Endpoints AJAX
+$router->get('/sigmu/activo/generar-codigo', static function (): void {
+    $controller = new ActivoController();
+    $controller->generarCodigo();
+});
+
+$router->get('/sigmu/activo/tipos', static function (): void {
+    $controller = new TipoActivoController();
+    $controller->index();
 });
 
 // RUTAS ADMINISTRACION USUARIOS

@@ -363,4 +363,9 @@ final class SigmuService
     {
         return $this->repository->agregarFotoUsuario($usuarioId, $rutaFoto, $descripcion);
     }
+
+    public function agregarFotoActivo(int $activoId, string $rutaFoto, string $descripcion = '', bool $esPrincipal = true): int
+    {
+        return $this->repository->agregarFotoActivo($activoId, $rutaFoto, $descripcion, $esPrincipal);
+    }
 }
