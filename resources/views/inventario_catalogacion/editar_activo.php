@@ -229,43 +229,5 @@ $csrfToken = Csrf::getToken();
 
     <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/activo-form.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const edificioSelect = document.getElementById('edificio_id');
-        const salaSelect = document.getElementById('sala_id');
-        const allSalas = Array.from(salaSelect.options);
-
-        function filterSalas() {
-            const edificioId = edificioSelect.value;
-            const currentSalaId = salaSelect.value;
-            
-            // Limpiar opciones actuales
-            salaSelect.innerHTML = '<option value="">Seleccionar sala...</option>';
-            
-            // Filtrar y agregar salas que pertenecen al edificio
-            const filteredSalas = allSalas.filter(option => {
-                return option.value === "" || option.getAttribute('data-edificio') === edificioId;
-            });
-            
-            filteredSalas.forEach(option => {
-                if (option.value !== "") {
-                    salaSelect.appendChild(option.cloneNode(true));
-                }
-            });
-
-            // Si la sala anteriormente seleccionada sigue en la lista, mantenerla
-            if (currentSalaId) {
-                salaSelect.value = currentSalaId;
-            }
-        }
-
-        edificioSelect.addEventListener('change', filterSalas);
-        
-        // Ejecutar al cargar para inicializar el estado
-        if (edificioSelect.value) {
-            filterSalas();
-        }
-    });
-    </script>
 </body>
 </html>

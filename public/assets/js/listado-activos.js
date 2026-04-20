@@ -19,10 +19,45 @@ document.addEventListener('DOMContentLoaded', function() {
     initMenu();
     initAnimations();
     initAlertsAutoHide();
+    initSorting();
     
     // ✅ Aplicar filtro por defecto al cargar
     filterByStatus(activeStatusFilters);
 });
+
+/**
+ * Sorting functionality
+ */
+function initSorting() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    console.log('🔍 Encontrados', sortableHeaders.length, 'encabezados ordenables');
+    
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const sortField = this.getAttribute('data-sort');
+            console.log('👉 Click en ordenar por:', sortField);
+            
+            // Usar URLSearchParams para capturar todos los parámetros GET actuales
+            let params = new URLSearchParams(window.location.search);
+            
+            // Si ya estamos ordenando por este campo, invertir la dirección
+            if (params.get('ordenar_por') === sortField) {
+                params.set('orden_direccion', params.get('orden_direccion') === 'ASC' ? 'DESC' : 'ASC');
+            } else {
+                params.set('ordenar_por', sortField);
+                params.set('orden_direccion', 'ASC');
+            }
+            
+            // Resetear a página 1 al cambiar ordenamiento
+            params.set('pagina', '1');
+            
+            // Redirigir conservando todos los parámetros (filtros, búsqueda, sala_id, etc.)
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+}
 
 /**
  * Search functionality

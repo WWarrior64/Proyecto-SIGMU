@@ -96,11 +96,11 @@ $usuarios = $service->obtenerTodosUsuarios();
             </div>
 
             <!-- PANEL DE FILTROS FUNCIONAL -->
-            <div id="filterPanel" style="display: none; margin-bottom: 24px; padding: 16px; background: #f8f8f8; border-radius: 8px; border: 1px solid #ddd;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div id="filterPanel" class="filter-panel" style="display: none;">
+                <div class="filter-grid">
                     <div>
-                        <label for="filterRol" style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Rol:</label>
-                        <select id="filterRol" style="width: 100%; padding: 8px 12px; border: 1px solid #9E9E9E; border-radius: 6px;">
+                        <label for="filterRol" class="filter-label">Filtrar por Rol:</label>
+                        <select id="filterRol" class="filter-select">
                             <option value="">Todos los Roles</option>
                             <option value="Administrador">Administrador</option>
                             <option value="Responsable de Area">Responsable de Area</option>
@@ -108,16 +108,16 @@ $usuarios = $service->obtenerTodosUsuarios();
                         </select>
                     </div>
                     <div>
-                        <label for="filterEstado" style="font-weight: 600; margin-bottom: 8px; display: block;">Filtrar por Estado:</label>
-                        <select id="filterEstado" style="width: 100%; padding: 8px 12px; border: 1px solid #9E9E9E; border-radius: 6px;">
+                        <label for="filterEstado" class="filter-label">Filtrar por Estado:</label>
+                        <select id="filterEstado" class="filter-select">
                             <option value="">Todos los Estados</option>
                             <option value="Activo">Solo Activos</option>
                             <option value="Inactivo">Solo Inactivos</option>
                         </select>
                     </div>
                     <div>
-                        <label for="resetFilters" style="font-weight: 600; margin-bottom: 8px; display: block;">&nbsp;</label>
-                        <button id="resetFilters" style="width: 100%; padding: 8px 12px; background: #9E9E9E; color: white; border: none; border-radius: 6px; cursor: pointer;">Limpiar Filtros</button>
+                        <label class="filter-label">&nbsp;</label>
+                        <button id="resetFilters" class="btn-reset">Limpiar Filtros</button>
                     </div>
                 </div>
             </div>
