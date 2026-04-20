@@ -37,6 +37,20 @@ final class ActivoController
             return '';
         }
 
+        // ✅ VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
+        $user = Session::get('auth_user');
+        if ($user['rol_nombre'] !== 'Administrador') {
+            // Usamos las salas accesibles para el usuario
+            $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
+            $idsSalas = array_column($salasAccesibles, 'id');
+            
+            if (!in_array((int)$activo['sala_id'], $idsSalas)) {
+                $mensaje = "El activo se ha movido correctamente, pero ya no tienes acceso a él por estar fuera de tu jurisdicción.";
+                header('Location: /sigmu/edificios?info=' . urlencode($mensaje));
+                return '';
+            }
+        }
+
         // Obtener foto principal (delegado al modelo/service en el futuro)
         $db = \App\Support\Database::connection();
         $stmt = $db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? ORDER BY es_principal DESC, id DESC LIMIT 1");

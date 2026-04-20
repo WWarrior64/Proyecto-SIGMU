@@ -176,15 +176,21 @@ class Activo
     }
 
     /**
-     * Obtener un activo por su ID
+     * Obtener un activo por su ID con información extendida (creador, sala, edificio)
      */
     public function obtenerPorId(int $id): ?array
     {
         try {
             $stmt = $this->db->prepare(
-                "SELECT a.*, ta.nombre as tipo 
+                "SELECT a.*, ta.nombre as tipo, 
+                        u.nombre_completo as usuario_creador_nombre,
+                        s.nombre as sala_nombre,
+                        e.nombre as edificio_nombre
                  FROM activo a 
                  LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id 
+                 LEFT JOIN usuario u ON a.usuario_creador_id = u.id
+                 LEFT JOIN sala s ON a.sala_id = s.id
+                 LEFT JOIN edificio e ON s.edificio_id = e.id
                  WHERE a.id = :id"
             );
             $stmt->execute([':id' => $id]);
@@ -192,7 +198,7 @@ class Activo
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             return $resultado ?: null;
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar null
+            error_log("Error en Activo::obtenerPorId: " . $e->getMessage());
             return null;
         }
     }

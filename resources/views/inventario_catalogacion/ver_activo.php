@@ -132,8 +132,11 @@ $error = $_GET['error'] ?? '';
                             <span class="metadata-value"><?= (int) ($activo['id'] ?? 0) ?></span>
                         </div>
                         <div class="metadata-card">
-                            <span class="metadata-label">Sala ID</span>
-                            <span class="metadata-value"><?= (int) ($activo['sala_id'] ?? 0) ?></span>
+                            <span class="metadata-label">Ubicación</span>
+                            <span class="metadata-value" style="font-size: 0.85em;">
+                                <?= htmlspecialchars((string) ($activo['sala_nombre'] ?? 'Sin sala'), ENT_QUOTES, 'UTF-8') ?><br>
+                                <small style="opacity: 0.8;"><?= htmlspecialchars((string) ($activo['edificio_nombre'] ?? 'Sin edificio'), ENT_QUOTES, 'UTF-8') ?></small>
+                            </span>
                         </div>
                         <div class="metadata-card">
                             <span class="metadata-label">Código</span>
@@ -169,7 +172,7 @@ $error = $_GET['error'] ?? '';
                         <div class="detail-group">
                             <label class="detail-label">Creado Por</label>
                             <div class="detail-value">
-                                <?= htmlspecialchars((string) ($activo['usuario_creador_id'] ?? 'Sistema'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars((string) ($activo['usuario_creador_nombre'] ?? $activo['usuario_creador_id'] ?? 'Sistema'), ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         </div>
 
@@ -183,11 +186,18 @@ $error = $_GET['error'] ?? '';
                             </div>
                         </div>
 
-                        <!-- Fecha de Creación -->
+                        <!-- Fechas -->
                         <div class="detail-group">
                             <label class="detail-label">Fecha de Creación</label>
                             <div class="detail-value">
                                 <?= htmlspecialchars((string) ($activo['fecha_creado'] ?? 'No disponible'), ENT_QUOTES, 'UTF-8') ?>
+                            </div>
+                        </div>
+
+                        <div class="detail-group">
+                            <label class="detail-label">Última Actualización</label>
+                            <div class="detail-value">
+                                <?= htmlspecialchars((string) ($activo['fecha_actualizado'] ?? 'Nunca'), ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         </div>
                     </div>

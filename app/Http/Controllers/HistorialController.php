@@ -28,6 +28,7 @@ class HistorialController
             // Obtener usuario de sesion
             $usuario = $_SESSION['auth_user'] ?? [];
             $esAdministrador = isset($usuario['rol_nombre']) && $usuario['rol_nombre'] === 'Administrador';
+            $userId = (int)($usuario['id'] ?? 0);
 
             // Obtener parametros de filtros
             $busqueda = trim((string) ($_GET['busqueda'] ?? ''));
@@ -35,26 +36,67 @@ class HistorialController
             $filtroEstado = trim((string) ($_GET['estado'] ?? ''));
             $filtroUsuario = filter_input(INPUT_GET, 'usuario', FILTER_VALIDATE_INT) ?: 0;
 
-            // Construir consulta base usando la vista existente del sistema
+            // Obtener IDs de edificios accesibles para el usuario (si no es admin)
+            $edificiosAccesiblesIds = [];
+            if (!$esAdministrador) {
+                $stmtEdificios = $this->db->prepare("
+                    SELECT edificio_id FROM usuario_edificio WHERE usuario_id = ?
+                    UNION
+                    SELECT id FROM edificio WHERE 1 = (SELECT ver_todo FROM rol WHERE id = ?)
+                ");
+                $stmtEdificios->execute([$userId, $usuario['rol_id'] ?? 0]);
+                $edificiosAccesiblesIds = $stmtEdificios->fetchAll(PDO::FETCH_COLUMN);
+            }
+
+            // Construir consulta base
             $sql = "SELECT
-                vh.*,
+                h.id, 
+                h.fecha, 
+                h.accion, 
+                h.detalle,
+                h.estado_anterior,
+                h.estado_nuevo,
+                h.sala_anterior_id,
+                h.sala_nueva_id,
+                h.usuario_id,
                 a.codigo AS activo_codigo,
                 a.nombre AS activo_nombre,
                 u.nombre_completo AS usuario_nombre,
                 u.username AS usuario_username,
                 sa.nombre AS sala_anterior_nombre,
-                sn.nombre AS sala_nueva_nombre
-            FROM vista_mis_historial vh
-            JOIN activo a ON a.id = vh.activo_id
-            JOIN usuario u ON u.id = vh.usuario_id
-            LEFT JOIN sala sa ON sa.id = vh.sala_anterior_id
-            LEFT JOIN sala sn ON sn.id = vh.sala_nueva_id
+                sn.nombre AS sala_nueva_nombre,
+                sa.edificio_id AS edificio_anterior_id,
+                sn.edificio_id AS edificio_nuevo_id
+            FROM historial_activo h
+            JOIN activo a ON a.id = h.activo_id
+            JOIN usuario u ON u.id = h.usuario_id
+            LEFT JOIN sala sa ON sa.id = h.sala_anterior_id
+            LEFT JOIN sala sn ON sn.id = h.sala_nueva_id
             WHERE 1=1";
             $params = [];
 
+            // ✅ LÓGICA DE JURISDICCIÓN REFORZADA
+            if (!$esAdministrador) {
+                if (empty($edificiosAccesiblesIds)) {
+                    // Si no tiene edificios, solo ve sus propias acciones
+                    $sql .= " AND h.usuario_id = ?";
+                    $params[] = $userId;
+                } else {
+                    $placeholders = implode(',', array_fill(0, count($edificiosAccesiblesIds), '?'));
+                    $sql .= " AND (
+                        h.usuario_id = ? 
+                        OR sa.edificio_id IN ($placeholders)
+                        OR sn.edificio_id IN ($placeholders)
+                    )";
+                    
+                    // Añadir parámetros: primero el userId, luego los edificios para sa, luego para sn
+                    $params = array_merge([$userId], $edificiosAccesiblesIds, $edificiosAccesiblesIds);
+                }
+            }
+
             // Aplicar filtros
             if (!empty($busqueda)) {
-                $sql .= " AND (detalle LIKE ? OR activo_nombre LIKE ? OR activo_codigo LIKE ? OR usuario_nombre LIKE ?)";
+                $sql .= " AND (h.detalle LIKE ? OR a.nombre LIKE ? OR a.codigo LIKE ? OR u.nombre_completo LIKE ?)";
                 $busquedaParam = "%$busqueda%";
                 $params[] = $busquedaParam;
                 $params[] = $busquedaParam;

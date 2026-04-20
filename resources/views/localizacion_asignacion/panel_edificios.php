@@ -34,11 +34,21 @@ $error = isset($error) ? (string) $error : null;
     <p><strong>Modulo:</strong> Localizacion y asignacion — jerarquia edificio &rarr; sala &rarr; activos.</p>
 
     <?php if (!empty($_GET['error'])): ?>
-        <p style="color: #b00020;">Error: <?= htmlspecialchars((string) $_GET['error'], ENT_QUOTES, 'UTF-8') ?></p>
+        <p style="color: #b00020; background-color: #fde8e8; padding: 10px; border-radius: 4px; border: 1px solid #b00020;">
+            Error: <?= htmlspecialchars((string) $_GET['error'], ENT_QUOTES, 'UTF-8') ?>
+        </p>
+    <?php endif; ?>
+
+    <?php if (!empty($_GET['info'])): ?>
+        <p style="color: #0c5460; background-color: #d1ecf1; padding: 10px; border-radius: 4px; border: 1px solid #bee5eb;">
+            ℹ️ <?= htmlspecialchars((string) $_GET['info'], ENT_QUOTES, 'UTF-8') ?>
+        </p>
     <?php endif; ?>
 
     <?php if ($error): ?>
-        <p style="color: #b00020;">Error BD: <?= htmlspecialchars((string) $error, ENT_QUOTES, 'UTF-8') ?></p>
+        <p style="color: #b00020; background-color: #fde8e8; padding: 10px; border-radius: 4px; border: 1px solid #b00020;">
+            Error BD: <?= htmlspecialchars((string) $error, ENT_QUOTES, 'UTF-8') ?>
+        </p>
     <?php endif; ?>
 
     <!-- Datos básicos de la sesión -->
