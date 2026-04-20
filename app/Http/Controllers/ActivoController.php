@@ -158,12 +158,10 @@ final class ActivoController
 
         return view('inventario_catalogacion.editar_activo', [
             'activo' => $activo,
-            'habitaciones' => $habitaciones,
-            'tiposActivo' => $tiposActivo,
-            'edificios' => $edificios,
-            'edificioActualId' => $edificioActualId
             'habitaciones' => $this->modelo->obtenerHabitaciones(),
             'tiposActivo' => $this->sigmuService->obtenerTiposActivo(),
+            'edificios' => $edificios,
+            'edificioActualId' => $edificioActualId,
             'error' => $_GET['error'] ?? ''
         ]);
     }
