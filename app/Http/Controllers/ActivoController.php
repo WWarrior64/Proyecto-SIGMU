@@ -138,13 +138,30 @@ final class ActivoController
         }
 
         $activo = $this->modelo->obtenerPorId($id);
+        $habitaciones = $this->modelo->obtenerHabitaciones();
+        $tiposActivo = $this->modelo->obtenerTiposActivo();
+        $edificios = $this->modelo->obtenerEdificios();
+        
         if (!$activo) {
             header('Location: /sigmu/edificios?error=activo_no_encontrado');
             return '';
         }
 
+        // Obtener el edificio_id de la sala actual para pre-seleccionarlo
+        $edificioActualId = 0;
+        foreach ($habitaciones as $h) {
+            if ($h['id'] == ($activo['sala_id'] ?? 0)) {
+                $edificioActualId = $h['edificio_id'];
+                break;
+            }
+        }
+
         return view('inventario_catalogacion.editar_activo', [
             'activo' => $activo,
+            'habitaciones' => $habitaciones,
+            'tiposActivo' => $tiposActivo,
+            'edificios' => $edificios,
+            'edificioActualId' => $edificioActualId
             'habitaciones' => $this->modelo->obtenerHabitaciones(),
             'tiposActivo' => $this->sigmuService->obtenerTiposActivo(),
             'error' => $_GET['error'] ?? ''

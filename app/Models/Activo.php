@@ -391,15 +391,27 @@ class Activo
     }
 
     /**
-     * Obtener todas las salas para el select
+     * Obtener todas las salas para el select, incluyendo el edificio_id
      */
     public function obtenerHabitaciones(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id, nombre FROM sala ORDER BY nombre");
+            $stmt = $this->db->query("SELECT id, nombre, edificio_id FROM sala ORDER BY nombre");
             return $stmt->fetchAll();
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar array vacío
+            return [];
+        }
+    }
+
+    /**
+     * Obtener todos los edificios para el select
+     */
+    public function obtenerEdificios(): array
+    {
+        try {
+            $stmt = $this->db->query("SELECT id, nombre FROM edificio ORDER BY nombre");
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
             return [];
         }
     }
