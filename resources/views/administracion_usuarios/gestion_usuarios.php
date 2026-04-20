@@ -43,7 +43,7 @@ $usuarios = $service->obtenerTodosUsuarios();
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
         </div>
         <div class="header-right">
@@ -139,7 +139,7 @@ $usuarios = $service->obtenerTodosUsuarios();
                     <div class="user-avatar">
                         <?php
                         $foto = $service->obtenerFotoUsuario($usuario['id']);
-                        if ($foto): 
+                        if ($foto):
                         ?>
                             <img src="<?= htmlspecialchars($foto['ruta_foto']) ?>" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                         <?php else: ?>
@@ -167,61 +167,7 @@ $usuarios = $service->obtenerTodosUsuarios();
 
         </div>
     </main>
-    <script>
-    // VARIABLES GLOBALES
-    const searchInput = document.querySelector('.search-box input');
-    const allUsers = document.querySelectorAll('.user-item:not(.header)');
-
-    // PANEL DE FILTROS FUNCIONAL
-    const filterBtn = document.getElementById('toggleFilterPanel');
-    const filterPanel = document.getElementById('filterPanel');
-    const filterRol = document.getElementById('filterRol');
-    const filterEstado = document.getElementById('filterEstado');
-    const resetBtn = document.getElementById('resetFilters');
-
-    filterBtn.addEventListener('click', () => {
-        filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
-    });
-
-    function aplicarFiltros() {
-        const rolSeleccionado = filterRol.value.toLowerCase().trim();
-        const estadoSeleccionado = filterEstado.value.toLowerCase().trim();
-        const busquedaTexto = searchInput.value.toLowerCase().trim();
-
-        allUsers.forEach(userRow => {
-            const username = userRow.querySelector('.user-username').textContent.toLowerCase();
-            const userRole = userRow.querySelector('.user-role').textContent.toLowerCase();
-            const userStatus = userRow.querySelector('.user-status').textContent.toLowerCase();
-
-            let coincide = true;
-
-            if (busquedaTexto !== '') {
-                coincide = coincide && (username.includes(busquedaTexto) || userRole.includes(busquedaTexto));
-            }
-
-            if (rolSeleccionado !== '') {
-                coincide = coincide && userRole.includes(rolSeleccionado);
-            }
-
-            if (estadoSeleccionado !== '') {
-                coincide = coincide && userStatus.includes(estadoSeleccionado);
-            }
-
-            userRow.style.display = coincide ? '' : 'none';
-        });
-    }
-
-    filterRol.addEventListener('change', aplicarFiltros);
-    filterEstado.addEventListener('change', aplicarFiltros);
-    searchInput.addEventListener('input', aplicarFiltros);
-
-    resetBtn.addEventListener('click', () => {
-        filterRol.value = '';
-        filterEstado.value = '';
-        searchInput.value = '';
-        allUsers.forEach(row => row.style.display = '');
-    });
-    </script>
-
+    <script src="/assets/js/gestion-usuarios.js"></script>
+    <script src="/assets/js/global-menu.js"></script>
 </body>
 </html>

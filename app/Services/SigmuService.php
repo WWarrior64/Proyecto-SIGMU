@@ -349,6 +349,11 @@ final class SigmuService
         return $this->repository->cambiarContrasena($usuarioId, $passwordHash);
     }
 
+    public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
+    {
+        return $this->repository->editarPerfil($usuarioId, $email, $nombreCompleto);
+    }
+
     public function obtenerFotoUsuario(int $usuarioId): ?array
     {
         return $this->repository->obtenerFotoUsuario($usuarioId);
@@ -357,5 +362,10 @@ final class SigmuService
     public function agregarFotoUsuario(int $usuarioId, string $rutaFoto, string $descripcion): int
     {
         return $this->repository->agregarFotoUsuario($usuarioId, $rutaFoto, $descripcion);
+    }
+
+    public function agregarFotoActivo(int $activoId, string $rutaFoto, string $descripcion = '', bool $esPrincipal = true): int
+    {
+        return $this->repository->agregarFotoActivo($activoId, $rutaFoto, $descripcion, $esPrincipal);
     }
 }

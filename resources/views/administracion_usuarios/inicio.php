@@ -30,7 +30,7 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
             <h1 class="header-title">INICIO</h1>
         </div>
@@ -103,5 +103,6 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
         </div>
     </main>
 
+    <script src="/assets/js/global-menu.js"></script>
 </body>
 </html>

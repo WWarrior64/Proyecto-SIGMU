@@ -47,7 +47,7 @@ if ($modo === 'editar' && $usuario_id) {
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
         </div>
         <div class="header-right">
@@ -133,14 +133,14 @@ if ($modo === 'editar' && $usuario_id) {
 
                         <div class="form-group">
                             <label for="nombre_completo">Nombre completo</label>
-                            <input type="text" name="nombre_completo" 
+                            <input type="text" name="nombre_completo"
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['nombre_completo']) : '' ?>"
                                    required>
                         </div>
 
                         <div class="form-group">
                             <label for="username">Username</label>
-                            <input type="text" name="username" 
+                            <input type="text" name="username"
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['username']) : '' ?>"
                                    required>
                         </div>
@@ -150,7 +150,7 @@ if ($modo === 'editar' && $usuario_id) {
                             <select name="rol_id" required>
                                 <option value="">Seleccionar rol</option>
                                 <?php foreach ($roles as $rol): ?>
-                                <option value="<?= $rol['id'] ?>" 
+                                <option value="<?= $rol['id'] ?>"
                                     <?= $modo === 'editar' && $usuario['rol_id'] == $rol['id'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($rol['nombre']) ?>
                                 </option>
@@ -168,7 +168,7 @@ if ($modo === 'editar' && $usuario_id) {
 
                         <div class="form-group">
                             <label for="email">Email</label>
-                            <input type="email" name="email" 
+                            <input type="email" name="email"
                                    value="<?= $modo === 'editar' ? htmlspecialchars($usuario['email']) : '' ?>"
                                    required>
                         </div>
@@ -196,7 +196,7 @@ if ($modo === 'editar' && $usuario_id) {
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" 
+                    <button type="button" class="btn btn-secondary"
                             onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'">
                         CANCELAR
                     </button>
@@ -210,7 +210,7 @@ if ($modo === 'editar' && $usuario_id) {
         </div>
     </main>
 
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/formulario-usuario.js"></script>
-
-</body>
+    </body>
 </html>
