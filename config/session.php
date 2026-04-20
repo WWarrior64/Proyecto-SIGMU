@@ -2,6 +2,6 @@
 
 return [
     'driver' => $_ENV['SESSION_DRIVER'] ?? 'file',
-    'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 120),
+    'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 900),
     'path' => __DIR__ . '/../storage/sessions',
 ];

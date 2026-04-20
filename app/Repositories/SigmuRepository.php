@@ -326,12 +326,10 @@ final class SigmuRepository
         string $descripcion = '',
         bool $esPrincipal = false
     ): int {
-        // ✅ Logica IGUAL que usuarios: si es principal, desmarcar todos los anteriores
+        // Si es principal, desmarcar la anterior
         if ($esPrincipal) {
-            $fotoAnterior = $this->obtenerFotoActivoPrincipal($activoId);
-            if ($fotoAnterior) {
-                $this->eliminarFotoActivo($fotoAnterior['id']);
-            }
+            $stmt = $this->db->prepare("UPDATE activo_foto SET es_principal = 0 WHERE activo_id = ?");
+            $stmt->execute([$activoId]);
         }
 
         $stmt = $this->db->prepare(
@@ -348,24 +346,7 @@ final class SigmuRepository
         $result = $stmt->fetch();
         $stmt->closeCursor();
 
-        if (!$result || !isset($result['nueva_foto_id'])) {
-            throw new RuntimeException('Could not get logged photo ID.');
-        }
-
-        // ✅ REGISTRAR CAMBIO DE FOTO EN EL HISTORIAL
-        $stmtHistorial = $this->db->prepare("
-            INSERT INTO historial_activo 
-            (activo_id, usuario_id, accion, detalle, fecha)
-            VALUES (?, ?, 'modificacion', ?, NOW())
-        ");
-
-        $stmtHistorial->execute([
-            $activoId,
-            isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0,
-            'Se actualizó la foto principal del activo'
-        ]);
-
-        return (int) $result['nueva_foto_id'];
+        return (int) ($result['nueva_foto_id'] ?? 0);
     }
 
     /**
@@ -621,5 +602,22 @@ final class SigmuRepository
         $stmt->closeCursor();
         
         return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
+    }
+
+    /**
+     * Permite a un usuario editar su propio perfil (nombre y email)
+     */
+    public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE usuario SET email = :email, nombre_completo = :nombre 
+             WHERE id = :id"
+        );
+        
+        return $stmt->execute([
+            'id' => $usuarioId,
+            'email' => $email,
+            'nombre' => $nombreCompleto
+        ]);
     }
 }

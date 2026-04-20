@@ -13,15 +13,10 @@ use Throwable;
 // Aquí solo recibimos inputs (GET/POST), llamamos al servicio y devolvemos vistas.
 final class SigmuController
 {
-    private const SESSION_LIFETIME = 120; // 2 minutos de inactividad
-    
     public function __construct(
         private readonly SigmuService $service = new SigmuService()
     ) {
-        // Iniciar sesión con control de expiración
-        Session::start(self::SESSION_LIFETIME);
     }
-
     public function dashboard(): string
     {
         // Si hay sesión, cargamos el panel. Si no, mostramos login.

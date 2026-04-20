@@ -26,7 +26,7 @@ class Activo
      * @param array $estados Array de estados a filtrar (vacio = todos)
      * @param array $tipos Array de tipos de activo a filtrar (vacio = todos)
      */
-    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = [], string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
+    public function listar(int $pagina = 1, int $porPagina = 50, string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0, string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
     {
         try {
             $offset = ($pagina - 1) * $porPagina;
@@ -46,18 +46,32 @@ class Activo
             
             $params = [];
             
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
+            
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
+
+            // 🎯 Filtro por ESTADO
+            if (!empty($estados) && is_array($estados)) {
+                $placeholders = [];
+                foreach ($estados as $idx => $estado) {
+                    $key = ":estado_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = $estado;
+                }
+                $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
+            } else {
+                // Ningun filtro marcado: excluir solo descartado
+                $sql .= " AND a.estado != 'descartado'";
+            }
             
-            // ✅ ✅ ✅ SE ELIMINA EL FILTRO SERVIDOR:
-            // Ahora TODOS LOS ACTIVOS (incluidos descartados) se envian al cliente
-            // El filtrado se hace 100% en el navegador con Javascript
-            // Esto permite mostrar ocultar activos descartados sin recargar la pagina
-            
-            // 🎯 Filtro por TIPO DE ACTIVO (admite multiples valores al mismo tiempo)
+            // 🎯 Filtro por TIPO DE ACTIVO
             if (!empty($tipos) && is_array($tipos)) {
                 $placeholders = [];
                 foreach ($tipos as $idx => $tipoId) {
@@ -86,7 +100,7 @@ class Activo
             
             $stmt = $this->db->prepare($sql);
             
-            // Bind de parametros integer correctamente (evita error de tipo en MySQL)
+            // Bind de parametros integer correctamente
             $stmt->bindParam(':limit', $porPagina, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             
@@ -109,11 +123,16 @@ class Activo
     /**
      * Contar total de activos para paginación con filtros aplicados
      */
-    public function contar(string $busqueda = '', array $estados = [], array $tipos = []): int
+    public function contar(string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0): int
     {
         try {
             $sql = "SELECT COUNT(*) as total FROM activo a LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
             $params = [];
+            
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
             
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
@@ -122,7 +141,6 @@ class Activo
             }
             
             // 🎯 Filtro por ESTADO
-            // ✅ MISMO COMPORTAMIENTO EN EL CONTADOR PARA PAGINACION
             if (!empty($estados) && is_array($estados)) {
                 $placeholders = [];
                 foreach ($estados as $idx => $estado) {
@@ -269,8 +287,26 @@ class Activo
                         $cambio['nuevo']
                     );
 
-                    // ✅ Si es cambio de estado: usamos accion 'cambio_estado' en lugar de 'modificacion'
-                    $accion = $cambio['campo'] === 'estado' ? 'cambio_estado' : 'modificacion';
+                    // ✅ Detectar tipo de accion correctamente
+                    if ($cambio['campo'] === 'estado') {
+                        $accion = 'cambio_estado';
+                    } elseif ($cambio['campo'] === 'sala_id') {
+                        $accion = 'traslado';
+                        
+                        // ✅ Reemplazar IDs de sala por nombres ANTES de grabar
+                        $salaAnterior = $this->obtenerSalaConEdificio((int)$cambio['anterior']);
+                        $salaNueva = $this->obtenerSalaConEdificio((int)$cambio['nuevo']);
+                        
+                        if ($salaAnterior && $salaNueva) {
+                            $detalle = sprintf('Se modificó %s: "%s" → "%s"',
+                                $cambio['nombre'],
+                                $salaAnterior['sala_nombre'],
+                                $salaNueva['sala_nombre']
+                            );
+                        }
+                    } else {
+                        $accion = 'modificacion';
+                    }
 
                     $stmtHistorial = $this->db->prepare("
                         INSERT INTO historial_activo 
@@ -465,7 +501,33 @@ class Activo
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ✅ Compatibilidad con registros antiguos: reemplazar IDs por nombres
+            foreach ($historial as &$registro) {
+                // Reemplazar IDs de sala por nombres en registros antiguos
+                if (!empty($registro['detalle'])) {
+                    // Reemplazar sala anterior
+                    if (!empty($registro['sala_anterior_id']) && !empty($registro['sala_anterior_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_anterior_id'] . '"',
+                            '"' . $registro['sala_anterior_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                    // Reemplazar sala nueva
+                    if (!empty($registro['sala_nueva_id']) && !empty($registro['sala_nueva_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_nueva_id'] . '"',
+                            '"' . $registro['sala_nueva_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                }
+            }
+            unset($registro);
+
+            return $historial;
         } catch (\PDOException $e) {
             return [];
         }

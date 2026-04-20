@@ -1,0 +1,138 @@
+/* CSS Especifico para Historial General */
+
+.historial-table .table-header .table-row {
+    grid-template-columns: 160px 70px 120px minmax(200px, 1fr) 120px 130px 130px 120px !important;
+    gap: 12px !important;
+}
+
+.historial-table .table-row {
+    grid-template-columns: 160px 70px 120px minmax(200px, 1fr) 120px 130px 130px 120px !important;
+    gap: 12px !important;
+    padding: 14px 20px !important;
+    align-items: center !important;
+}
+
+.historial-table .cell-user {
+    width: auto !important;
+}
+
+.historial-table .user-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.historial-table .user-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--unicaes-red);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.historial-table .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.historial-table .user-fullname {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.historial-table .user-username {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+
+.historial-table .cell-id {
+    font-size: 13px;
+    text-align: center;
+}
+
+.historial-table .action-badge {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.historial-table .detail-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    display: block;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.historial-table .cell-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+}
+
+.historial-table .status-changes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.historial-table .status-old {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.historial-table .status-arrow {
+    font-size: 14px;
+    color: var(--unicaes-red);
+    font-weight: 700;
+}
+
+.historial-table .status-new {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.historial-table .status-only {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.historial-table .cell-date {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.historial-table .cell-date span:first-child {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.historial-table .time-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 1200px) {
+    .historial-table .table-header .table-row,
+    .historial-table .table-row {
+        grid-template-columns: 140px 60px 100px minmax(180px, 1fr) 100px 110px 110px 100px !important;
+        gap: 8px !important;
+    }
+}

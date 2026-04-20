@@ -15,6 +15,11 @@ $total = $total ?? count($activos);
 $busqueda = $busqueda ?? '';
 $ordenarPor = $ordenarPor ?? 'id';
 $ordenDireccion = $ordenDireccion ?? 'DESC';
+
+// Filtros pasados desde el controlador
+$tiposDisponibles = $tiposDisponibles ?? [];
+$estadosSeleccionados = $estadosSeleccionados ?? [];
+$tiposSeleccionados = $tiposSeleccionados ?? [];
 ?>
 <!doctype html>
 <html lang="es">
@@ -199,45 +204,62 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
                 <?php endif; ?>
             </div>
 
-            <!-- Pagination -->
-            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Mostrando <?= count($activos) ?> de <?= $total ?> activos
-                </div>
-                <div class="pagination">
-                    <?php if ($pagina > 1): ?>
-                        <a href="?pagina=<?= $pagina - 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                            Anterior
-                        </a>
-                    <?php endif; ?>
+<?php
+// Generar la cadena de consulta base manteniendo los filtros y ordenamiento
+$currentParams = $_GET;
+unset($currentParams['pagina']);
+$queryString = http_build_query($currentParams);
+$baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
+?>
 
-                    <div class="pagination-pages">
-                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                            <?php if ($i == $pagina): ?>
-                                <span class="pagination-btn active"><?= $i ?></span>
-                            <?php else: ?>
-                                <a href="?pagina=<?= $i ?>&sala_id=<?= $salaId ?>" class="pagination-btn"><?= $i ?></a>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </div>
+<!-- Pagination -->
+<?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+<div class="pagination-container">
+    <div class="pagination-info">
+        Mostrando <?= count($activos) ?> de <?= $total ?> activos
+    </div>
+    <div class="pagination">
+        <?php if ($pagina > 1): ?>
+            <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Anterior
+            </a>
+        <?php endif; ?>
 
-                    <?php if ($pagina < $totalPaginas): ?>
-                        <a href="?pagina=<?= $pagina + 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
-                            Siguiente
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endif; ?>
+        <div class="pagination-pages">
+            <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                <?php if ($i == $pagina): ?>
+                    <span class="pagination-btn active"><?= $i ?></span>
+                <?php else: ?>
+                    <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+        </div>
+
+        <?php if ($pagina < $totalPaginas): ?>
+            <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
+                Siguiente
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
         </div>
     </main>
+
+    <script>
+    // Variables globales para el sistema de filtros
+    window.SIGMU_DATA = {
+        tiposDisponibles: <?= json_encode($tiposDisponibles) ?>,
+        estadosSeleccionados: <?= json_encode($estadosSeleccionados) ?>,
+        tiposSeleccionados: <?= json_encode($tiposSeleccionados) ?>
+    };
+    </script>
 
     <script>
     // Sistema de ordenamiento
@@ -253,49 +275,26 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
             
             header.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
                 
                 const sortField = this.getAttribute('data-sort');
                 console.log('👉 Click en ordenar por:', sortField);
                 
-                // Obtener URL actual
-                let baseUrl = window.location.pathname;
-                let queryString = window.location.search.substring(1);
-                let params = {};
-                
-                // Parsear parametros manualmente
-                if (queryString.length > 0) {
-                    let pairs = queryString.split('&');
-                    for (let i = 0; i < pairs.length; i++) {
-                        let pair = pairs[i].split('=');
-                        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-                    }
-                }
+                // Usar URLSearchParams para capturar todos los parámetros GET actuales
+                let params = new URLSearchParams(window.location.search);
                 
                 // Si ya estamos ordenando por este campo, invertir la dirección
-                if (params['ordenar_por'] === sortField) {
-                    params['orden_direccion'] = params['orden_direccion'] === 'ASC' ? 'DESC' : 'ASC';
+                if (params.get('ordenar_por') === sortField) {
+                    params.set('orden_direccion', params.get('orden_direccion') === 'ASC' ? 'DESC' : 'ASC');
                 } else {
-                    params['ordenar_por'] = sortField;
-                    params['orden_direccion'] = 'ASC';
+                    params.set('ordenar_por', sortField);
+                    params.set('orden_direccion', 'ASC');
                 }
                 
-                // Resetear a pagina 1
-                params['pagina'] = '1';
+                // Resetear a página 1 al cambiar ordenamiento
+                params.set('pagina', '1');
                 
-                // Construir nueva URL
-                let newQuery = [];
-                for (let key in params) {
-                    newQuery.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-                }
-                
-                let finalUrl = baseUrl;
-                if (newQuery.length > 0) {
-                    finalUrl += '?' + newQuery.join('&');
-                }
-                
-                console.log('🔄 Redirigiendo a:', finalUrl);
-                window.location.href = finalUrl;
+                // Redirigir conservando todos los parámetros (filtros, búsqueda, sala_id, etc.)
+                window.location.href = window.location.pathname + '?' + params.toString();
             });
             
             // Efecto hover

@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Menu lateral
     const menuBtn = document.getElementById('menuBtn');
     if (menuBtn) {
-        menuBtn.addEventListener('click', function() {
-            document.body.classList.toggle('menu-open');
-        });
+        // En algunas vistas el menu se maneja por global-menu.js y en otras por toggle de clase
+        if (!menuBtn.onclick) {
+            menuBtn.addEventListener('click', function() {
+                document.body.classList.toggle('menu-open');
+            });
+        }
     }
 
     // ✅ BUSQUEDA EN TIEMPO REAL - SIN PERDER FOCO
@@ -34,21 +37,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             searchTimeout = setTimeout(() => {
                 aplicarFiltros();
-            }, 450); // Aumentado un poco para dar tiempo al usuario a escribir
+            }, 450);
         });
     }
 
     // ✅ APLICAR FILTROS AUTOMATICAMENTE AL CAMBIAR SELECTS
     const selectAccion = document.querySelector('select[name="accion"]');
     const selectEstado = document.querySelector('select[name="estado"]');
+    const selectUsuario = document.querySelector('select[name="usuario"]');
 
-    if (selectAccion) {
-        selectAccion.addEventListener('change', aplicarFiltros);
-    }
-
-    if (selectEstado) {
-        selectEstado.addEventListener('change', aplicarFiltros);
-    }
+    if (selectAccion) selectAccion.addEventListener('change', aplicarFiltros);
+    if (selectEstado) selectEstado.addEventListener('change', aplicarFiltros);
+    if (selectUsuario) selectUsuario.addEventListener('change', aplicarFiltros);
 
     // ✅ BOTON LIMPIAR FILTROS
     const botonLimpiar = document.getElementById('limpiarFiltrosBtn');
@@ -57,13 +57,20 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             // Limpiar todos los campos
-            searchInput.value = '';
-            selectAccion.selectedIndex = 0;
-            selectEstado.selectedIndex = 0;
+            if (searchInput) searchInput.value = '';
+            if (selectAccion) selectAccion.selectedIndex = 0;
+            if (selectEstado) selectEstado.selectedIndex = 0;
+            if (selectUsuario) selectUsuario.selectedIndex = 0;
 
-            // Redirigir sin parametros
+            // Redirigir sin parametros (pero manteniendo el ID si existe)
             const urlParams = new URLSearchParams(window.location.search);
-            window.location.href = window.location.pathname + '?id=' + urlParams.get('id');
+            const activoId = urlParams.get('id');
+            
+            if (activoId) {
+                window.location.href = window.location.pathname + '?id=' + activoId;
+            } else {
+                window.location.href = window.location.pathname;
+            }
         });
     }
 
@@ -72,30 +79,40 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function aplicarFiltros() {
         const urlParams = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams();
         
-        // Mantener siempre el id del activo
+        // 1. Mantener ID del activo si existe (para historial individual)
         const activoId = urlParams.get('id');
-        
-        // Construir nueva URL
-        let nuevaUrl = window.location.pathname + '?id=' + activoId;
+        if (activoId) {
+            params.set('id', activoId);
+        }
 
-        // Agregar busqueda si existe
+        // 2. Agregar busqueda
         if (searchInput && searchInput.value.trim() !== '') {
-            nuevaUrl += '&busqueda=' + encodeURIComponent(searchInput.value.trim());
+            params.set('busqueda', searchInput.value.trim());
         }
 
-        // Agregar filtro accion
+        // 3. Agregar filtro accion
         if (selectAccion && selectAccion.value !== '') {
-            nuevaUrl += '&accion=' + encodeURIComponent(selectAccion.value);
+            params.set('accion', selectAccion.value);
         }
 
-        // Agregar filtro estado
+        // 4. Agregar filtro estado
         if (selectEstado && selectEstado.value !== '') {
-            nuevaUrl += '&estado=' + encodeURIComponent(selectEstado.value);
+            params.set('estado', selectEstado.value);
         }
 
-        // Solo actualizar si la URL cambio
-        if (window.location.href !== nuevaUrl) {
+        // 5. Agregar filtro usuario (para historial general)
+        if (selectUsuario && selectUsuario.value !== '') {
+            params.set('usuario', selectUsuario.value);
+        }
+
+        // Construir nueva URL
+        const queryStr = params.toString();
+        const nuevaUrl = window.location.pathname + (queryStr ? '?' + queryStr : '');
+
+        // Solo actualizar si la URL cambio (evitar bucles)
+        if (window.location.search !== (queryStr ? '?' + queryStr : '')) {
             window.location.href = nuevaUrl;
         }
     }

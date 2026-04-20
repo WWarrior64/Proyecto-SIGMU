@@ -10,10 +10,13 @@ $error = isset($error) ? (string) $error : null;
 // Errores que llegan por querystring (por ejemplo: credenciales incorrectas).
 $queryError = isset($_GET['error']) ? (string) $_GET['error'] : null;
 $resetOk = isset($_GET['reset_ok']) ? (string) $_GET['reset_ok'] : '';
+$timeout = isset($_GET['timeout']) ? (bool) $_GET['timeout'] : false;
 
 // Armamos un mensaje único para no estar mostrando 2 cosas a la vez.
 $alert = null;
-if (!empty($queryError)) {
+if ($timeout) {
+    $alert = 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.';
+} elseif (!empty($queryError)) {
     $alert = $queryError;
 } elseif (!empty($resetOk)) {
     $alert = 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.';
