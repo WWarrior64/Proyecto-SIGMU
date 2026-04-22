@@ -7,7 +7,7 @@
  * Menu lateral global - disponible en TODAS las vistas
  * Funciona directamente sin esperar DOM
  */
-window.openSidebarMenu = function() {
+globalThis.openSidebarMenu = function() {
         // Toggle sidebar or menu
         let sidebar = document.querySelector('.sidebar');
         
@@ -181,13 +181,13 @@ window.openSidebarMenu = function() {
         const userNameEl = document.getElementById('sidebarUserName');
         const userAvatarEl = document.getElementById('sidebarUserAvatar');
         
-        if (window.authUser) {
-            if (userNameEl && window.authUser.nombre_completo) {
-                userNameEl.textContent = window.authUser.nombre_completo;
+        if (globalThis.authUser) {
+            if (userNameEl && globalThis.authUser.nombre_completo) {
+                userNameEl.textContent = globalThis.authUser.nombre_completo;
             }
             
-            if (userAvatarEl && window.authUser.foto) {
-                userAvatarEl.innerHTML = `<img src="${window.authUser.foto}" alt="">`;
+            if (userAvatarEl && globalThis.authUser.foto) {
+                userAvatarEl.innerHTML = `<img src="${globalThis.authUser.foto}" alt="">`;
             }
         }
         
