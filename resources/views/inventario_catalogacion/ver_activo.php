@@ -98,8 +98,8 @@ $error = $_GET['error'] ?? '';
                 <div class="left-column">
                     <!-- Image Container -->
                     <div class="image-container">
-                        <?php if (!empty($activo['imagen'])): ?>
-                            <img src="/<?= htmlspecialchars((string) $activo['imagen'], ENT_QUOTES, 'UTF-8') ?>" 
+                        <?php if (!empty($activo['fotos'])): ?>
+                            <img id="mainImage" src="/<?= htmlspecialchars((string) $activo['fotos'][0]['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" 
                                  alt="Imagen del activo" 
                                  class="asset-image"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -110,10 +110,8 @@ $error = $_GET['error'] ?? '';
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
                                 <span>Imagen no disponible</span>
-            </div>
-
-
-        <?php else: ?>
+                            </div>
+                        <?php else: ?>
                             <div class="image-placeholder">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -124,6 +122,18 @@ $error = $_GET['error'] ?? '';
                             </div>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Gallery -->
+                    <?php if (!empty($activo['fotos']) && count($activo['fotos']) > 1): ?>
+                        <div class="gallery-thumbnails" style="display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 5px;">
+                            <?php foreach ($activo['fotos'] as $foto): ?>
+                                <img src="/<?= htmlspecialchars((string) $foto['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" 
+                                     alt="Miniatura" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent;"
+                                     onclick="changeMainImage(this)">
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Metadata Cards -->
                     <div class="metadata-cards">

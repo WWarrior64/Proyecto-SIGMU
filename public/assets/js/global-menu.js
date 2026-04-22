@@ -213,3 +213,18 @@ setTimeout(() => {
         menuBtn.onclick = openSidebarMenu;
     }
 }, 0);
+
+/**
+ * Alterna la visibilidad del formulario de carga de fotos de edificio
+ * @param {number} id 
+ */
+function toggleUploadForm(id) {
+    const form = document.getElementById('form-upload-' + id);
+    if (!form) return;
+    
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}

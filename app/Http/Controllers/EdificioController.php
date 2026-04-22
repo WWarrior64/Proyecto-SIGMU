@@ -64,6 +64,45 @@ final class EdificioController
         }
     }
 
+    public function updatePhoto(): void
+    {
+        if (!$this->requireAuth()) {
+            header('Location: /sigmu?error=acceso_denegado');
+            return;
+        }
+
+        $edificioId = (int)($_POST['edificio_id'] ?? 0);
+        
+        try {
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                // Necesitamos procesarFotoEdificio que está en ActivoController.
+                // Lo moveré a un trait o helper si fuera necesario, pero por ahora lo implementaré aquí o usaré una instancia de ActivoController.
+                // Mejor lo implemento aquí para no complicar.
+                $fotoPath = $this->procesarFotoEdificio($_FILES['foto']);
+                $this->service->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
+                header("Location: /sigmu/edificios?success=foto_actualizada");
+            } else {
+                header("Location: /sigmu/edificios?error=error_al_subir_foto");
+            }
+        } catch (Throwable $e) {
+            header("Location: /sigmu/edificios?error=" . urlencode($e->getMessage()));
+        }
+    }
+
+    private function procesarFotoEdificio(array $file): string
+    {
+        $uploadDir = __DIR__ . '/../../../public/uploads/edificios/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid('edificio_', true) . '.' . $extension;
+        
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
+            return 'uploads/edificios/' . $fileName;
+        }
+        throw new \RuntimeException('Error al subir archivo de edificio');
+    }
+
     private function syncDatabaseSession(): void
     {
         $userId = $this->getSessionUser()['id'] ?? null;

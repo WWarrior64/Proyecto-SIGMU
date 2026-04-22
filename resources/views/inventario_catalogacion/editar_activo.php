@@ -180,35 +180,54 @@ $csrfToken = Csrf::getToken();
                                   maxlength="500"><?= htmlspecialchars((string) ($activo['descripcion'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                     </div>
 
-                    <!-- Imagen actual -->
-                    <?php if (!empty($activo['imagen'])): ?>
+                    <!-- Imágenes actuales -->
+                    <?php 
+                    $fotos = \App\Support\Database::connection()->prepare("SELECT id, ruta_foto, es_principal FROM activo_foto WHERE activo_id = ? ORDER BY es_principal DESC, id DESC");
+                    $fotos->execute([(int)$activo['id']]);
+                    $fotosActuales = $fotos->fetchAll();
+                    if (!empty($fotosActuales)): ?>
                         <div class="form-group full-width">
-                            <label>Imagen actual:</label>
-                            <div style="text-align: center; margin-bottom: 15px;">
-                                <img src="/storage/uploads/<?= htmlspecialchars((string) $activo['imagen'], ENT_QUOTES, 'UTF-8') ?>" 
-                                     alt="Imagen actual del activo" 
-                                     style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <div style="display: none; color: #6c757d; font-style: italic; padding: 20px;">Imagen no disponible</div>
+                            <label>Imágenes actuales:</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                                <?php foreach ($fotosActuales as $f): ?>
+                                    <div style="position: relative; border: 1px solid #ddd; border-radius: 4px; padding: 5px; background: #f9f9f9; <?= $f['es_principal'] ? 'border-color: #007bff; box-shadow: 0 0 5px rgba(0,123,255,0.3);' : '' ?>">
+                                        <img src="/<?= htmlspecialchars((string) $f['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" 
+                                             alt="Imagen del activo" 
+                                             style="width: 100px; height: 100px; object-fit: cover; border-radius: 2px; display: block;">
+                                        
+                                        <div class="photo-actions-container">
+                                            <?php if (!$f['es_principal']): ?>
+                                                <button type="button" class="btn-photo-action btn-star" onclick="submitFotoAction('/sigmu/activo/foto/principal', <?= (int)$f['id'] ?>)" title="Hacer principal">⭐</button>
+                                                <button type="button" class="btn-photo-action btn-delete" onclick="if(confirm('¿Eliminar esta foto permanentemente?')) submitFotoAction('/sigmu/activo/foto/eliminar', <?= (int)$f['id'] ?>)" title="Eliminar">🗑️</button>
+                                            <?php else: ?>
+                                                <span class="label-is-principal">Principal</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     <?php endif; ?>
 
-                    <!-- Nueva foto -->
+                    <!-- Nuevas fotos -->
                     <div class="form-group full-width">
-                        <label for="foto"><?= !empty($activo['imagen']) ? 'Nueva foto (opcional):' : 'Foto principal:' ?></label>
+                        <label for="fotos">Agregar nuevas fotos:</label>
                         <div class="file-input-wrapper">
-                            <input type="file" id="foto" name="foto" accept="image/*" class="file-input">
+                            <input type="file" id="fotos" name="fotos[]" accept="image/*" class="file-input" multiple onchange="previewNewPhotos(this, <?= !empty($fotosActuales) ? 'true' : 'false' ?>)">
                             <div class="file-input-label">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                     <polyline points="17 8 12 3 7 8"></polyline>
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
-                                <span>Seleccionar archivo o arrastrar aquí</span>
+                                <span id="fileInputText">Seleccionar archivos o arrastrar aquí (puedes elegir varios)</span>
                             </div>
                         </div>
-                        <small class="form-hint">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB. <?php if (!empty($activo['imagen'])): ?>Si selecciona una nueva imagen, reemplazará la actual.<?php endif; ?></small>
+                        
+                        <!-- Contenedor de Previsualización Temporal -->
+                        <div id="newPhotosPreview"></div>
+                        
+                        <small class="form-hint">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por archivo. <strong>Las fotos de arriba se subirán solo cuando presiones ACTUALIZAR.</strong></small>
                     </div>
 
                     <!-- Botones -->
@@ -216,6 +235,13 @@ $csrfToken = Csrf::getToken();
                         <button type="button" class="btn btn-cancel" onclick="window.location.href='/sigmu/activo/ver?id=<?= (int) ($activo['id'] ?? 0) ?>'">CANCELAR</button>
                         <button type="submit" class="btn btn-submit">ACTUALIZAR</button>
                     </div>
+                </form>
+
+                <!-- Formulario oculto para acciones de fotos -->
+                <form id="fotoActionForm" method="POST" style="display: none;">
+                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="foto_id" id="action_foto_id">
+                    <input type="hidden" name="activo_id" value="<?= (int)$activo['id'] ?>">
                 </form>
             <?php else: ?>
                 <div class="alert alert-error">
