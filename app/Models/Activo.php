@@ -9,6 +9,18 @@ class Activo
 {
     private PDO $db;
 
+    public const ESTADO_DISPONIBLE = 'disponible';
+    public const ESTADO_EN_USE = 'en_uso';
+    public const ESTADO_REPARACION = 'reparacion';
+    public const ESTADO_DESCARTADO = 'descartado';
+
+    public const ESTADOS = [
+        self::ESTADO_DISPONIBLE => 'Disponible',
+        self::ESTADO_EN_USE     => 'En Uso',
+        self::ESTADO_REPARACION => 'Reparación',
+        self::ESTADO_DESCARTADO => 'Descartado'
+    ];
+
     public function __construct()
     {
         $this->db = Database::connection();

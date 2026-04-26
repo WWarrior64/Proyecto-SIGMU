@@ -103,13 +103,26 @@ final class ActivoController
             return;
         }
 
+        $estado = trim((string)($_POST['estado'] ?? 'disponible'));
         $salaId = (int)($_POST['sala_id'] ?? 0);
+
+        if ($salaId <= 0) {
+            header("Location: /sigmu/activo/registrar?error=" . urlencode("Sala no especificada"));
+            return;
+        }
+
+        // ✅ VALIDACIÓN DE ESTADO
+        if (!array_key_exists($estado, Activo::ESTADOS)) {
+            header("Location: /sigmu/activo/registrar?sala_id={$salaId}&error=" . urlencode("Estado no válido seleccionado"));
+            return;
+        }
+
         $datos = [
             'codigo' => trim((string)($_POST['codigo'] ?? '')),
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
-            'estado' => trim((string)($_POST['estado'] ?? 'disponible')),
+            'estado' => $estado,
             'sala_id' => $salaId,
             'cantidad' => (int)($_POST['cantidad'] ?? 1)
         ];
@@ -189,11 +202,19 @@ final class ActivoController
             return;
         }
 
+        $estado = trim((string)($_POST['estado'] ?? ''));
+
+        // ✅ VALIDACIÓN DE ESTADO
+        if (!array_key_exists($estado, Activo::ESTADOS)) {
+            header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode("Estado no válido seleccionado"));
+            return;
+        }
+
         $datos = [
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
-            'estado' => trim((string)($_POST['estado'] ?? '')),
+            'estado' => $estado,
             'codigo' => trim((string)($_POST['codigo'] ?? '')),
             'sala_id' => (int)($_POST['sala_id'] ?? 0),
             'fecha_actualizado' => date('Y-m-d H:i:s')
