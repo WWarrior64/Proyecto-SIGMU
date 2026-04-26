@@ -181,7 +181,7 @@ $error = $_GET['error'] ?? '';
                             <label class="detail-label">Estado</label>
                             <div class="detail-value">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars((string) ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
                                 </span>
                             </div>
                         </div>

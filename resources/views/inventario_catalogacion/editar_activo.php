@@ -130,10 +130,11 @@ $csrfToken = Csrf::getToken();
                             <label for="estado">Estado: <span class="required">*</span></label>
                             <select id="estado" name="estado" required>
                                 <option value="">Seleccionar estado...</option>
-                                <option value="disponible" <?= (($activo['estado'] ?? '') === 'disponible') ? 'selected' : '' ?>>Disponible</option>
-                                <option value="en_uso" <?= (($activo['estado'] ?? '') === 'en_uso') ? 'selected' : '' ?>>En uso</option>
-                                <option value="reparacion" <?= (($activo['estado'] ?? '') === 'reparacion') ? 'selected' : '' ?>>Reparación</option>
-                                <option value="descartado" <?= (($activo['estado'] ?? '') === 'descartado') ? 'selected' : '' ?>>Descartado</option>
+                                <?php foreach (\App\Models\Activo::ESTADOS as $key => $label): ?>
+                                    <option value="<?= $key ?>" <?= (($activo['estado'] ?? '') === $key) ? 'selected' : '' ?>>
+                                        <?= $label ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
 
