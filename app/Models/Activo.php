@@ -388,12 +388,42 @@ class Activo
     }
 
     /**
-     * Eliminar un activo
+     * Eliminar un activo y sus archivos físicos asociados
      */
     public function eliminar(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM activo WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+        try {
+            // 1. Obtener todas las rutas de fotos asociadas antes de borrar
+            $stmtFotos = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = :id");
+            $stmtFotos->execute([':id' => $id]);
+            $fotos = $stmtFotos->fetchAll(PDO::FETCH_COLUMN);
+
+            // 2. Ejecutar el borrado en la base de datos
+            // El procedimiento almacenado sp_eliminar_activo existe según el SQL, 
+            // pero el modelo actualmente usa DELETE directo. 
+            // Usaremos el SP si está disponible para mayor seguridad y consistencia con el historial.
+            
+            $stmt = $this->db->prepare("CALL sp_eliminar_activo(:id)");
+            $ejecutado = $stmt->execute([':id' => $id]);
+            $stmt->closeCursor();
+
+            if ($ejecutado) {
+                // 3. Si el borrado en DB fue exitoso, borrar los archivos físicos
+                foreach ($fotos as $rutaFoto) {
+                    if ($rutaFoto) {
+                        $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
+                        if (file_exists($rutaCompleta)) {
+                            unlink($rutaCompleta);
+                        }
+                    }
+                }
+            }
+
+            return $ejecutado;
+        } catch (\PDOException $e) {
+            error_log("Error en Activo::eliminar: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

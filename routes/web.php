@@ -90,6 +90,11 @@ $router->get('/sigmu/edificio', static function (): string {
     return $controller->salasPorEdificio();
 });
 
+$router->post('/sigmu/edificio/actualizar-foto', static function (): void {
+    $controller = new EdificioController();
+    $controller->updatePhoto();
+});
+
 // Rutas de salas (NUEVO)
 $router->get('/sigmu/sala', static function (): string {
     $controller = new SalaController();
@@ -125,6 +130,16 @@ $router->post('/sigmu/activo/actualizar', static function (): string {
     $controller = new ActivoController();
     $controller->update($id);
     return '';
+});
+
+$router->post('/sigmu/activo/foto/principal', static function (): void {
+    $controller = new ActivoController();
+    $controller->setPrincipalPhoto();
+});
+
+$router->post('/sigmu/activo/foto/eliminar', static function (): void {
+    $controller = new ActivoController();
+    $controller->deletePhoto();
 });
 
 $router->post('/sigmu/activo/dar-baja', static function (): string {

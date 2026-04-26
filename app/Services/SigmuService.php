@@ -131,6 +131,7 @@ final class SigmuService
 
     /**
      * Registra un nuevo activo en el sistema
+     * @param array<string> $fotoPaths
      * @return array{success: bool, message: string, activo_id?: int}
      */
     public function registrarActivo(
@@ -140,7 +141,7 @@ final class SigmuService
         string $descripcion,
         string $estado,
         int $salaId,
-        ?string $fotoPath = null
+        array $fotoPaths = []
     ): array {
         try {
             // Verificar que el código no exista
@@ -161,9 +162,13 @@ final class SigmuService
                 $salaId
             );
 
-            // If a photo was provided, add it
-            if ($fotoPath !== null && $activoId > 0) {
-                $this->repository->agregarFotoActivo($activoId, $fotoPath, 'Foto principal', true);
+            // If photos were provided, add them
+            if (!empty($fotoPaths) && $activoId > 0) {
+                foreach ($fotoPaths as $index => $path) {
+                    // La primera foto es la principal
+                    $esPrincipal = ($index === 0);
+                    $this->repository->agregarFotoActivo($activoId, $path, 'Foto ' . ($index + 1), $esPrincipal);
+                }
             }
 
             return [
@@ -181,8 +186,9 @@ final class SigmuService
 
     /**
      * Registrar multiples activos iguales con codigos automaticos diferentes
+     * @param array<string> $fotoPaths
      */
-    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, ?string $fotoPath = null): array
+    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, array $fotoPaths = []): array
     {
         try {
             $creados = 0;
@@ -193,7 +199,7 @@ final class SigmuService
                 // Generar codigo unico automatico para CADA activo
                 $codigo = $this->generarCodigoActivo($nombre);
 
-                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPath);
+                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPaths);
 
                 if ($resultado['success']) {
                     $creados++;
@@ -215,6 +221,31 @@ final class SigmuService
                 'message' => 'Error al registrar activos multiples: ' . $e->getMessage()
             ];
         }
+    }
+
+    public function obtenerFotosActivo(int $activoId): array
+    {
+        return $this->repository->obtenerFotosActivo($activoId);
+    }
+
+    public function eliminarFotoActivo(int $fotoId): bool
+    {
+        return $this->repository->eliminarFotoActivo($fotoId);
+    }
+
+    public function establecerPrincipalFotoActivo(int $fotoId): bool
+    {
+        return $this->repository->establecerPrincipalFotoActivo($fotoId);
+    }
+
+    public function agregarFotoEdificio(int $edificioId, string $rutaFoto, string $descripcion): int
+    {
+        return $this->repository->agregarFotoEdificio($edificioId, $rutaFoto, $descripcion);
+    }
+
+    public function obtenerFotoEdificio(int $edificioId): ?array
+    {
+        return $this->repository->obtenerFotoEdificio($edificioId);
     }
 
     /**

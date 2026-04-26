@@ -51,11 +51,11 @@ final class ActivoController
             }
         }
 
-        // Obtener foto principal (delegado al modelo/service en el futuro)
-        $db = \App\Support\Database::connection();
-        $stmt = $db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = ? ORDER BY es_principal DESC, id DESC LIMIT 1");
-        $stmt->execute([$id]);
-        $activo['imagen'] = $stmt->fetchColumn();
+        // Obtener todas las fotos
+        $fotos = $this->sigmuService->obtenerFotosActivo($id);
+        $activo['fotos'] = $fotos;
+        // Mantener compatibilidad con 'imagen' para la foto principal
+        $activo['imagen'] = !empty($fotos) ? $fotos[0]['ruta_foto'] : null;
 
         return view('inventario_catalogacion.ver_activo', [
             'activo' => $activo
@@ -115,20 +115,20 @@ final class ActivoController
         ];
 
         try {
-            $fotoPath = null;
-            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-                $fotoPath = $this->procesarFoto($_FILES['foto']);
+            $fotoPaths = [];
+            if (isset($_FILES['fotos'])) {
+                $fotoPaths = $this->procesarMultiplesFotos($_FILES['fotos']);
             }
 
             if ($datos['cantidad'] > 1) {
                 $res = $this->sigmuService->registrarMultiplesActivos(
                     $datos['cantidad'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPath
+                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
                 );
             } else {
                 $res = $this->sigmuService->registrarActivo(
                     $datos['codigo'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPath
+                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
                 );
             }
 
@@ -200,11 +200,22 @@ final class ActivoController
         ];
 
         try {
-            // Manejo de imagen (esto debería ir al Service idealmente)
-            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-                $fotoPath = $this->procesarFoto($_FILES['foto']);
-                $this->sigmuService->agregarFotoUsuario($id, $fotoPath, 'Foto principal'); // Nota: el service usa agregarFotoUsuario pero sp_agregar_foto_activo es el que toca. 
-                // Corregiré esto en el Service luego.
+            // Verificar si el activo ya tiene fotos antes de procesar las nuevas
+            $fotosExistentes = $this->sigmuService->obtenerFotosActivo($id);
+            $tieneFotosPrevias = !empty($fotosExistentes);
+
+            if (isset($_FILES['fotos'])) {
+                $fotoPaths = $this->procesarMultiplesFotos($_FILES['fotos']);
+                foreach ($fotoPaths as $index => $path) {
+                    // Solo será principal si NO tiene fotos previas Y es la primera del nuevo lote
+                    $esPrincipal = (!$tieneFotosPrevias && $index === 0);
+                    $this->sigmuService->agregarFotoActivo($id, $path, 'Foto ' . ($index + 1), $esPrincipal);
+                    
+                    // Si acabamos de agregar una que es principal, el resto ya no lo serán
+                    if ($esPrincipal) {
+                        $tieneFotosPrevias = true;
+                    }
+                }
             }
 
             $this->modelo->actualizar($id, $datos);
@@ -289,6 +300,69 @@ final class ActivoController
         echo json_encode(['success' => true, 'codigo' => $this->sigmuService->generarCodigoActivo($nombre)]);
     }
 
+    public function setPrincipalPhoto(): void
+    {
+        if (!$this->requireAuth() || !Csrf::validate()) {
+            return;
+        }
+
+        $fotoId = (int)($_POST['foto_id'] ?? 0);
+        $activoId = (int)($_POST['activo_id'] ?? 0);
+
+        if ($this->sigmuService->establecerPrincipalFotoActivo($fotoId)) {
+            header("Location: /sigmu/activo/editar?id={$activoId}&success=foto_principal_actualizada");
+        } else {
+            header("Location: /sigmu/activo/editar?id={$activoId}&error=error_al_actualizar_foto");
+        }
+    }
+
+    public function deletePhoto(): void
+    {
+        if (!$this->requireAuth() || !Csrf::validate()) {
+            return;
+        }
+
+        $fotoId = (int)($_POST['foto_id'] ?? 0);
+        $activoId = (int)($_POST['activo_id'] ?? 0);
+
+        if ($this->sigmuService->eliminarFotoActivo($fotoId)) {
+            header("Location: /sigmu/activo/editar?id={$activoId}&success=foto_eliminada");
+        } else {
+            header("Location: /sigmu/activo/editar?id={$activoId}&error=error_al_eliminar_foto");
+        }
+    }
+
+    private function procesarMultiplesFotos(array $files): array
+    {
+        $paths = [];
+        
+        // Si no es un array de nombres, es que solo se subió uno o el formato es simple
+        if (!isset($files['name']) || !is_array($files['name'])) {
+            if (isset($files['error']) && $files['error'] === UPLOAD_ERR_OK) {
+                $paths[] = $this->procesarFoto($files);
+            }
+            return $paths;
+        }
+
+        // Estructura de PHP para múltiples archivos: $_FILES['campo']['name'][0], $_FILES['campo']['name'][1]...
+        $fileCount = count($files['name']);
+        for ($i = 0; $i < $fileCount; $i++) {
+            // Verificar que realmente se haya subido un archivo en esta posición
+            if (isset($files['error'][$i]) && $files['error'][$i] === UPLOAD_ERR_OK) {
+                $fileData = [
+                    'name'     => $files['name'][$i],
+                    'type'     => $files['type'][$i],
+                    'tmp_name' => $files['tmp_name'][$i],
+                    'error'    => $files['error'][$i],
+                    'size'     => $files['size'][$i]
+                ];
+                $paths[] = $this->procesarFoto($fileData);
+            }
+        }
+        
+        return $paths;
+    }
+
     private function procesarFoto(array $file): string
     {
         $uploadDir = __DIR__ . '/../../../public/uploads/activos/';
@@ -301,6 +375,20 @@ final class ActivoController
             return 'uploads/activos/' . $fileName;
         }
         throw new \RuntimeException('Error al subir archivo');
+    }
+
+    private function procesarFotoEdificio(array $file): string
+    {
+        $uploadDir = __DIR__ . '/../../../public/uploads/edificios/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid('edificio_', true) . '.' . $extension;
+        
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
+            return 'uploads/edificios/' . $fileName;
+        }
+        throw new \RuntimeException('Error al subir archivo de edificio');
     }
 
     private function requireAuth(): bool

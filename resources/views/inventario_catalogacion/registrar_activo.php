@@ -167,21 +167,25 @@ $csrfToken = Csrf::getToken();
                               maxlength="500"><?= htmlspecialchars($formData['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
 
-                <!-- Foto -->
+                <!-- Fotos -->
                 <div class="form-group full-width">
-                    <label for="foto">Foto principal:</label>
+                    <label for="fotos">Fotos del activo:</label>
                     <div class="file-input-wrapper">
-                        <input type="file" id="foto" name="foto" accept="image/*" class="file-input">
+                        <input type="file" id="fotos" name="fotos[]" accept="image/*" class="file-input" multiple onchange="previewNewPhotos(this, false)">
                         <div class="file-input-label">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            <span>Seleccionar archivo o arrastrar aquí</span>
+                            <span id="fileInputText">Seleccionar archivos o arrastrar aquí (puedes elegir varios)</span>
                         </div>
                     </div>
-                    <small class="form-hint">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+
+                    <!-- Contenedor de Previsualización Temporal -->
+                    <div id="newPhotosPreview"></div>
+
+                    <small class="form-hint">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por archivo. <strong>La primera imagen de la lista será la principal.</strong></small>
                 </div>
 
                 <!-- Botones -->
@@ -195,5 +199,7 @@ $csrfToken = Csrf::getToken();
 
     <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/activo-form.js"></script>
+</body>
+</html>
 </body>
 </html>
