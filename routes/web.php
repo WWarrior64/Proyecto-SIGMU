@@ -108,6 +108,17 @@ $router->get('/sigmu/activo/ver', static function (): string {
     return $controller->show($id);
 });
 
+$router->get('/sigmu/activo/importar', static function (): string {
+    $controller = new ActivoController();
+    return $controller->import();
+});
+
+$router->post('/sigmu/activo/importar', static function (): string {
+    $controller = new ActivoController();
+    $controller->processImport();
+    return '';
+});
+
 $router->get('/sigmu/activo/registrar', static function (): string {
     $controller = new ActivoController();
     return $controller->create();

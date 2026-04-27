@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Services\SigmuService;
+use App\Services\AssetImportService;
 use App\Support\Session;
 use App\Support\Csrf;
 use Throwable;
@@ -14,11 +15,73 @@ final class ActivoController
 {
     private readonly Activo $modelo;
     private readonly SigmuService $sigmuService;
+    private readonly AssetImportService $importService;
 
     public function __construct()
     {
         $this->modelo = new Activo();
         $this->sigmuService = new SigmuService();
+        $this->importService = new AssetImportService();
+    }
+
+    /**
+     * Muestra el formulario para importar activos
+     */
+    public function import(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $salaId = filter_input(INPUT_GET, 'sala_id', FILTER_VALIDATE_INT);
+        if (!$salaId) {
+            header('Location: /sigmu/edificios?error=sala_no_especificada');
+            return '';
+        }
+
+        return view('inventario_catalogacion.importar_activos', [
+            'salaId' => $salaId,
+            'error' => $_GET['error'] ?? '',
+            'success' => $_GET['success'] ?? '',
+            'results' => Session::get('import_results')
+        ]);
+    }
+
+    /**
+     * Procesa el archivo de importación
+     */
+    public function processImport(): void
+    {
+        if (!$this->requireAuth() || !Csrf::validate()) {
+            header('Location: /sigmu?error=acceso_denegado');
+            return;
+        }
+
+        $salaId = (int)($_POST['sala_id'] ?? 0);
+        
+        if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode("Debes seleccionar un archivo válido"));
+            return;
+        }
+
+        try {
+            $results = $this->importService->importFromFile(
+                $_FILES['archivo']['tmp_name'], 
+                $_FILES['archivo']['name'],
+                $salaId
+            );
+            
+            Session::set('import_results', $results);
+            
+            $mensaje = "Importación completada: {$results['success']} activos importados.";
+            if (!empty($results['errors'])) {
+                $mensaje .= " Hubo algunos errores.";
+            }
+            
+            header("Location: /sigmu/activo/importar?sala_id={$salaId}&success=" . urlencode($mensaje));
+        } catch (Throwable $e) {
+            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode($e->getMessage()));
+        }
     }
 
     /**

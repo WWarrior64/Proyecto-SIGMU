@@ -269,10 +269,11 @@ final class SigmuRepository
         int $tipoActivoId,
         string $descripcion,
         string $estado,
-        int $salaId
+        int $salaId,
+        ?string $fechaCreado = null
     ): int {
         $stmt = $this->db->prepare(
-            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id)'
+            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id, :fecha_creado)'
         );
         
         $stmt->execute([
@@ -282,6 +283,7 @@ final class SigmuRepository
             'descripcion' => $descripcion,
             'estado' => $estado,
             'sala_id' => $salaId,
+            'fecha_creado' => $fechaCreado
         ]);
 
         $result = $stmt->fetch();
