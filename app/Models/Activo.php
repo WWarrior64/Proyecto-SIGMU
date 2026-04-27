@@ -9,6 +9,18 @@ class Activo
 {
     private PDO $db;
 
+    public const ESTADO_DISPONIBLE = 'disponible';
+    public const ESTADO_EN_USE = 'en_uso';
+    public const ESTADO_REPARACION = 'reparacion';
+    public const ESTADO_DESCARTADO = 'descartado';
+
+    public const ESTADOS = [
+        self::ESTADO_DISPONIBLE => 'Disponible',
+        self::ESTADO_EN_USE     => 'En Uso',
+        self::ESTADO_REPARACION => 'Reparación',
+        self::ESTADO_DESCARTADO => 'Descartado'
+    ];
+
     public function __construct()
     {
         $this->db = Database::connection();
@@ -26,7 +38,7 @@ class Activo
      * @param array $estados Array de estados a filtrar (vacio = todos)
      * @param array $tipos Array de tipos de activo a filtrar (vacio = todos)
      */
-    public function listar(int $pagina = 1, int $porPagina = 10, string $busqueda = '', array $estados = [], array $tipos = [], string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
+    public function listar(int $pagina = 1, int $porPagina = 50, string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0, string $ordenarPor = 'id', string $ordenDireccion = 'DESC'): array
     {
         try {
             $offset = ($pagina - 1) * $porPagina;
@@ -46,18 +58,32 @@ class Activo
             
             $params = [];
             
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
+            
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
                 $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
+
+            // 🎯 Filtro por ESTADO
+            if (!empty($estados) && is_array($estados)) {
+                $placeholders = [];
+                foreach ($estados as $idx => $estado) {
+                    $key = ":estado_{$idx}";
+                    $placeholders[] = $key;
+                    $params[$key] = $estado;
+                }
+                $sql .= " AND a.estado IN (" . implode(',', $placeholders) . ")";
+            } else {
+                // Ningun filtro marcado: excluir solo descartado
+                $sql .= " AND a.estado != 'descartado'";
+            }
             
-            // ✅ ✅ ✅ SE ELIMINA EL FILTRO SERVIDOR:
-            // Ahora TODOS LOS ACTIVOS (incluidos descartados) se envian al cliente
-            // El filtrado se hace 100% en el navegador con Javascript
-            // Esto permite mostrar ocultar activos descartados sin recargar la pagina
-            
-            // 🎯 Filtro por TIPO DE ACTIVO (admite multiples valores al mismo tiempo)
+            // 🎯 Filtro por TIPO DE ACTIVO
             if (!empty($tipos) && is_array($tipos)) {
                 $placeholders = [];
                 foreach ($tipos as $idx => $tipoId) {
@@ -86,7 +112,7 @@ class Activo
             
             $stmt = $this->db->prepare($sql);
             
-            // Bind de parametros integer correctamente (evita error de tipo en MySQL)
+            // Bind de parametros integer correctamente
             $stmt->bindParam(':limit', $porPagina, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             
@@ -109,11 +135,16 @@ class Activo
     /**
      * Contar total de activos para paginación con filtros aplicados
      */
-    public function contar(string $busqueda = '', array $estados = [], array $tipos = []): int
+    public function contar(string $busqueda = '', array $estados = [], array $tipos = [], int $salaId = 0): int
     {
         try {
             $sql = "SELECT COUNT(*) as total FROM activo a LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id WHERE 1=1";
             $params = [];
+            
+            if ($salaId > 0) {
+                $sql .= " AND a.sala_id = :sala_id";
+                $params[':sala_id'] = $salaId;
+            }
             
             // 🔍 Filtro de busqueda de texto
             if (!empty($busqueda)) {
@@ -122,7 +153,6 @@ class Activo
             }
             
             // 🎯 Filtro por ESTADO
-            // ✅ MISMO COMPORTAMIENTO EN EL CONTADOR PARA PAGINACION
             if (!empty($estados) && is_array($estados)) {
                 $placeholders = [];
                 foreach ($estados as $idx => $estado) {
@@ -158,15 +188,21 @@ class Activo
     }
 
     /**
-     * Obtener un activo por su ID
+     * Obtener un activo por su ID con información extendida (creador, sala, edificio)
      */
     public function obtenerPorId(int $id): ?array
     {
         try {
             $stmt = $this->db->prepare(
-                "SELECT a.*, ta.nombre as tipo 
+                "SELECT a.*, ta.nombre as tipo, 
+                        u.nombre_completo as usuario_creador_nombre,
+                        s.nombre as sala_nombre,
+                        e.nombre as edificio_nombre
                  FROM activo a 
                  LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id 
+                 LEFT JOIN usuario u ON a.usuario_creador_id = u.id
+                 LEFT JOIN sala s ON a.sala_id = s.id
+                 LEFT JOIN edificio e ON s.edificio_id = e.id
                  WHERE a.id = :id"
             );
             $stmt->execute([':id' => $id]);
@@ -174,7 +210,7 @@ class Activo
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             return $resultado ?: null;
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar null
+            error_log("Error en Activo::obtenerPorId: " . $e->getMessage());
             return null;
         }
     }
@@ -269,8 +305,26 @@ class Activo
                         $cambio['nuevo']
                     );
 
-                    // ✅ Si es cambio de estado: usamos accion 'cambio_estado' en lugar de 'modificacion'
-                    $accion = $cambio['campo'] === 'estado' ? 'cambio_estado' : 'modificacion';
+                    // ✅ Detectar tipo de accion correctamente
+                    if ($cambio['campo'] === 'estado') {
+                        $accion = 'cambio_estado';
+                    } elseif ($cambio['campo'] === 'sala_id') {
+                        $accion = 'traslado';
+                        
+                        // ✅ Reemplazar IDs de sala por nombres ANTES de grabar
+                        $salaAnterior = $this->obtenerSalaConEdificio((int)$cambio['anterior']);
+                        $salaNueva = $this->obtenerSalaConEdificio((int)$cambio['nuevo']);
+                        
+                        if ($salaAnterior && $salaNueva) {
+                            $detalle = sprintf('Se modificó %s: "%s" → "%s"',
+                                $cambio['nombre'],
+                                $salaAnterior['sala_nombre'],
+                                $salaNueva['sala_nombre']
+                            );
+                        }
+                    } else {
+                        $accion = 'modificacion';
+                    }
 
                     $stmtHistorial = $this->db->prepare("
                         INSERT INTO historial_activo 
@@ -346,24 +400,66 @@ class Activo
     }
 
     /**
-     * Eliminar un activo
+     * Eliminar un activo y sus archivos físicos asociados
      */
     public function eliminar(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM activo WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+        try {
+            // 1. Obtener todas las rutas de fotos asociadas antes de borrar
+            $stmtFotos = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE activo_id = :id");
+            $stmtFotos->execute([':id' => $id]);
+            $fotos = $stmtFotos->fetchAll(PDO::FETCH_COLUMN);
+
+            // 2. Ejecutar el borrado en la base de datos
+            // El procedimiento almacenado sp_eliminar_activo existe según el SQL, 
+            // pero el modelo actualmente usa DELETE directo. 
+            // Usaremos el SP si está disponible para mayor seguridad y consistencia con el historial.
+            
+            $stmt = $this->db->prepare("CALL sp_eliminar_activo(:id)");
+            $ejecutado = $stmt->execute([':id' => $id]);
+            $stmt->closeCursor();
+
+            if ($ejecutado) {
+                // 3. Si el borrado en DB fue exitoso, borrar los archivos físicos
+                foreach ($fotos as $rutaFoto) {
+                    if ($rutaFoto) {
+                        $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
+                        if (file_exists($rutaCompleta)) {
+                            unlink($rutaCompleta);
+                        }
+                    }
+                }
+            }
+
+            return $ejecutado;
+        } catch (\PDOException $e) {
+            error_log("Error en Activo::eliminar: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * Obtener todas las salas para el select
+     * Obtener todas las salas para el select, incluyendo el edificio_id
      */
     public function obtenerHabitaciones(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id, nombre FROM sala ORDER BY nombre");
+            $stmt = $this->db->query("SELECT id, nombre, edificio_id FROM sala ORDER BY nombre");
             return $stmt->fetchAll();
         } catch (\PDOException $e) {
-            // Si la tabla no existe, retornar array vacío
+            return [];
+        }
+    }
+
+    /**
+     * Obtener todos los edificios para el select
+     */
+    public function obtenerEdificios(): array
+    {
+        try {
+            $stmt = $this->db->query("SELECT id, nombre FROM edificio ORDER BY nombre");
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
             return [];
         }
     }
@@ -465,7 +561,33 @@ class Activo
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ✅ Compatibilidad con registros antiguos: reemplazar IDs por nombres
+            foreach ($historial as &$registro) {
+                // Reemplazar IDs de sala por nombres en registros antiguos
+                if (!empty($registro['detalle'])) {
+                    // Reemplazar sala anterior
+                    if (!empty($registro['sala_anterior_id']) && !empty($registro['sala_anterior_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_anterior_id'] . '"',
+                            '"' . $registro['sala_anterior_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                    // Reemplazar sala nueva
+                    if (!empty($registro['sala_nueva_id']) && !empty($registro['sala_nueva_nombre'])) {
+                        $registro['detalle'] = str_replace(
+                            '"' . $registro['sala_nueva_id'] . '"',
+                            '"' . $registro['sala_nueva_nombre'] . '"',
+                            $registro['detalle']
+                        );
+                    }
+                }
+            }
+            unset($registro);
+
+            return $historial;
         } catch (\PDOException $e) {
             return [];
         }

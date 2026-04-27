@@ -85,9 +85,10 @@ final class SigmuRepository
     {
         // Vista filtrada por usuario en sesión (fn_usuario_sesion / fn_tiene_acceso_edificio).
         $stmt = $this->db->query(
-            'SELECT id, nombre, descripcion, cantidad_pisos, total_salas
-             FROM vista_mis_edificios
-             ORDER BY nombre'
+            'SELECT vme.*, ef.ruta_foto as foto
+             FROM vista_mis_edificios vme
+             LEFT JOIN edificio_foto ef ON ef.edificio_id = vme.id
+             ORDER BY vme.nombre'
         );
 
         return $stmt === false ? [] : $stmt->fetchAll();
@@ -268,10 +269,11 @@ final class SigmuRepository
         int $tipoActivoId,
         string $descripcion,
         string $estado,
-        int $salaId
+        int $salaId,
+        ?string $fechaCreado = null
     ): int {
         $stmt = $this->db->prepare(
-            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id)'
+            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id, :fecha_creado)'
         );
         
         $stmt->execute([
@@ -281,6 +283,7 @@ final class SigmuRepository
             'descripcion' => $descripcion,
             'estado' => $estado,
             'sala_id' => $salaId,
+            'fecha_creado' => $fechaCreado
         ]);
 
         $result = $stmt->fetch();
@@ -307,17 +310,44 @@ final class SigmuRepository
 
     public function eliminarFotoActivo(int $fotoId): bool
     {
-        $stmt = $this->db->prepare("SELECT ruta_foto FROM activo_foto WHERE id = ?");
+        // 1. Obtener la ruta y el activo antes de borrar
+        $stmt = $this->db->prepare("SELECT activo_id, ruta_foto FROM activo_foto WHERE id = ?");
         $stmt->execute([$fotoId]);
-        $rutaFoto = $stmt->fetchColumn();
+        $fotoInfo = $stmt->fetch();
+        
+        if (!$fotoInfo) return false;
+        
+        $activoId = (int)$fotoInfo['activo_id'];
+        $rutaFoto = $fotoInfo['ruta_foto'];
 
-        // ✅ Eliminar archivo fisico del servidor
-        if ($rutaFoto && file_exists('public/' . $rutaFoto)) {
-            unlink('public/' . $rutaFoto);
+        // 2. Ejecutar el procedimiento almacenado (borra de DB y reasigna principal si aplica)
+        $stmt = $this->db->prepare("CALL sp_eliminar_foto_activo(:foto_id)");
+        $stmt->execute(['foto_id' => $fotoId]);
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+
+        // 3. Registrar en Historial
+        $this->registrarHistorialInterno($activoId, 'modificacion', "Se eliminó la foto: " . basename($rutaFoto));
+
+        // 4. Eliminar archivo físico
+        if ($rutaFoto) {
+            $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
+            if (file_exists($rutaCompleta)) {
+                unlink($rutaCompleta);
+            }
         }
 
-        $stmt = $this->db->prepare("DELETE FROM activo_foto WHERE id = ?");
-        return $stmt->execute([$fotoId]);
+        return isset($result['filas_eliminadas']) && $result['filas_eliminadas'] > 0;
+    }
+
+    /**
+     * Obtiene todas las fotos de un activo
+     */
+    public function obtenerFotosActivo(int $activoId): array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto, descripcion, es_principal FROM activo_foto WHERE activo_id = ? ORDER BY es_principal DESC, id DESC");
+        $stmt->execute([$activoId]);
+        return $stmt->fetchAll();
     }
 
     public function agregarFotoActivo(
@@ -326,12 +356,10 @@ final class SigmuRepository
         string $descripcion = '',
         bool $esPrincipal = false
     ): int {
-        // ✅ Logica IGUAL que usuarios: si es principal, desmarcar todos los anteriores
+        // Si es principal, desmarcar la anterior
         if ($esPrincipal) {
-            $fotoAnterior = $this->obtenerFotoActivoPrincipal($activoId);
-            if ($fotoAnterior) {
-                $this->eliminarFotoActivo($fotoAnterior['id']);
-            }
+            $stmt = $this->db->prepare("UPDATE activo_foto SET es_principal = 0 WHERE activo_id = ?");
+            $stmt->execute([$activoId]);
         }
 
         $stmt = $this->db->prepare(
@@ -348,24 +376,123 @@ final class SigmuRepository
         $result = $stmt->fetch();
         $stmt->closeCursor();
 
-        if (!$result || !isset($result['nueva_foto_id'])) {
-            throw new RuntimeException('Could not get logged photo ID.');
+        $nuevaFotoId = (int) ($result['nueva_foto_id'] ?? 0);
+        
+        if ($nuevaFotoId > 0) {
+            $detalle = "Se agregó una nueva foto" . ($esPrincipal ? " (marcada como principal)" : "");
+            $this->registrarHistorialInterno($activoId, 'modificacion', $detalle);
         }
 
-        // ✅ REGISTRAR CAMBIO DE FOTO EN EL HISTORIAL
-        $stmtHistorial = $this->db->prepare("
-            INSERT INTO historial_activo 
-            (activo_id, usuario_id, accion, detalle, fecha)
-            VALUES (?, ?, 'modificacion', ?, NOW())
-        ");
+        return $nuevaFotoId;
+    }
 
-        $stmtHistorial->execute([
-            $activoId,
-            isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0,
-            'Se actualizó la foto principal del activo'
+    /**
+     * Obtiene la foto de un edificio
+     */
+    public function obtenerFotoEdificio(int $edificioId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT id, ruta_foto FROM edificio_foto WHERE edificio_id = ? ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$edificioId]);
+        $foto = $stmt->fetch();
+        return is_array($foto) ? $foto : null;
+    }
+
+    /**
+     * Agrega una foto a un edificio
+     */
+    public function agregarFotoEdificio(int $edificioId, string $rutaFoto, string $descripcion = ''): int
+    {
+        // El SP sp_agregar_foto_edificio no limpia anteriores, lo hacemos manual si queremos solo una
+        $fotoAnterior = $this->obtenerFotoEdificio($edificioId);
+        if ($fotoAnterior) {
+            $this->eliminarFotoEdificio((int)$fotoAnterior['id']);
+        }
+
+        $stmt = $this->db->prepare("CALL sp_agregar_foto_edificio(:edificio_id, :ruta, :descripcion)");
+        $stmt->execute([
+            'edificio_id' => $edificioId,
+            'ruta' => $rutaFoto,
+            'descripcion' => $descripcion
         ]);
+        
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        
+        return (int) ($result['nueva_foto_id'] ?? 0);
+    }
 
-        return (int) $result['nueva_foto_id'];
+    /**
+     * Elimina una foto de edificio
+     */
+    public function eliminarFotoEdificio(int $fotoId): bool
+    {
+        // 1. Obtener ruta para borrar archivo
+        $stmt = $this->db->prepare("SELECT ruta_foto FROM edificio_foto WHERE id = ?");
+        $stmt->execute([$fotoId]);
+        $rutaFoto = $stmt->fetchColumn();
+
+        // 2. Ejecutar el procedimiento almacenado
+        $stmt = $this->db->prepare("CALL sp_eliminar_foto_edificio(:foto_id)");
+        $stmt->execute(['foto_id' => $fotoId]);
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+
+        // 3. Eliminar archivo físico
+        if ($rutaFoto) {
+            $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
+            if (file_exists($rutaCompleta)) {
+                unlink($rutaCompleta);
+            }
+        }
+        
+        return isset($result['filas_eliminadas']) && $result['filas_eliminadas'] > 0;
+    }
+
+    public function establecerPrincipalFotoActivo(int $fotoId): bool
+    {
+        // Obtener el activo_id de esta foto
+        $stmt = $this->db->prepare("SELECT activo_id FROM activo_foto WHERE id = ?");
+        $stmt->execute([$fotoId]);
+        $fotoInfo = $stmt->fetch();
+
+        if (!$fotoInfo) return false;
+        
+        $activoId = (int)$fotoInfo['activo_id'];
+
+        // Desmarcar todas las fotos de este activo
+        $stmt = $this->db->prepare("UPDATE activo_foto SET es_principal = 0 WHERE activo_id = ?");
+        $stmt->execute([$activoId]);
+
+        // Marcar la seleccionada como principal
+        $stmt = $this->db->prepare("UPDATE activo_foto SET es_principal = 1 WHERE id = ?");
+        $exito = $stmt->execute([$fotoId]);
+
+        if ($exito) {
+            $this->registrarHistorialInterno($activoId, 'modificacion', "Se cambió la foto principal del activo");
+        }
+
+        return $exito;
+    }
+
+    /**
+     * Método interno para registrar historial manualmente cuando no hay un trigger directo
+     */
+    private function registrarHistorialInterno(int $activoId, string $accion, string $detalle): void
+    {
+        try {
+            // Obtenemos el usuario de la sesión de base de datos (@usuario_id_sesion)
+            $stmt = $this->db->prepare("
+                INSERT INTO historial_activo (activo_id, usuario_id, accion, detalle)
+                VALUES (:activo_id, IFNULL(@usuario_id_sesion, (SELECT id FROM usuario LIMIT 1)), :accion, :detalle)
+            ");
+            $stmt->execute([
+                'activo_id' => $activoId,
+                'accion' => $accion,
+                'detalle' => $detalle
+            ]);
+        } catch (\Throwable $e) {
+            error_log("Error al registrar historial manual: " . $e->getMessage());
+        }
     }
 
     /**
@@ -621,5 +748,22 @@ final class SigmuRepository
         $stmt->closeCursor();
         
         return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
+    }
+
+    /**
+     * Permite a un usuario editar su propio perfil (nombre y email)
+     */
+    public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE usuario SET email = :email, nombre_completo = :nombre 
+             WHERE id = :id"
+        );
+        
+        return $stmt->execute([
+            'id' => $usuarioId,
+            'email' => $email,
+            'nombre' => $nombreCompleto
+        ]);
     }
 }

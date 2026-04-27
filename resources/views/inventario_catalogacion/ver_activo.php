@@ -98,8 +98,8 @@ $error = $_GET['error'] ?? '';
                 <div class="left-column">
                     <!-- Image Container -->
                     <div class="image-container">
-                        <?php if (!empty($activo['imagen'])): ?>
-                            <img src="/<?= htmlspecialchars((string) $activo['imagen'], ENT_QUOTES, 'UTF-8') ?>" 
+                        <?php if (!empty($activo['fotos'])): ?>
+                            <img id="mainImage" src="/<?= htmlspecialchars((string) $activo['fotos'][0]['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" 
                                  alt="Imagen del activo" 
                                  class="asset-image"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -110,10 +110,8 @@ $error = $_GET['error'] ?? '';
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
                                 <span>Imagen no disponible</span>
-            </div>
-
-
-        <?php else: ?>
+                            </div>
+                        <?php else: ?>
                             <div class="image-placeholder">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -125,6 +123,18 @@ $error = $_GET['error'] ?? '';
                         <?php endif; ?>
                     </div>
 
+                    <!-- Gallery -->
+                    <?php if (!empty($activo['fotos']) && count($activo['fotos']) > 1): ?>
+                        <div class="gallery-thumbnails" style="display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 5px;">
+                            <?php foreach ($activo['fotos'] as $foto): ?>
+                                <img src="/<?= htmlspecialchars((string) $foto['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" 
+                                     alt="Miniatura" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent;"
+                                     onclick="changeMainImage(this)">
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Metadata Cards -->
                     <div class="metadata-cards">
                         <div class="metadata-card">
@@ -132,8 +142,11 @@ $error = $_GET['error'] ?? '';
                             <span class="metadata-value"><?= (int) ($activo['id'] ?? 0) ?></span>
                         </div>
                         <div class="metadata-card">
-                            <span class="metadata-label">Sala ID</span>
-                            <span class="metadata-value"><?= (int) ($activo['sala_id'] ?? 0) ?></span>
+                            <span class="metadata-label">Ubicación</span>
+                            <span class="metadata-value" style="font-size: 0.85em;">
+                                <?= htmlspecialchars((string) ($activo['sala_nombre'] ?? 'Sin sala'), ENT_QUOTES, 'UTF-8') ?><br>
+                                <small style="opacity: 0.8;"><?= htmlspecialchars((string) ($activo['edificio_nombre'] ?? 'Sin edificio'), ENT_QUOTES, 'UTF-8') ?></small>
+                            </span>
                         </div>
                         <div class="metadata-card">
                             <span class="metadata-label">Código</span>
@@ -169,7 +182,7 @@ $error = $_GET['error'] ?? '';
                         <div class="detail-group">
                             <label class="detail-label">Creado Por</label>
                             <div class="detail-value">
-                                <?= htmlspecialchars((string) ($activo['usuario_creador_id'] ?? 'Sistema'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars((string) ($activo['usuario_creador_nombre'] ?? $activo['usuario_creador_id'] ?? 'Sistema'), ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         </div>
 
@@ -178,16 +191,23 @@ $error = $_GET['error'] ?? '';
                             <label class="detail-label">Estado</label>
                             <div class="detail-value">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars((string) ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Fecha de Creación -->
+                        <!-- Fechas -->
                         <div class="detail-group">
                             <label class="detail-label">Fecha de Creación</label>
                             <div class="detail-value">
                                 <?= htmlspecialchars((string) ($activo['fecha_creado'] ?? 'No disponible'), ENT_QUOTES, 'UTF-8') ?>
+                            </div>
+                        </div>
+
+                        <div class="detail-group">
+                            <label class="detail-label">Última Actualización</label>
+                            <div class="detail-value">
+                                <?= htmlspecialchars((string) ($activo['fecha_actualizado'] ?? 'Nunca'), ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         </div>
                     </div>

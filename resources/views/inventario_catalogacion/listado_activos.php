@@ -15,6 +15,11 @@ $total = $total ?? count($activos);
 $busqueda = $busqueda ?? '';
 $ordenarPor = $ordenarPor ?? 'id';
 $ordenDireccion = $ordenDireccion ?? 'DESC';
+
+// Filtros pasados desde el controlador
+$tiposDisponibles = $tiposDisponibles ?? [];
+$estadosSeleccionados = $estadosSeleccionados ?? [];
+$tiposSeleccionados = $tiposSeleccionados ?? [];
 ?>
 <!doctype html>
 <html lang="es">
@@ -72,12 +77,21 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
                     Activos Registrados
                 <?php endif; ?>
             </h1>
-            <button class="add-btn" onclick="window.location.href='/sigmu/activo/registrar?sala_id=<?= $salaId ?>'" title="Agregar nuevo activo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </button>
+            <div style="display: flex; gap: 12px;">
+                <button class="add-btn" style="background-color: #4b5563;" onclick="window.location.href='/sigmu/activo/importar?sala_id=<?= $salaId ?>'" title="Importar activos desde Excel/CSV">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+                <button class="add-btn" onclick="window.location.href='/sigmu/activo/registrar?sala_id=<?= $salaId ?>'" title="Agregar nuevo activo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <?php if ($error): ?>
@@ -165,7 +179,7 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
                             <div class="table-cell cell-type" data-label="Tipo Activo" data-tipo-id="<?= (int) ($activo['tipo_activo_id'] ?? 0) ?>"><?= htmlspecialchars((string) ($activo['tipo'] ?? 'Sin tipo'), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-status" data-label="Estado">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
                                 </span>
                             </div>
                             <div class="table-cell cell-ubicacion" data-label="Ubicación"><?= htmlspecialchars((string) ($activo['sala_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
@@ -199,139 +213,62 @@ $ordenDireccion = $ordenDireccion ?? 'DESC';
                 <?php endif; ?>
             </div>
 
-            <!-- Pagination -->
-            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Mostrando <?= count($activos) ?> de <?= $total ?> activos
-                </div>
-                <div class="pagination">
-                    <?php if ($pagina > 1): ?>
-                        <a href="?pagina=<?= $pagina - 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                            Anterior
-                        </a>
-                    <?php endif; ?>
+<?php
+// Generar la cadena de consulta base manteniendo los filtros y ordenamiento
+$currentParams = $_GET;
+unset($currentParams['pagina']);
+$queryString = http_build_query($currentParams);
+$baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
+?>
 
-                    <div class="pagination-pages">
-                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                            <?php if ($i == $pagina): ?>
-                                <span class="pagination-btn active"><?= $i ?></span>
-                            <?php else: ?>
-                                <a href="?pagina=<?= $i ?>&sala_id=<?= $salaId ?>" class="pagination-btn"><?= $i ?></a>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </div>
+<!-- Pagination -->
+<?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+<div class="pagination-container">
+    <div class="pagination-info">
+        Mostrando <?= count($activos) ?> de <?= $total ?> activos
+    </div>
+    <div class="pagination">
+        <?php if ($pagina > 1): ?>
+            <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Anterior
+            </a>
+        <?php endif; ?>
 
-                    <?php if ($pagina < $totalPaginas): ?>
-                        <a href="?pagina=<?= $pagina + 1 ?>&sala_id=<?= $salaId ?>" class="pagination-btn">
-                            Siguiente
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endif; ?>
+        <div class="pagination-pages">
+            <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                <?php if ($i == $pagina): ?>
+                    <span class="pagination-btn active"><?= $i ?></span>
+                <?php else: ?>
+                    <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+        </div>
+
+        <?php if ($pagina < $totalPaginas): ?>
+            <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
+                Siguiente
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
         </div>
     </main>
 
     <script>
-    // Sistema de ordenamiento
-    console.log('✅ Script de ordenamiento cargado');
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const sortableHeaders = document.querySelectorAll('.sortable');
-        console.log('🔍 Encontrados', sortableHeaders.length, 'encabezados ordenables');
-        
-        sortableHeaders.forEach(header => {
-            header.style.cursor = 'pointer';
-            header.style.userSelect = 'none';
-            
-            header.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const sortField = this.getAttribute('data-sort');
-                console.log('👉 Click en ordenar por:', sortField);
-                
-                // Obtener URL actual
-                let baseUrl = window.location.pathname;
-                let queryString = window.location.search.substring(1);
-                let params = {};
-                
-                // Parsear parametros manualmente
-                if (queryString.length > 0) {
-                    let pairs = queryString.split('&');
-                    for (let i = 0; i < pairs.length; i++) {
-                        let pair = pairs[i].split('=');
-                        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-                    }
-                }
-                
-                // Si ya estamos ordenando por este campo, invertir la dirección
-                if (params['ordenar_por'] === sortField) {
-                    params['orden_direccion'] = params['orden_direccion'] === 'ASC' ? 'DESC' : 'ASC';
-                } else {
-                    params['ordenar_por'] = sortField;
-                    params['orden_direccion'] = 'ASC';
-                }
-                
-                // Resetear a pagina 1
-                params['pagina'] = '1';
-                
-                // Construir nueva URL
-                let newQuery = [];
-                for (let key in params) {
-                    newQuery.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-                }
-                
-                let finalUrl = baseUrl;
-                if (newQuery.length > 0) {
-                    finalUrl += '?' + newQuery.join('&');
-                }
-                
-                console.log('🔄 Redirigiendo a:', finalUrl);
-                window.location.href = finalUrl;
-            });
-            
-            // Efecto hover
-            header.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-            });
-            
-            header.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = '';
-            });
-        });
-    });
+    // Variables globales para el sistema de filtros
+    window.SIGMU_DATA = {
+        tiposDisponibles: <?= json_encode($tiposDisponibles) ?>,
+        estadosSeleccionados: <?= json_encode($estadosSeleccionados) ?>,
+        tiposSeleccionados: <?= json_encode($tiposSeleccionados) ?>
+    };
     </script>
-    
-    <style>
-    .sortable {
-        position: relative;
-        transition: background-color 0.15s ease;
-    }
-    
-    .sort-icon {
-        margin-left: 6px;
-        opacity: 0.4;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .sort-icon.active {
-        opacity: 1;
-        color: #3b82f6;
-    }
-    
-    .sortable:hover .sort-icon {
-        opacity: 0.7;
-    }
-    </style>
 
     <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/listado-activos.js"></script>

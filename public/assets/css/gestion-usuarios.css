@@ -338,4 +338,46 @@ body {
         flex-direction: column;
         align-items: flex-start;
     }
-}
+    }
+
+    /* Panel de Filtros */
+    .filter-panel {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    }
+
+    .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    }
+
+    .filter-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    }
+
+    .filter-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #9E9E9E;
+    border-radius: 6px;
+    }
+
+    .btn-reset {
+    width: 100%;
+    padding: 8px 12px;
+    background: #9E9E9E;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+
+    .btn-reset:hover {
+    background: #757575;
+    }

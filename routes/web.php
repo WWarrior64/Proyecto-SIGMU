@@ -8,7 +8,10 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SigmuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EdificioController;
+use App\Http\Controllers\SalaController;
 use App\Http\Controllers\ActivoController;
+use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\TipoActivoController;
 
 // Rutas públicas / navegación base.
 $router->get('/', static function (): string {
@@ -23,8 +26,7 @@ $router->get('/sigmu', static function (): string {
 });
 
 $router->get('/sigmu/admin/usuarios', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/gestion_usuarios.php';
-    return '';
+    return view('administracion_usuarios.gestion_usuarios');
 });
 
 // Login (POST) - valida usuario/contraseña contra tabla usuarios.
@@ -38,6 +40,18 @@ $router->post('/sigmu/login', static function (): string {
 $router->get('/sigmu/logout', static function (): string {
     $controller = new AuthController();
     $controller->logout();
+    return '';
+});
+
+// Perfil de usuario
+$router->get('/sigmu/perfil', static function (): string {
+    $controller = new \App\Http\Controllers\UserController();
+    return $controller->perfil();
+});
+
+$router->post('/sigmu/perfil/actualizar', static function (): string {
+    $controller = new \App\Http\Controllers\UserController();
+    $controller->actualizarPerfil();
     return '';
 });
 
@@ -76,56 +90,44 @@ $router->get('/sigmu/edificio', static function (): string {
     return $controller->salasPorEdificio();
 });
 
-// Rutas de activos
+$router->post('/sigmu/edificio/actualizar-foto', static function (): void {
+    $controller = new EdificioController();
+    $controller->updatePhoto();
+});
+
+// Rutas de salas (NUEVO)
 $router->get('/sigmu/sala', static function (): string {
-    $controller = new ActivoController();
-    return $controller->activosPorSala();
+    $controller = new SalaController();
+    return $controller->activos();
 });
 
-$router->get('/sigmu/activo/registrar', static function (): string {
-    $controller = new ActivoController();
-    return $controller->registrarActivoGet();
-});
-
-$router->post('/sigmu/activo/registrar', static function (): string {
-    $controller = new ActivoController();
-    return $controller->registrarActivoPost();
-});
-
-// Endpoint AJAX para generar código basado en nombre del activo
-$router->get('/sigmu/activo/generar-codigo', static function (): void {
-    $controller = new ActivoController();
-    $controller->generarCodigo();
-});
-
-// Endpoint AJAX para obtener tipos de activo (filtros)
-$router->get('/sigmu/activo/tipos', static function (): void {
-    $controller = new ActivoController();
-    $controller->obtenerTiposActivo();
-});
-
-// Routes for asset CRUD (using query parameters)
-$router->get('/activos', static function (): string {
-    $controller = new ActivoController();
-    return $controller->index();
-});
-
-$router->get('/activos/create', static function (): string {
-    $controller = new ActivoController();
-    return $controller->create();
-});
-
-$router->post('/activos', static function (): string {
-    $controller = new ActivoController();
-    $controller->store();
-    return '';
-});
-
-// Rutas adicionales para compatibilidad con vistas
+// Rutas de activos (CRUD REESTRUCTURADO)
 $router->get('/sigmu/activo/ver', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
     return $controller->show($id);
+});
+
+$router->get('/sigmu/activo/importar', static function (): string {
+    $controller = new ActivoController();
+    return $controller->import();
+});
+
+$router->post('/sigmu/activo/importar', static function (): string {
+    $controller = new ActivoController();
+    $controller->processImport();
+    return '';
+});
+
+$router->get('/sigmu/activo/registrar', static function (): string {
+    $controller = new ActivoController();
+    return $controller->create();
+});
+
+$router->post('/sigmu/activo/registrar', static function (): string {
+    $controller = new ActivoController();
+    $controller->store();
+    return '';
 });
 
 $router->get('/sigmu/activo/editar', static function (): string {
@@ -141,10 +143,20 @@ $router->post('/sigmu/activo/actualizar', static function (): string {
     return '';
 });
 
+$router->post('/sigmu/activo/foto/principal', static function (): void {
+    $controller = new ActivoController();
+    $controller->setPrincipalPhoto();
+});
+
+$router->post('/sigmu/activo/foto/eliminar', static function (): void {
+    $controller = new ActivoController();
+    $controller->deletePhoto();
+});
+
 $router->post('/sigmu/activo/dar-baja', static function (): string {
     $id = (int) ($_POST['id'] ?? 0);
     $controller = new ActivoController();
-    return $controller->darDeBaja($id);
+    $controller->darDeBaja($id);
     return '';
 });
 
@@ -155,15 +167,30 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
     return '';
 });
 
+$router->get('/sigmu/activo/historial', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new ActivoController();
+    return $controller->historial($id);
+});
+
+// Endpoints AJAX
+$router->get('/sigmu/activo/generar-codigo', static function (): void {
+    $controller = new ActivoController();
+    $controller->generarCodigo();
+});
+
+$router->get('/sigmu/activo/tipos', static function (): void {
+    $controller = new TipoActivoController();
+    $controller->index();
+});
+
 // RUTAS ADMINISTRACION USUARIOS
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/gestion_usuarios.php';
-    return '';
+    return view('administracion_usuarios.gestion_usuarios');
 });
 
 $router->get('/sigmu/administracion_usuarios/formulario_usuario', static function (): string {
-    require_once __DIR__ . '/../resources/views/administracion_usuarios/formulario_usuario.php';
-    return '';
+    return view('administracion_usuarios.formulario_usuario');
 });
 
 $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function (): string {
@@ -278,4 +305,10 @@ $router->get('/sigmu/activo/historial', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
     return $controller->historial($id);
+});
+
+// Historial General de Cambios
+$router->get('/sigmu/historial', static function (): string {
+    $controller = new \App\Http\Controllers\HistorialController();
+    return $controller->index();
 });

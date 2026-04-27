@@ -18,9 +18,14 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
 $service = new SigmuService();
 $service->iniciarSesionBd($sessionUser['id']);
 
-// Detectar modo: EDITAR o REGISTRAR
-$modo = $_GET['modo'] ?? 'crear';
-$usuario_id = $_GET['id'] ?? null;
+// Detectar modo: EDITAR o REGISTRAR (Validación absoluta para romper el rastreo de taint)
+$modo = 'crear';
+if (isset($_GET['modo']) && $_GET['modo'] === 'editar') {
+    $modo = 'editar';
+}
+
+// Saneamiento de ID con casting explícito
+$usuario_id = (isset($_GET['id']) && is_numeric($_GET['id'])) ? (int)$_GET['id'] : null;
 $usuario = null;
 $roles = $service->obtenerRoles();
 
@@ -38,7 +43,7 @@ if ($modo === 'editar' && $usuario_id) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - <?= $modo === 'editar' ? 'Editar Usuario' : 'Registrar Usuario' ?></title>
+    <title>SIGMU - <?= ($modo === 'editar' ? 'Editar Usuario' : 'Registrar Usuario') ?></title>
     <link rel="stylesheet" href="/assets/css/gestion-usuarios.css">
     <link rel="stylesheet" href="/assets/css/formulario-usuario.css">
 </head>
@@ -47,7 +52,7 @@ if ($modo === 'editar' && $usuario_id) {
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
         </div>
         <div class="header-right">
@@ -76,7 +81,7 @@ if ($modo === 'editar' && $usuario_id) {
         <div class="content-card">
             
             <h2 class="page-title">
-                <?= $modo === 'editar' ? 'EDITAR USUARIO' : 'REGISTRAR USUARIO' ?>
+                <?= ($modo === 'editar' ? 'EDITAR USUARIO' : 'REGISTRAR USUARIO') ?>
             </h2>
             
             <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 16px 0 32px 0;">
@@ -84,9 +89,9 @@ if ($modo === 'editar' && $usuario_id) {
             <form id="formUsuario" method="POST" action="/sigmu/administracion_usuarios/guardar_usuario" enctype="multipart/form-data">
                 <input type="file" id="fotoUsuario" name="foto" accept="image/*" style="display: none;">
                 
-                <input type="hidden" name="modo" value="<?= $modo ?>">
-                <?php if ($modo === 'editar'): ?>
-                    <input type="hidden" name="usuario_id" value="<?= $usuario['id'] ?>">
+                <input type="hidden" name="modo" value="<?= ($modo === 'editar' ? 'editar' : 'crear') ?>">
+                <?php if ($modo === 'editar' && $usuario): ?>
+                    <input type="hidden" name="usuario_id" value="<?= (int)$usuario['id'] ?>">
                 <?php endif; ?>
 
                 <div class="form-grid">
@@ -96,15 +101,13 @@ if ($modo === 'editar' && $usuario_id) {
                         <div class="avatar">
                             <?php
                             $fotoUsuario = null;
-                            if ($modo === 'editar') {
-                                $fotoUsuario = $service->obtenerFotoUsuario($usuario['id']);
-                            } else {
-                                $fotoUsuario = null;
+                            if ($modo === 'editar' && $usuario) {
+                                $fotoUsuario = $service->obtenerFotoUsuario((int)$usuario['id']);
                             }
 
                             if ($fotoUsuario) {
                                 ?>
-                                <img src="<?= htmlspecialchars($fotoUsuario['ruta_foto']) ?>" alt="Foto perfil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                <img src="<?= htmlspecialchars((string)$fotoUsuario['ruta_foto'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto perfil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                 <?php
                             } else {
                                 ?>
@@ -116,7 +119,7 @@ if ($modo === 'editar' && $usuario_id) {
                             }
                             ?>
                         </div>
-                        <button type="button" class="avatar-edit-btn" title="<?= $modo === 'editar' ? 'Cambiar foto' : 'Subir foto' ?>">
+                        <button type="button" class="avatar-edit-btn" title="<?= ($modo === 'editar' ? 'Cambiar foto' : 'Subir foto') ?>">
                             ✏️
                         </button>
                     </div>
@@ -124,24 +127,24 @@ if ($modo === 'editar' && $usuario_id) {
                     <!-- CAMPOS FORMULARIO -->
                     <div class="fields-container">
                         
-                        <?php if ($modo === 'editar'): ?>
+                        <?php if ($modo === 'editar' && $usuario): ?>
                         <div class="form-group">
                             <label for="id">ID</label>
-                            <input type="text" value="<?= $usuario['id'] ?>" disabled>
+                            <input type="text" value="<?= (int)$usuario['id'] ?>" disabled>
                         </div>
                         <?php endif; ?>
 
                         <div class="form-group">
                             <label for="nombre_completo">Nombre completo</label>
-                            <input type="text" name="nombre_completo" 
-                                   value="<?= $modo === 'editar' ? htmlspecialchars($usuario['nombre_completo']) : '' ?>"
+                            <input type="text" name="nombre_completo"
+                                   value="<?= ($modo === 'editar' && $usuario) ? htmlspecialchars((string)$usuario['nombre_completo'], ENT_QUOTES, 'UTF-8') : '' ?>"
                                    required>
                         </div>
 
                         <div class="form-group">
                             <label for="username">Username</label>
-                            <input type="text" name="username" 
-                                   value="<?= $modo === 'editar' ? htmlspecialchars($usuario['username']) : '' ?>"
+                            <input type="text" name="username"
+                                   value="<?= ($modo === 'editar' && $usuario) ? htmlspecialchars((string)$usuario['username'], ENT_QUOTES, 'UTF-8') : '' ?>"
                                    required>
                         </div>
 
@@ -150,9 +153,9 @@ if ($modo === 'editar' && $usuario_id) {
                             <select name="rol_id" required>
                                 <option value="">Seleccionar rol</option>
                                 <?php foreach ($roles as $rol): ?>
-                                <option value="<?= $rol['id'] ?>" 
-                                    <?= $modo === 'editar' && $usuario['rol_id'] == $rol['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($rol['nombre']) ?>
+                                <option value="<?= (int)$rol['id'] ?>"
+                                    <?= ($modo === 'editar' && $usuario && $usuario['rol_id'] == $rol['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars((string)$rol['nombre'], ENT_QUOTES, 'UTF-8') ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -161,22 +164,22 @@ if ($modo === 'editar' && $usuario_id) {
                         <div class="form-group">
                             <label for="estado">Estado</label>
                             <select name="activo" required>
-                                <option value="1" <?= $modo === 'editar' && $usuario['activo'] ? 'selected' : '' ?>>Activo</option>
-                                <option value="0" <?= $modo === 'editar' && !$usuario['activo'] ? 'selected' : '' ?>>Inactivo</option>
+                                <option value="1" <?= ($modo === 'editar' && $usuario && $usuario['activo']) ? 'selected' : '' ?>>Activo</option>
+                                <option value="0" <?= ($modo === 'editar' && $usuario && !$usuario['activo']) ? 'selected' : '' ?>>Inactivo</option>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email</label>
-                            <input type="email" name="email" 
-                                   value="<?= $modo === 'editar' ? htmlspecialchars($usuario['email']) : '' ?>"
+                            <input type="email" name="email"
+                                   value="<?= ($modo === 'editar' && $usuario) ? htmlspecialchars((string)$usuario['email'], ENT_QUOTES, 'UTF-8') : '' ?>"
                                    required>
                         </div>
 
-                        <?php if ($modo === 'editar'): ?>
+                        <?php if ($modo === 'editar' && $usuario): ?>
                         <div class="form-group">
                             <label for="fecha_creado">Fecha creado</label>
-                            <input type="text" value="<?= date('d-m-Y', strtotime($usuario['fecha_creado'])) ?>" disabled>
+                            <input type="text" value="<?= htmlspecialchars(date('d-m-Y', strtotime((string)$usuario['fecha_creado'])), ENT_QUOTES, 'UTF-8') ?>" disabled>
                         </div>
                         <?php endif; ?>
 
@@ -196,7 +199,7 @@ if ($modo === 'editar' && $usuario_id) {
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" 
+                    <button type="button" class="btn btn-secondary"
                             onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'">
                         CANCELAR
                     </button>
@@ -210,7 +213,7 @@ if ($modo === 'editar' && $usuario_id) {
         </div>
     </main>
 
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/formulario-usuario.js"></script>
-
-</body>
+    </body>
 </html>

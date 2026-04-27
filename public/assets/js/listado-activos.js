@@ -19,10 +19,45 @@ document.addEventListener('DOMContentLoaded', function() {
     initMenu();
     initAnimations();
     initAlertsAutoHide();
+    initSorting();
     
     // ✅ Aplicar filtro por defecto al cargar
     filterByStatus(activeStatusFilters);
 });
+
+/**
+ * Sorting functionality
+ */
+function initSorting() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    console.log('🔍 Encontrados', sortableHeaders.length, 'encabezados ordenables');
+    
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const sortField = this.getAttribute('data-sort');
+            console.log('👉 Click en ordenar por:', sortField);
+            
+            // Usar URLSearchParams para capturar todos los parámetros GET actuales
+            let params = new URLSearchParams(window.location.search);
+            
+            // Si ya estamos ordenando por este campo, invertir la dirección
+            if (params.get('ordenar_por') === sortField) {
+                params.set('orden_direccion', params.get('orden_direccion') === 'ASC' ? 'DESC' : 'ASC');
+            } else {
+                params.set('ordenar_por', sortField);
+                params.set('orden_direccion', 'ASC');
+            }
+            
+            // Resetear a página 1 al cambiar ordenamiento
+            params.set('pagina', '1');
+            
+            // Redirigir conservando todos los parámetros (filtros, búsqueda, sala_id, etc.)
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+}
 
 /**
  * Search functionality
@@ -106,7 +141,7 @@ function updateEmptyState(searchTerm) {
 }
 
 /**
- * Filter functionality
+ * Filter functionality: Uses server-provided data and redirects for persistence
  */
 function initFilter() {
     const filterBtn = document.getElementById('filterBtn');
@@ -122,24 +157,19 @@ function initFilter() {
         dropdown = document.createElement('div');
         dropdown.className = 'filter-dropdown';
 
-        const isChecked = (value) => {
-            return activeStatusFilters.includes(value);
-        };
+        // Obtener datos desde las variables globales inyectadas por PHP
+        const data = window.SIGMU_DATA || { tiposDisponibles: [], estadosSeleccionados: [], tiposSeleccionados: [] };
+        
+        const isEstadoChecked = (val) => data.estadosSeleccionados.includes(val);
+        const isTipoChecked = (val) => data.tiposSeleccionados.includes(parseInt(val));
 
-        // ✅ Obtener tipos reales de la tabla
-        const typeCells = document.querySelectorAll('.table-body .cell-type');
-        const uniqueTypes = [...new Set(Array.from(typeCells).map(cell => cell.textContent.trim()))]
-            .filter(name => name && 
-                           name !== 'Sin tipo' && 
-                           name.toLowerCase() !== 'tipo');
-
-        // Construir HTML de tipos
+        // Construir HTML de tipos de activo usando los datos del servidor
         let tiposHtml = '';
-        uniqueTypes.forEach(tipo => {
+        data.tiposDisponibles.forEach(tipo => {
             tiposHtml += `
                 <label class="filter-option">
-                    <input type="checkbox" value="${tipo}" class="tipo-checkbox" ${isChecked(tipo) ? 'checked' : ''}>
-                    <span>${tipo}</span>
+                    <input type="checkbox" value="${tipo.id}" class="tipo-checkbox" ${isTipoChecked(tipo.id) ? 'checked' : ''}>
+                    <span>${tipo.nombre}</span>
                 </label>
             `;
         });
@@ -149,26 +179,26 @@ function initFilter() {
                 <div class="filter-column">
                     <h5 style="margin: 8px 0 12px 0; color: #424242; font-size: 14px;">Estado</h5>
                     <label class="filter-option">
-                        <input type="checkbox" value="disponible" ${isChecked('disponible') ? 'checked' : ''} class="estado-checkbox">
+                        <input type="checkbox" value="disponible" ${isEstadoChecked('disponible') ? 'checked' : ''} class="estado-checkbox">
                         <span class="status-badge status-disponible">Disponible</span>
                     </label>
                     <label class="filter-option">
-                        <input type="checkbox" value="en_uso" ${isChecked('en_uso') ? 'checked' : ''} class="estado-checkbox">
+                        <input type="checkbox" value="en_uso" ${isEstadoChecked('en_uso') ? 'checked' : ''} class="estado-checkbox">
                         <span class="status-badge status-en_uso">En uso</span>
                     </label>
                     <label class="filter-option">
-                        <input type="checkbox" value="reparacion" ${isChecked('reparacion') ? 'checked' : ''} class="estado-checkbox">
+                        <input type="checkbox" value="reparacion" ${isEstadoChecked('reparacion') ? 'checked' : ''} class="estado-checkbox">
                         <span class="status-badge status-reparacion">Reparación</span>
                     </label>
                     <label class="filter-option">
-                        <input type="checkbox" value="descartado" ${isChecked('descartado') ? 'checked' : ''} class="estado-checkbox">
+                        <input type="checkbox" value="descartado" ${isEstadoChecked('descartado') ? 'checked' : ''} class="estado-checkbox">
                         <span class="status-badge status-descartado">Descartado</span>
                     </label>
                 </div>
                 
                 <div class="filter-column">
                     <h5 style="margin: 8px 0 12px 0; color: #424242; font-size: 14px;">Tipo de Activo</h5>
-                    <div id="tipos-container">
+                    <div id="tipos-container" style="max-height: 200px; overflow-y: auto;">
                         ${tiposHtml || '<label class="filter-option"><span style="color:#999;">No hay tipos</span></label>'}
                     </div>
                 </div>
@@ -196,47 +226,60 @@ function initFilter() {
 
         document.body.appendChild(dropdown);
 
-        const style = document.createElement('style');
-        style.textContent = `
-            .filter-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
-            .filter-column { display: flex; flex-direction: column; }
-            .filter-option { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
-            .filter-option input { margin: 0; }
-            .filter-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #E0E0E0; }
-            .filter-apply, .filter-clear {
-                padding: 8px 16px; border: 1px solid #E0E0E0; border-radius: 8px; background: white;
-                cursor: pointer; font-size: 12px; font-weight: 500;
-            }
-            .filter-apply { background: #9C1C1C; color: white; border-color: #9C1C1C; }
-            .filter-apply:hover { background: #B71C1C; }
-            .filter-clear:hover { background: #F5F5F5; }
-        `;
-        document.head.appendChild(style);
+        // Estilos internos
+        if (!document.getElementById('filter-dropdown-styles')) {
+            const style = document.createElement('style');
+            style.id = 'filter-dropdown-styles';
+            style.textContent = `
+                .filter-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
+                .filter-column { display: flex; flex-direction: column; }
+                .filter-option { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
+                .filter-option input { margin: 0; }
+                .filter-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #E0E0E0; }
+                .filter-apply, .filter-clear {
+                    padding: 8px 16px; border: 1px solid #E0E0E0; border-radius: 8px; background: white;
+                    cursor: pointer; font-size: 12px; font-weight: 500;
+                }
+                .filter-apply { background: #9C1C1C; color: white; border-color: #9C1C1C; }
+                .filter-apply:hover { background: #B71C1C; }
+                .filter-clear:hover { background: #F5F5F5; }
+            `;
+            document.head.appendChild(style);
+        }
 
-        // Aplicar filtros
+        // APLICAR FILTROS (REDIECCIÓN)
         const applyBtn = dropdown.querySelector('.filter-apply');
         applyBtn.addEventListener('click', function() {
-            const selected = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'))
-                                 .map(cb => cb.value);
-            activeStatusFilters = [...selected];
-            filterByStatus(selected);
-            dropdown.remove();
+            const params = new URLSearchParams(window.location.search);
+            
+            // Limpiar filtros anteriores para reconstruirlos
+            params.delete('estados[]');
+            params.delete('tipos[]');
+            
+            // Agregar estados seleccionados
+            dropdown.querySelectorAll('.estado-checkbox:checked').forEach(cb => {
+                params.append('estados[]', cb.value);
+            });
+            
+            // Agregar tipos seleccionados
+            dropdown.querySelectorAll('.tipo-checkbox:checked').forEach(cb => {
+                params.append('tipos[]', cb.value);
+            });
+            
+            // Resetear a página 1 al filtrar
+            params.set('pagina', '1');
+            
+            window.location.href = window.location.pathname + '?' + params.toString();
         });
 
-        // ✅ BOTON LIMPIAR: DEJA TODO SIN MARCAR
+        // LIMPIAR FILTROS
         const clearBtn = dropdown.querySelector('.filter-clear');
         clearBtn.addEventListener('click', function() {
-            const allCheckboxes = dropdown.querySelectorAll('input[type="checkbox"]');
-            allCheckboxes.forEach(cb => cb.checked = false);
-            activeStatusFilters = [];
-            filterByStatus(activeStatusFilters);
-            
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.value = '';
-                searchInput.dispatchEvent(new Event('input'));
-            }
-            dropdown.remove();
+            const params = new URLSearchParams(window.location.search);
+            params.delete('estados[]');
+            params.delete('tipos[]');
+            params.set('pagina', '1');
+            window.location.href = window.location.pathname + '?' + params.toString();
         });
 
         // Cerrar al clic fuera
@@ -253,75 +296,11 @@ function initFilter() {
 }
 
 /**
- * Filter table rows by status AND type
+ * Filter table rows (DEPRECATED: Now handled by server)
  */
 function filterByStatus(filters) {
-    const tableRows = document.querySelectorAll('.table-body .table-row');
-    
-    const normalizarEstado = (estado) => {
-        if (!estado) return '';
-        let norm = String(estado).toLowerCase().trim();
-        norm = norm.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        norm = norm.replace(/[\s-]+/g, '_');
-        return norm;
-    };
-
-    // ✅ ✅ ✅ LOGICA DEFINITIVA:
-    if (filters.length === 0) {
-        // ✅ NINGUN FILTRO MARCADO: MOSTRAR TODOS MENOS LOS DESCARTADOS
-        tableRows.forEach(row => {
-            const statusBadge = row.querySelector('.status-badge');
-            const rowStatusText = statusBadge ? statusBadge.textContent.trim() : '';
-            const rowStatusNormalizado = normalizarEstado(rowStatusText);
-            
-            if (rowStatusNormalizado === 'descartado') {
-                row.style.display = 'none';
-                row.style.opacity = '0';
-            } else {
-                row.style.display = '';
-                row.style.opacity = '1';
-            }
-        });
-        updateEmptyState(document.getElementById('searchInput')?.value || '');
-        return;
-    }
-
-    // ✅ HAY FILTROS MARCADOS: MOSTRAR SOLO LOS MARCADOS
-    const statusKeywords = ['disponible', 'en_uso', 'reparacion', 'descartado'];
-    
-    const statusFilters = filters.filter(f => statusKeywords.includes(normalizarEstado(f)));
-    const typeFilters   = filters.filter(f => !statusKeywords.includes(normalizarEstado(f)));
-
-    tableRows.forEach(row => {
-        // Estado (por texto del badge)
-        const statusBadge = row.querySelector('.status-badge');
-        const rowStatusText = statusBadge ? statusBadge.textContent.trim() : '';
-        const rowStatusNormalizado = normalizarEstado(rowStatusText);
-
-        // Tipo
-        const typeCell = row.querySelector('.cell-type');
-        const rowTypeText = typeCell ? typeCell.textContent.trim() : '';
-
-        let mostrar = true;
-
-        if (statusFilters.length > 0) {
-            mostrar = mostrar && statusFilters.includes(rowStatusNormalizado);
-        }
-
-        if (typeFilters.length > 0) {
-            mostrar = mostrar && typeFilters.includes(rowTypeText);
-        }
-
-        if (mostrar) {
-            row.style.display = '';
-            row.style.opacity = '1';
-        } else {
-            row.style.display = 'none';
-            row.style.opacity = '0';
-        }
-    });
-    
-    updateEmptyState(document.getElementById('searchInput')?.value || '');
+    // Esta función ya no es necesaria pues el filtrado es por servidor
+    console.log('Filtros aplicados desde el servidor.');
 }
 
 /**
