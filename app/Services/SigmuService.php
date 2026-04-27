@@ -141,7 +141,8 @@ final class SigmuService
         string $descripcion,
         string $estado,
         int $salaId,
-        array $fotoPaths = []
+        array $fotoPaths = [],
+        ?string $fechaCreado = null
     ): array {
         try {
             // Verificar que el código no exista
@@ -159,12 +160,16 @@ final class SigmuService
                 $tipoActivoId,
                 $descripcion,
                 $estado,
-                $salaId
+                $salaId,
+                $fechaCreado
             );
 
             // If photos were provided, add them
             if (!empty($fotoPaths) && $activoId > 0) {
                 foreach ($fotoPaths as $index => $path) {
+                    if (empty($path) || !is_string($path)) {
+                        continue;
+                    }
                     // La primera foto es la principal
                     $esPrincipal = ($index === 0);
                     $this->repository->agregarFotoActivo($activoId, $path, 'Foto ' . ($index + 1), $esPrincipal);
