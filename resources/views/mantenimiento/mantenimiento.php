@@ -44,12 +44,11 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
     <!-- BARRA SUPERIOR -->
     <header class="header-bar">
         <div class="header-left">
-            <button class="menu-btn" onclick="window.location.href='/sigmu'">☰</button>
+            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
             <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
             <h1 class="header-title">MANTENIMIENTO</h1>
         </div>
         <div class="header-right">
-            <button class="icon-btn" title="Opciones">🔑</button>
             <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -61,7 +60,7 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
     </header>
 
     <div class="back-btn-container">
-        <button class="back-btn" onclick="window.location.href='/sigmu'" title="Regresar">
+        <button class="back-btn" onclick="if(document.referrer.indexOf(window.location.host) !== -1) { history.back(); } else { window.location.href='/sigmu'; }" title="Regresar">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
@@ -219,6 +218,15 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
         </div>
     </div>
 
+    <script>
+        // Datos del usuario para el menú global
+        globalThis.authUser = {
+            id: <?= (int)$sessionUser['id'] ?>,
+            nombre_completo: '<?= addslashes($sessionUser['nombre_completo']) ?>',
+            foto: '<?= $sessionUser['foto'] ?? '' ?>'
+        };
+    </script>
+    <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/mantenimiento.js"></script>
 </body>
 </html>
