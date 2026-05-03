@@ -18,9 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Cerrar modal
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
 
     window.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -29,27 +31,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Enviar formulario
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        const formData = new FormData(form);
+            const formData = new FormData(form);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
 
-        fetch('/sigmu/mantenimiento/agendar', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Reparación agendada correctamente');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ocurrió un error al procesar la solicitud');
+            fetch('/sigmu/mantenimiento/agendar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Reparación agendada correctamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al procesar la solicitud');
+                if (submitBtn) submitBtn.disabled = false;
+            });
         });
-    });
+    }
 });

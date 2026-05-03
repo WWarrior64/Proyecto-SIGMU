@@ -68,6 +68,50 @@ final class MantenimientoController
         }
     }
 
+    public function listado(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        try {
+            $mantenimientos = $this->mantenimientoService->obtenerListadoCompleto();
+            $sessionUser = Session::get('auth_user');
+
+            return view('mantenimiento.listado_mantenimientos', [
+                'sessionUser' => $sessionUser,
+                'mantenimientos' => $mantenimientos
+            ]);
+        } catch (Throwable $e) {
+            return "Error: " . $e->getMessage();
+        }
+    }
+
+    public function completar(): string
+    {
+        if (!$this->requireAuth()) {
+            return json_encode(['success' => false, 'message' => 'No autorizado']);
+        }
+
+        try {
+            $id = (int) ($_POST['mantenimiento_id'] ?? 0);
+            $notas = $_POST['notas'] ?? '';
+            $fechaReal = $_POST['fecha_real'] ?? date('Y-m-d');
+            $resultado = $_POST['resultado'] ?? 'resuelto';
+            $observaciones = $_POST['observaciones'] ?? '';
+
+            if ($id <= 0) {
+                return json_encode(['success' => false, 'message' => 'ID inválido']);
+            }
+
+            $success = $this->mantenimientoService->finalizarMantenimiento($id, $notas, $fechaReal, $resultado, $observaciones);
+
+            return json_encode(['success' => $success]);
+        } catch (Throwable $e) {
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     private function requireAuth(): bool
     {
         $user = Session::get('auth_user');

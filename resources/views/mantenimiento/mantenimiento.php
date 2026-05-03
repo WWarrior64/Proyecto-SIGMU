@@ -14,21 +14,26 @@ $nombresMeses = [
 ];
 
 $diasSemana = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-$primerDiaMes = mktime(0, 0, 0, $mes, 1, $anio);
-$numeroDias = (int) date('t', $primerDiaMes);
-$diaInicio = (int) date('w', $primerDiaMes);
+
+/**
+ * LÓGICA DE CALENDARIO
+ * mktime(hour, minute, second, month, day, year)
+ */
+$primerDiaMesTimestamp = mktime(0, 0, 0, $mes, 1, $anio);
+$numeroDias = (int) date('t', $primerDiaMesTimestamp);
+$diaInicio = (int) date('w', $primerDiaMesTimestamp); // 0 (Dom) a 6 (Sab)
 $hoy = date('Y-m-d');
 
 // Agrupar eventos por día
 $eventosPorDia = [];
 foreach ($calendario as $evento) {
     if (!empty($evento['fecha_agendada'])) {
-        $dia = (int) date('j', strtotime($evento['fecha_agendada']));
-        $eventosPorDia[$dia][] = $evento;
+        $diaEvento = (int) date('j', strtotime($evento['fecha_agendada']));
+        $eventosPorDia[$diaEvento][] = $evento;
     }
 }
 
-// Colores aleatorios para eventos
+// Clases de colores para eventos
 $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-orange'];
 ?>
 <!DOCTYPE html>
@@ -100,7 +105,7 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
                                         <?php foreach ($eventosPorDia[$dia] as $idx => $evento): ?>
                                             <div class="event-tag <?= $colores[$idx % count($colores)] ?>" 
                                                  title="<?= htmlspecialchars($evento['activo_nombre'] . ': ' . $evento['descripcion_problema']) ?>">
-                                                <?= htmlspecialchars($evento['activo_codigo']) ?> <?= htmlspecialchars($evento['activo_nombre']) ?>
+                                                <?= htmlspecialchars($evento['activo_codigo']) ?>
                                             </div>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -112,9 +117,11 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
                         <?php 
                         $totalCeldas = $diaInicio + $numeroDias;
                         $restante = (7 - ($totalCeldas % 7)) % 7;
-                        for ($i = 0; $i < $restante; $i++): ?>
-                            <div class="calendar-day other-month"></div>
-                        <?php endfor; ?>
+                        if ($restante > 0 && $restante < 7):
+                            for ($i = 0; $i < $restante; $i++): ?>
+                                <div class="calendar-day other-month"></div>
+                            <?php endfor;
+                        endif; ?>
                     </div>
                 </div>
             </section>
@@ -122,15 +129,20 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
             <!-- DERECHA: LISTA PENDIENTES -->
             <section class="card">
                 <div class="card-header-red">
-                    ACTIVOS PENDIENTES DE REPARACIÓN
+                    <span>PENDIENTES DE REPARACIÓN</span>
+                    <a href="/sigmu/mantenimiento/listado" class="view-all-btn" style="color: white; font-size: 11px; text-decoration: underline; font-weight: 500;">
+                        VER HISTORIAL COMPLETO
+                    </a>
+                </div>
+                <div class="card-subheader" style="background: #8b0000; padding: 0 15px 10px 15px;">
                     <div class="list-stats-panel">
                         <div class="stat-item">
                             <span class="stat-dot yellow"></span>
-                            Reparaciones Programadas: <?= $stats['programados'] ?>
+                            Programados: <?= $stats['programados'] ?>
                         </div>
                         <div class="stat-item">
                             <span class="stat-dot green"></span>
-                            Técnicos Disponibles: <?= $stats['tecnicos'] ?>
+                            Técnicos: <?= $stats['tecnicos'] ?>
                         </div>
                     </div>
                 </div>
@@ -142,19 +154,36 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
                         <?php foreach ($pendientes as $item): ?>
                             <article class="pending-item">
                                 <div class="asset-img-container">
-                                    <img src="<?= $item['foto_principal'] ?: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png' ?>" 
+                                    <?php 
+                                        $fotoPath = !empty($item['foto_principal']) 
+                                            ? '/' . ltrim($item['foto_principal'], '/') 
+                                            : 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png';
+                                    ?>
+                                    <img src="<?= $fotoPath ?>" 
                                          alt="<?= htmlspecialchars($item['activo_codigo']) ?>" 
-                                         class="asset-img">
+                                         class="asset-img"
+                                         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png'">
                                 </div>
                                 <div class="asset-details">
-                                    <h3 class="asset-code"><?= htmlspecialchars($item['activo_codigo']) ?></h3>
-                                    <p class="asset-location"><?= htmlspecialchars($item['edificio_nombre']) ?></p>
-                                    <p class="problem-desc"><?= htmlspecialchars($item['descripcion_problema']) ?></p>
+                                    <h3 class="asset-code"><?= htmlspecialchars($item['activo_codigo']) ?> - <?= htmlspecialchars($item['activo_nombre']) ?></h3>
+                                    <p class="asset-location">
+                                        <strong><?= htmlspecialchars($item['edificio_nombre']) ?></strong> - <?= htmlspecialchars($item['sala_nombre'] ?? 'Sin sala') ?>
+                                    </p>
+                                    <p class="problem-desc" title="<?= htmlspecialchars($item['descripcion_problema']) ?>">
+                                        <?= htmlspecialchars($item['descripcion_problema']) ?>
+                                    </p>
                                 </div>
                                 <div class="action-container">
+                                    <a href="/sigmu/activo/ver?id=<?= (int)$item['activo_id'] ?>" class="view-btn" title="Ver detalle del activo">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </a>
                                     <button class="program-btn" 
                                             data-id="<?= $item['id'] ?>" 
-                                            data-code="<?= htmlspecialchars($item['activo_codigo']) ?>">
+                                            data-code="<?= htmlspecialchars($item['activo_codigo']) ?>"
+                                            title="Agendar reparación">
                                         Programar
                                     </button>
                                 </div>
@@ -218,14 +247,6 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
         </div>
     </div>
 
-    <script>
-        // Datos del usuario para el menú global
-        globalThis.authUser = {
-            id: <?= (int)$sessionUser['id'] ?>,
-            nombre_completo: '<?= addslashes($sessionUser['nombre_completo']) ?>',
-            foto: '<?= $sessionUser['foto'] ?? '' ?>'
-        };
-    </script>
     <script src="/assets/js/global-menu.js"></script>
     <script src="/assets/js/mantenimiento.js"></script>
 </body>

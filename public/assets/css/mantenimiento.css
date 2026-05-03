@@ -5,14 +5,14 @@ body {
     color: #2d3748;
     font-size: 14px;
     line-height: 1.4;
-    letter-spacing: -0.015em; /* Ajuste fino de espacio entre letras */
+    letter-spacing: -0.015em;
 }
 
 /* 🔴 BARRA SUPERIOR (ESTANDARIZADA) */
 .header-bar {
-    background-color: #9a2018; /* Color estándar del proyecto */
+    background-color: #9a2018;
     color: white;
-    height: 64px; /* Altura estándar */
+    height: 64px;
     display: flex;
     align-items: center;
     padding: 0 24px;
@@ -107,7 +107,7 @@ body {
 .layout-grid {
     display: grid;
     grid-template-columns: 1.3fr 1fr;
-    gap: 16px; /* Espacio reducido */
+    gap: 16px;
 }
 
 /* TARJETAS */
@@ -154,7 +154,7 @@ body {
 }
 
 .calendar-day {
-    min-height: 85px; /* Más compacto */
+    min-height: 85px;
     background: #fdfdfd;
     border-radius: 4px;
     padding: 6px;
@@ -164,6 +164,11 @@ body {
 .calendar-day.today {
     background: #fffafa;
     border-color: #feb2b2;
+}
+
+.calendar-day.other-month {
+    background: #f7fafc;
+    color: #cbd5e0;
 }
 
 .day-number {
@@ -198,6 +203,12 @@ body {
     white-space: nowrap;
 }
 
+.event-blue { background-color: #4299e1; }
+.event-red { background-color: #f56565; }
+.event-green { background-color: #48bb78; }
+.event-purple { background-color: #9f7aea; }
+.event-orange { background-color: #ed8936; }
+
 /* SECCION LISTA PENDIENTES */
 .list-stats-panel {
     background: rgba(255,255,255,0.15);
@@ -231,47 +242,104 @@ body {
 }
 
 .pending-item {
-    display: flex;
-    gap: 12px;
-    padding: 10px;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #edf2f7;
+    transition: background-color 0.2s;
     background: #fff;
-    border: 1px solid #edf2f7;
-    border-radius: 8px;
-    margin-bottom: 10px;
+}
+
+.pending-item:hover {
+    background-color: #f7fafc;
 }
 
 .asset-img-container {
-    width: 65px;
-    height: 65px;
-    border-radius: 6px;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #edf2f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.asset-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.asset-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .asset-code {
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
     font-size: 15px;
-    font-weight: 800;
-    color: #1a202c;
-    letter-spacing: -0.02em;
 }
 
 .asset-location {
     font-size: 12px;
-    margin-bottom: 4px;
+    color: #718096;
+    margin: 0;
 }
 
 .problem-desc {
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 13px;
     color: #4a5568;
-    word-spacing: 0.02em;
+    margin: 4px 0 0 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.action-container {
+    display: flex;
+    gap: 8px;
 }
 
 .program-btn {
-    background: #8b0000;
-    font-size: 12px;
-    padding: 6px 14px;
+    background-color: #9F2A2A;
+    color: white;
+    border: none;
+    padding: 8px 16px;
     border-radius: 6px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.program-btn:hover {
+    background-color: #7a1f1f;
+}
+
+.view-btn {
+    background-color: #edf2f7;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-btn:hover {
+    background-color: #e2e8f0;
 }
 
 /* MODAL COMPACTO */
@@ -282,7 +350,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    display: none; /* Oculto por defecto */
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -295,12 +363,6 @@ body {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    animation: modalIn 0.3s ease-out;
-}
-
-@keyframes modalIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
@@ -309,7 +371,6 @@ body {
     padding: 12px 15px;
     font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.02em;
 }
 
 .modal-body {
@@ -326,7 +387,6 @@ body {
     font-weight: 600;
     color: #4a5568;
     margin-bottom: 4px;
-    letter-spacing: 0.01em;
 }
 
 .form-control {

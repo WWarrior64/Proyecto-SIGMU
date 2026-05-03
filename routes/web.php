@@ -323,3 +323,13 @@ $router->post('/sigmu/mantenimiento/agendar', static function (): string {
     $controller = new \App\Http\Controllers\MantenimientoController();
     return $controller->agendar();
 });
+
+$router->get('/sigmu/mantenimiento/listado', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->listado();
+});
+
+$router->post('/sigmu/mantenimiento/completar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->completar();
+});
