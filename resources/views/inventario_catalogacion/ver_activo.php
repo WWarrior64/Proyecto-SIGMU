@@ -72,6 +72,10 @@ $error = $_GET['error'] ?? '';
                     <a href="/sigmu/activo/historial?id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Ver historial de cambios">
                         <span>📋</span> Historial
                     </a>
+
+                    <a href="/sigmu/reporte-falla?activo_id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Reportar falla o incidencia" style="background-color: #f59e0b; color: white;">
+                        <span>⚠️</span> Reportar Falla
+                    </a>
                     
                     <?php 
                         // Mostrar botón dar de baja solo si usuario tiene permisos y activo no esta descartado

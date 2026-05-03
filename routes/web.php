@@ -312,3 +312,14 @@ $router->get('/sigmu/historial', static function (): string {
     $controller = new \App\Http\Controllers\HistorialController();
     return $controller->index();
 });
+
+// RUTAS REPORTE FALLA
+$router->get('/sigmu/reporte-falla', static function (): string {
+    $controller = new \App\Http\Controllers\FallaController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/reporte-falla/guardar', static function (): string {
+    $controller = new \App\Http\Controllers\FallaController();
+    return $controller->guardar();
+});
