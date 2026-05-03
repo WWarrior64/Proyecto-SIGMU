@@ -56,6 +56,18 @@
                         <input type="text" id="activo_nombre" class="form-control" value="<?= htmlspecialchars($activo['nombre']) ?>" disabled>
                     </div>
 
+                    <!-- Usuario que reporta -->
+                    <div class="form-group">
+                        <label for="usuario_reporta">Usuario que reporta:</label>
+                        <input type="text" id="usuario_reporta" class="form-control" value="<?= htmlspecialchars($sessionUser['nombre_completo']) ?>" disabled>
+                    </div>
+
+                    <!-- Fecha de detección -->
+                    <div class="form-group">
+                        <label for="fecha_deteccion">Fecha de detección:</label>
+                        <input type="text" id="fecha_deteccion" class="form-control" value="<?= htmlspecialchars($fechaDeteccion) ?>" disabled>
+                    </div>
+
                     <!-- Estado (Pendiente por defecto) -->
                     <div class="form-group">
                         <label for="estado">Estado:</label>

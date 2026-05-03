@@ -59,9 +59,9 @@ $error = $_GET['error'] ?? '';
 
         <?php if ($activo): ?>
             <!-- Section Header -->
-            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
-                <h1 class="section-title" style="margin: 0; flex: 1;"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="section-header">
+                <h1 class="section-title"><?= htmlspecialchars((string) ($activo['nombre'] ?? 'Detalle del Activo'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <div class="action-buttons">
                     <a href="/sigmu/activo/editar?id=<?= (int) $activo['id'] ?>" class="edit-btn" title="Editar activo">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -70,11 +70,23 @@ $error = $_GET['error'] ?? '';
                     </a>
                     
                     <a href="/sigmu/activo/historial?id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Ver historial de cambios">
-                        <span>📋</span> Historial
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Historial
                     </a>
 
-                    <a href="/sigmu/reporte-falla?activo_id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Reportar falla o incidencia" style="background-color: #f59e0b; color: white;">
-                        <span>⚠️</span> Reportar Falla
+                    <a href="/sigmu/reporte-falla?activo_id=<?= (int) $activo['id'] ?>" class="btn-reporte" title="Reportar falla o incidencia">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                            <path d="M12 9v4"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg>
+                        Reportar Falla
                     </a>
                     
                     <?php 
@@ -84,7 +96,7 @@ $error = $_GET['error'] ?? '';
                         
                         if ($puedeDarBaja && $activo['estado'] !== 'descartado'): 
                     ?>
-                    <button class="edit-btn delete-btn" id="btnDarBaja" title="Dar de baja activo" style="background-color: #dc2626;">
+                    <button class="edit-btn delete-btn" id="btnDarBaja" title="Dar de baja activo">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

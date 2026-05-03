@@ -35,10 +35,12 @@ final class FallaController
         try {
             $activo = $this->fallaService->obtenerDatosActivo($activoId);
             $sessionUser = Session::get('auth_user');
+            $fechaDeteccion = date('d/m/Y');
 
             return view('reporte_falla.reporte_falla', [
                 'sessionUser' => $sessionUser,
-                'activo' => $activo
+                'activo' => $activo,
+                'fechaDeteccion' => $fechaDeteccion
             ]);
         } catch (Throwable $e) {
             return "Error: " . $e->getMessage();
