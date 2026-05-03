@@ -1,346 +1,224 @@
+<?php
+/** @var array $sessionUser */
+/** @var array $calendario */
+/** @var array $pendientes */
+/** @var array $tecnicos */
+/** @var array $stats */
+/** @var int $mes */
+/** @var int $anio */
+
+$nombresMeses = [
+    1 => 'ENERO', 2 => 'FEBRERO', 3 => 'MARZO', 4 => 'ABRIL',
+    5 => 'MAYO', 6 => 'JUNIO', 7 => 'JULIO', 8 => 'AGOSTO',
+    9 => 'SEPTIEMBRE', 10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE'
+];
+
+$diasSemana = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+$primerDiaMes = mktime(0, 0, 0, $mes, 1, $anio);
+$numeroDias = (int) date('t', $primerDiaMes);
+$diaInicio = (int) date('w', $primerDiaMes);
+$hoy = date('Y-m-d');
+
+// Agrupar eventos por día
+$eventosPorDia = [];
+foreach ($calendario as $evento) {
+    if (!empty($evento['fecha_agendada'])) {
+        $dia = (int) date('j', strtotime($evento['fecha_agendada']));
+        $eventosPorDia[$dia][] = $evento;
+    }
+}
+
+// Colores aleatorios para eventos
+$colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-orange'];
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Mantenimientos</title>
-
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #eef1f5;
-}
-
-/* 🔴 BARRA SUPERIOR */
-.header {
-    background: #7b1e1e;
-    color: white;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.menu-btn {
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.logo {
-    height: 30px;
-}
-
-.header-title {
-    font-weight: bold;
-}
-
-.header-right {
-    display: flex;
-    gap: 10px;
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-/* CONTENIDO */
-.container {
-    padding: 20px;
-}
-
-/* LAYOUT */
-.layout {
-    display: flex;
-    gap: 20px;
-}
-
-/* TARJETAS */
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-}
-
-/* IZQUIERDA */
-.calendar-section {
-    flex: 1.2;
-}
-
-.calendar-title {
-    background: #7b1e1e;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* CALENDARIO */
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-}
-
-.day-name {
-    font-size: 12px;
-    text-align: center;
-    color: #777;
-    font-weight: bold;
-}
-
-.day {
-    height: 70px;
-    background: #f4f6f9;
-    border-radius: 6px;
-    padding: 5px;
-    position: relative;
-}
-
-.day span {
-    position: absolute;
-    top: 5px;
-    left: 6px;
-    font-size: 12px;
-}
-
-/* EVENTO */
-.event {
-    background: #7b1e1e;
-    color: white;
-    font-size: 10px;
-    padding: 2px 5px;
-    border-radius: 4px;
-    margin-top: 18px;
-    display: inline-block;
-}
-
-/* DERECHA */
-.list-section {
-    flex: 1;
-}
-
-/* HEADER DERECHA */
-.list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    margin-bottom: 10px;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-/* TÍTULO (IZQUIERDA) */
-.list-title {
-    background: #7b1e1e;
-    color: white;
-    padding: 12px;
-    font-weight: bold;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    border-radius: 9px;
-}
-
-/* MINI PANEL DERECHO */
-.list-stats {
-    background: #e7e7e7; 
-    color: rgb(0, 0, 0);
-    padding: 10px 15px;
-    font-size: 12px;
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 140px;
-
-    border: 1.5px solid #000000;
-    border-radius: 9px; /* 👈 clave */
-}
-
-.stats {
-    font-size: 12px;
-    text-align: right;
-    color: #ffffff;
-}
-
-/* ITEMS */
-.item {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    background: #f9fafc;
-    margin-bottom: 10px;
-    align-items: center;
-}
-
-.item img {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-}
-
-.item-info {
-    flex: 1;
-}
-
-.item-info strong {
-    display: block;
-}
-
-.item-info span {
-    font-size: 12px;
-    color: #666;
-}
-
-/* BOTON */
-.btn {
-    background: #7b1e1e;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.btn:hover {
-    background: #5a1414;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGMU - Mantenimiento</title>
+    <link rel="stylesheet" href="/assets/css/mantenimiento.css">
 </head>
-
 <body>
 
-<!-- 🔴 BARRA SUPERIOR -->
-<div class="header">
-    <div class="header-left">
-        <div class="menu-btn">☰</div>
-        <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-        <div class="header-title">MANTENIMIENTO</div>
-    </div>
-
-    <div class="header-right">
-        <button class="icon-btn">🔑</button>
-        <button class="icon-btn">⎋</button>
-    </div>
-</div>
-
-<!-- CONTENIDO -->
-<div class="container">
-    <div class="layout">
-
-        <!-- IZQUIERDA -->
-        <div class="calendar-section card">
-            <div class="calendar-title">CALENDARIO DE REPARACIONES - MES ACTUAL</div>
-
-            <div class="calendar">
-                <div class="day-name">Sun</div>
-                <div class="day-name">Mon</div>
-                <div class="day-name">Tue</div>
-                <div class="day-name">Wed</div>
-                <div class="day-name">Thu</div>
-                <div class="day-name">Fri</div>
-                <div class="day-name">Sat</div>
-
-                <!-- DÍAS -->
-                <!-- (placeholder) -->
-                <div class="day"><span>1</span></div>
-                <div class="day"><span>2</span></div>
-                <div class="day"><span>3</span><div class="event">A21</div></div>
-                <div class="day"><span>4</span></div>
-                <div class="day"><span>5</span></div>
-                <div class="day"><span>6</span></div>
-                <div class="day"><span>7</span></div>
-
-                <div class="day"><span>8</span></div>
-                <div class="day"><span>9</span></div>
-                <div class="day"><span>10</span></div>
-                <div class="day"><span>11</span></div>
-                <div class="day"><span>12</span></div>
-                <div class="day"><span>13</span></div>
-                <div class="day"><span>14</span></div>
-
-                <div class="day"><span>15</span></div>
-                <div class="day"><span>16</span></div>
-                <div class="day"><span>17</span></div>
-                <div class="day"><span>18</span></div>
-                <div class="day"><span>19</span></div>
-                <div class="day"><span>20</span></div>
-                <div class="day"><span>21</span></div>
-
-                <div class="day"><span>22</span></div>
-                <div class="day"><span>23</span></div>
-                <div class="day"><span>24</span></div>
-                <div class="day"><span>25</span></div>
-                <div class="day"><span>26</span></div>
-                <div class="day"><span>27</span></div>
-                <div class="day"><span>28</span></div>
-            </div>
+    <!-- BARRA SUPERIOR -->
+    <header class="header-bar">
+        <div class="header-left">
+            <button class="menu-btn" onclick="window.location.href='/sigmu'">☰</button>
+            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
+            <h1 class="header-title">MANTENIMIENTO</h1>
         </div>
+        <div class="header-right">
+            <button class="icon-btn" title="Opciones">🔑</button>
+            <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
 
-        <!-- DERECHA -->
-        <div class="list-section card">
-            <div class="list-header">
-    
-    <!-- IZQUIERDA -->
-    <div class="list-title">
-        ACTIVOS PENDIENTES
+    <div class="back-btn-container">
+        <button class="back-btn" onclick="window.location.href='/sigmu'" title="Regresar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
     </div>
 
-    <!-- DERECHA (mini panel) -->
-    <div class="list-stats">
-        <div><strong>Reparaciones:</strong> 5</div>
-        <div><strong>Técnicos:</strong> 2</div>
-    </div>
-
-</div>
-
-            <div class="item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png">
-                <div class="item-info">
-                    <strong>A21</strong>
-                    <span>Edificio A</span>
-                    <div>Problema en cañon</div>
-                </div>
-                <button class="btn">Programar</button>
-            </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-container">
+        <div class="layout-grid">
             
-            <div class="item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png">
-                <div class="item-info">
-                    <strong>B30</strong>
-                    <span>Edificio B</span>
-                    <div>Cable HDMI tiene falso</div>
+            <!-- IZQUIERDA: CALENDARIO -->
+            <section class="card">
+                <div class="card-header-red">
+                    CALENDARIO DE REPARACIONES - <?= $nombresMeses[$mes] ?> <?= $anio ?>
                 </div>
-                <button class="btn">Programar</button>
-            </div>
+                <div class="calendar-container">
+                    <div class="calendar-grid">
+                        <?php foreach ($diasSemana as $diaNombre): ?>
+                            <div class="day-header"><?= $diaNombre ?></div>
+                        <?php endforeach; ?>
 
-            <div class="item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png">
-                <div class="item-info">
-                    <strong>C41</strong>
-                    <span>Edificio C</span>
-                    <div>Pupitre dañado</div>
+                        <!-- Espacios vacíos antes del inicio del mes -->
+                        <?php for ($i = 0; $i < $diaInicio; $i++): ?>
+                            <div class="calendar-day other-month"></div>
+                        <?php endfor; ?>
+
+                        <!-- Días del mes -->
+                        <?php for ($dia = 1; $dia <= $numeroDias; $dia++): 
+                            $fechaActual = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
+                            $esHoy = ($fechaActual === $hoy);
+                        ?>
+                            <div class="calendar-day <?= $esHoy ? 'today' : '' ?>">
+                                <span class="day-number"><?= $dia ?></span>
+                                <div class="event-list">
+                                    <?php if (isset($eventosPorDia[$dia])): ?>
+                                        <?php foreach ($eventosPorDia[$dia] as $idx => $evento): ?>
+                                            <div class="event-tag <?= $colores[$idx % count($colores)] ?>" 
+                                                 title="<?= htmlspecialchars($evento['activo_nombre'] . ': ' . $evento['descripcion_problema']) ?>">
+                                                <?= htmlspecialchars($evento['activo_codigo']) ?> <?= htmlspecialchars($evento['activo_nombre']) ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endfor; ?>
+
+                        <!-- Espacios vacíos después del fin del mes -->
+                        <?php 
+                        $totalCeldas = $diaInicio + $numeroDias;
+                        $restante = (7 - ($totalCeldas % 7)) % 7;
+                        for ($i = 0; $i < $restante; $i++): ?>
+                            <div class="calendar-day other-month"></div>
+                        <?php endfor; ?>
+                    </div>
                 </div>
-                <button class="btn">Programar</button>
-            </div>
+            </section>
 
+            <!-- DERECHA: LISTA PENDIENTES -->
+            <section class="card">
+                <div class="card-header-red">
+                    ACTIVOS PENDIENTES DE REPARACIÓN
+                    <div class="list-stats-panel">
+                        <div class="stat-item">
+                            <span class="stat-dot yellow"></span>
+                            Reparaciones Programadas: <?= $stats['programados'] ?>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-dot green"></span>
+                            Técnicos Disponibles: <?= $stats['tecnicos'] ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pending-list">
+                    <?php if (empty($pendientes)): ?>
+                        <p style="text-align: center; color: #718096; margin-top: 40px;">No hay activos pendientes de reparación.</p>
+                    <?php else: ?>
+                        <?php foreach ($pendientes as $item): ?>
+                            <article class="pending-item">
+                                <div class="asset-img-container">
+                                    <img src="<?= $item['foto_principal'] ?: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png' ?>" 
+                                         alt="<?= htmlspecialchars($item['activo_codigo']) ?>" 
+                                         class="asset-img">
+                                </div>
+                                <div class="asset-details">
+                                    <h3 class="asset-code"><?= htmlspecialchars($item['activo_codigo']) ?></h3>
+                                    <p class="asset-location"><?= htmlspecialchars($item['edificio_nombre']) ?></p>
+                                    <p class="problem-desc"><?= htmlspecialchars($item['descripcion_problema']) ?></p>
+                                </div>
+                                <div class="action-container">
+                                    <button class="program-btn" 
+                                            data-id="<?= $item['id'] ?>" 
+                                            data-code="<?= htmlspecialchars($item['activo_codigo']) ?>">
+                                        Programar
+                                    </button>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </section>
         </div>
+    </main>
 
+    <!-- MODAL AGENDAR -->
+    <div class="modal-overlay" id="modalProgramar">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">
+                AGENDAR REPARACIÓN
+            </div>
+            <form id="formProgramar">
+                <input type="hidden" name="mantenimiento_id" id="mantenimiento_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="tecnico_id">Usuario técnico:</label>
+                        <select name="tecnico_id" id="tecnico_id" class="form-control" required>
+                            <option value="">Seleccione un técnico...</option>
+                            <?php foreach ($tecnicos as $tec): ?>
+                                <option value="<?= $tec['id'] ?>"><?= htmlspecialchars($tec['nombre_completo']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha">Fecha:</label>
+                            <input type="date" name="fecha" id="fecha" class="form-control" required value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="hora">Hora:</label>
+                            <input type="time" name="hora" id="hora" class="form-control" value="08:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="duracion">Duración:</label>
+                            <select name="duracion" id="duracion" class="form-control">
+                                <option value="00:30">30 min</option>
+                                <option value="01:00">1 h</option>
+                                <option value="02:00">2 h</option>
+                                <option value="04:00">4 h</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notas">Nota de intervención:</label>
+                        <textarea name="notas" id="notas" class="form-control" rows="3" placeholder="Notas adicionales..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="closeModal">Cancelar</button>
+                    <button type="submit" class="btn-primary">Confirmar Programación</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
+    <script src="/assets/js/mantenimiento.js"></script>
 </body>
 </html>

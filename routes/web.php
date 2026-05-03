@@ -312,3 +312,14 @@ $router->get('/sigmu/historial', static function (): string {
     $controller = new \App\Http\Controllers\HistorialController();
     return $controller->index();
 });
+
+// RUTAS MANTENIMIENTO
+$router->get('/sigmu/mantenimiento', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/mantenimiento/agendar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->agendar();
+});
