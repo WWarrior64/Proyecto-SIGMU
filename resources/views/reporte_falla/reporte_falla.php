@@ -6,6 +6,7 @@ $sigmuPageTitle = 'REPORTAR FALLA';
 $sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
 $sigmuExtraCss = ['/assets/css/reporte-falla.css'];
 $sigmuExtraScripts = ['/assets/js/reporte-falla.js'];
+$fechaDeteccion = $fechaDeteccion ?? date('Y-m-d H:i');
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
 
