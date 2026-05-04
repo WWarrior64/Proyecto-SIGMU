@@ -143,6 +143,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 32px;
+    gap: 20px;
 }
 
 .section-title {
@@ -150,6 +151,13 @@ body {
     font-weight: 700;
     color: var(--unicaes-red);
     margin: 0;
+    flex: 1;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .edit-btn {
@@ -170,6 +178,45 @@ body {
     background-color: var(--bg-gray);
     border-color: var(--text-secondary);
     box-shadow: var(--shadow);
+}
+
+.btn-historial, .btn-reporte {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    height: 44px;
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-historial:hover {
+    background-color: var(--bg-gray);
+    border-color: var(--text-secondary);
+    box-shadow: var(--shadow);
+}
+
+.btn-reporte {
+    background-color: #f59e0b;
+    color: white;
+    border-color: #d97706;
+}
+
+.btn-reporte:hover {
+    background-color: #d97706;
+    color: white;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    border-color: #b45309;
+}
+
+.btn-reporte svg {
+    color: white;
 }
 
 /* Content Grid */
@@ -459,10 +506,6 @@ body {
         font-size: 24px;
     }
     
-    .edit-btn {
-        align-self: flex-end;
-    }
-    
     .details-container {
         padding: 24px 20px;
     }
@@ -571,26 +614,4 @@ body {
 
 .delete-btn:hover {
     background-color: #b91c1c !important;
-}
-
-.btn-historial {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 16px;
-    height: 44px;
-    background-color: var(--bg-white);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.btn-historial:hover {
-    background-color: var(--bg-gray);
-    border-color: var(--text-secondary);
-    box-shadow: var(--shadow);
 }
