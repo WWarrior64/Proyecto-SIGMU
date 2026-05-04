@@ -42,10 +42,11 @@ foreach ($calendario as $evento) {
         .maint-list-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
         .maint-header { background: #8b0000; color: white; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; }
         .maint-body { padding: 10px; max-height: 500px; overflow-y: auto; }
-        .maint-item { padding: 15px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
-        .maint-info h4 { margin: 0; color: #2d3748; font-size: 14px; }
-        .maint-info p { margin: 4px 0 0; color: #718096; font-size: 12px; }
+        .maint-item { padding: 12px; border-bottom: 1px solid #edf2f7; }
+        .maint-tech-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
         .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; text-transform: uppercase; }
+        .status-pendiente { background: #fef3c7; color: #92400e; }
+        .status-en_proceso { background: #dcfce7; color: #166534; }
         .btn-finish { background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
         @media (max-width: 900px) { .grid-tech { grid-template-columns: 1fr; } }
     </style>
@@ -80,7 +81,7 @@ foreach ($calendario as $evento) {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    HISTORIAL
+                    LISTADO
                 </a>
                 <a href="/sigmu/mantenimiento/reportar" class="report-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -134,24 +135,46 @@ foreach ($calendario as $evento) {
                         <p style="text-align: center; color: #a0aec0; margin-top: 30px;">No tienes mantenimientos asignados.</p>
                     <?php else: ?>
                         <?php foreach ($asignados as $m): ?>
-                            <div class="maint-item">
-                                <div class="maint-info">
-                                    <h4><?= htmlspecialchars($m['activo_codigo']) ?> - <?= htmlspecialchars($m['activo_nombre']) ?></h4>
-                                    <p><strong><?= htmlspecialchars($m['edificio_nombre']) ?></strong> - <?= htmlspecialchars($m['sala_nombre']) ?></p>
-                                    <p><?= htmlspecialchars(substr($m['descripcion_problema'], 0, 50)) ?>...</p>
-                                    <p style="margin-top: 5px;">
-                                        <span class="status-badge status-<?= $m['estado'] ?>"><?= str_replace('_', ' ', $m['estado']) ?></span>
-                                        <?php if ($m['fecha_agendada']): ?>
-                                            <span style="margin-left: 10px; font-weight: 600;"><?= date('d/m/Y', strtotime($m['fecha_agendada'])) ?></span>
+                            <?php
+                            $fotoPath = !empty($m['foto_principal'])
+                                ? '/' . ltrim((string) $m['foto_principal'], '/')
+                                : 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png';
+                            $desc = (string) ($m['descripcion_problema'] ?? '');
+                            $descSnippet = mb_strlen($desc) > 80 ? mb_substr($desc, 0, 80) . '…' : $desc;
+                            ?>
+                            <article class="pending-item maint-item">
+                                <div class="asset-img-container">
+                                    <img src="<?= htmlspecialchars($fotoPath) ?>"
+                                         alt="<?= htmlspecialchars((string) ($m['activo_codigo'] ?? '')) ?>"
+                                         class="asset-img"
+                                         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png'">
+                                </div>
+                                <div class="asset-details">
+                                    <h3 class="asset-code"><?= htmlspecialchars((string) ($m['activo_codigo'] ?? '')) ?> — <?= htmlspecialchars((string) ($m['activo_nombre'] ?? '')) ?></h3>
+                                    <p class="asset-location">
+                                        <strong><?= htmlspecialchars((string) ($m['edificio_nombre'] ?? '')) ?></strong>
+                                        — <?= htmlspecialchars((string) ($m['sala_nombre'] ?? '')) ?>
+                                    </p>
+                                    <p class="problem-desc" title="<?= htmlspecialchars($desc) ?>"><?= htmlspecialchars($descSnippet) ?></p>
+                                    <p style="margin: 6px 0 0;">
+                                        <span class="status-badge status-<?= htmlspecialchars((string) ($m['estado'] ?? '')) ?>"><?= str_replace('_', ' ', (string) ($m['estado'] ?? '')) ?></span>
+                                        <?php if (!empty($m['fecha_agendada'])): ?>
+                                            <span style="margin-left: 10px; font-weight: 600;"><?= date('d/m/Y', strtotime((string) $m['fecha_agendada'])) ?></span>
                                         <?php endif; ?>
                                     </p>
                                 </div>
-                                <div>
-                                    <?php if ($m['estado'] === 'en_proceso' || $m['estado'] === 'pendiente'): ?>
-                                        <button class="btn-finish" onclick="abrirModalCompletar(<?= $m['id'] ?>, '<?= htmlspecialchars($m['activo_codigo']) ?>')">COMPLETAR</button>
+                                <div class="maint-tech-actions">
+                                    <a href="/sigmu/activo/ver?id=<?= (int) ($m['activo_id'] ?? 0) ?>" class="view-btn" title="Ver activo">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </a>
+                                    <?php if (($m['estado'] ?? '') === 'en_proceso' || ($m['estado'] ?? '') === 'pendiente'): ?>
+                                        <button type="button" class="btn-finish" onclick="abrirModalCompletar(<?= (int) $m['id'] ?>, <?= json_encode((string) ($m['activo_codigo'] ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>)">COMPLETAR</button>
                                     <?php endif; ?>
                                 </div>
-                            </div>
+                            </article>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>

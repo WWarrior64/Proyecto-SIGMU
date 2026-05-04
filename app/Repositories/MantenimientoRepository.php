@@ -125,8 +125,8 @@ final class MantenimientoRepository
                 a.nombre as activo_nombre,
                 u.email as email_tecnico,
                 u.nombre_completo as tecnico_nombre
-             FROM vista_mis_mantenimientos m
-             JOIN vista_mis_activos a ON a.id = m.activo_id
+             FROM mantenimiento m
+             JOIN activo a ON a.id = m.activo_id
              LEFT JOIN vista_usuarios u ON u.id = m.usuario_mantenimiento_id
              WHERE m.id = :id"
         );
@@ -150,12 +150,15 @@ final class MantenimientoRepository
                 s.nombre as sala_nombre,
                 m.descripcion_problema,
                 m.fecha_agendada,
-                m.estado
-             FROM vista_mis_mantenimientos m
-             JOIN vista_mis_activos a ON a.id = m.activo_id
-             JOIN vista_mis_salas s ON s.id = a.sala_id
-             JOIN vista_mis_edificios e ON e.id = s.edificio_id
+                m.estado,
+                f.ruta_foto AS foto_principal
+             FROM mantenimiento m
+             JOIN activo a ON a.id = m.activo_id
+             JOIN sala s ON s.id = a.sala_id
+             JOIN edificio e ON e.id = s.edificio_id
+             LEFT JOIN activo_foto f ON f.activo_id = a.id AND f.es_principal = TRUE
              WHERE m.usuario_mantenimiento_id = :tecnico_id
+               AND m.estado IN ('pendiente', 'en_proceso')
              ORDER BY m.fecha_agendada DESC"
         );
 
@@ -177,12 +180,12 @@ final class MantenimientoRepository
                 m.fecha_agendada, 
                 m.estado,
                 m.descripcion_problema
-             FROM vista_mis_mantenimientos m
-             JOIN vista_mis_activos a ON a.id = m.activo_id
+             FROM mantenimiento m
+             JOIN activo a ON a.id = m.activo_id
              WHERE m.usuario_mantenimiento_id = :tecnico_id
                AND MONTH(m.fecha_agendada) = :mes 
                AND YEAR(m.fecha_agendada) = :anio
-               AND m.estado != 'cancelado'"
+               AND m.estado IN ('pendiente', 'en_proceso')"
         );
 
         $stmt->execute([
@@ -199,6 +202,12 @@ final class MantenimientoRepository
     public function registrarFalla(int $activoId, int $usuarioReporteId, string $descripcion, string $fechaDeteccion): int
     {
         try {
+            $stmtData = $this->db->prepare('SELECT estado, sala_id FROM activo WHERE id = :id');
+            $stmtData->execute(['id' => $activoId]);
+            $current = $stmtData->fetch();
+            $estadoAnterior = $current['estado'] ?? null;
+            $salaActualId = isset($current['sala_id']) ? (int) $current['sala_id'] : null;
+
             $this->db->beginTransaction();
 
             // 1. Usar procedimiento almacenado para registrar mantenimiento
@@ -220,6 +229,22 @@ final class MantenimientoRepository
             $stmtActivo->execute(['activo_id' => $activoId]);
             $stmtActivo->closeCursor();
 
+            // 3. Trazabilidad: mismo criterio que FallaRepository (motivo explícito en historial).
+            // El trigger trg_activo_au puede registrar solo el cambio de estado genérico.
+            $detalleHistorial = 'Falla reportada: ' . $descripcion;
+            if ($fechaDeteccion !== '') {
+                $detalleHistorial .= ' | Fecha de detección informada: ' . $fechaDeteccion;
+            }
+            $this->insertarHistorialReporteFalla(
+                $activoId,
+                $usuarioReporteId,
+                $detalleHistorial,
+                $estadoAnterior !== null ? (string) $estadoAnterior : null,
+                'reparacion',
+                $salaActualId,
+                $salaActualId
+            );
+
             $this->db->commit();
             return $mantenimientoId;
         } catch (\Exception $e) {
@@ -228,6 +253,40 @@ final class MantenimientoRepository
             }
             throw $e;
         }
+    }
+
+    /**
+     * Registro explícito en historial_activo para reportes de falla (trazabilidad).
+     */
+    private function insertarHistorialReporteFalla(
+        int $activoId,
+        int $usuarioId,
+        string $detalle,
+        ?string $estadoAnterior,
+        string $estadoNuevo,
+        ?int $salaAnteriorId,
+        ?int $salaNuevaId
+    ): void {
+        $stmt = $this->db->prepare(
+            'INSERT INTO historial_activo (
+                activo_id, usuario_id, accion, detalle,
+                estado_anterior, estado_nuevo,
+                sala_anterior_id, sala_nueva_id
+            ) VALUES (
+                :activo_id, :usuario_id, :accion, :detalle,
+                :est_ant, :est_nue, :sala_ant, :sala_nue
+            )'
+        );
+        $stmt->execute([
+            'activo_id' => $activoId,
+            'usuario_id' => $usuarioId,
+            'accion' => 'cambio_estado',
+            'detalle' => $detalle,
+            'est_ant' => $estadoAnterior,
+            'est_nue' => $estadoNuevo,
+            'sala_ant' => $salaAnteriorId,
+            'sala_nue' => $salaNuevaId,
+        ]);
     }
 
     /**
@@ -251,6 +310,36 @@ final class MantenimientoRepository
              LEFT JOIN vista_usuarios u ON u.id = m.usuario_mantenimiento_id
              ORDER BY m.fecha_agendada ASC, m.fecha_reporte ASC"
         );
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Historial del técnico: solo mantenimientos ya cerrados (no pendientes ni en curso).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerListadoMantenimientosPorTecnico(int $tecnicoId): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT 
+                m.id,
+                a.codigo as activo_codigo,
+                a.nombre as activo_nombre,
+                m.fecha_agendada,
+                m.fecha_reporte,
+                m.fecha_completada,
+                m.estado,
+                u.nombre_completo as responsable,
+                m.descripcion_problema
+             FROM mantenimiento m
+             JOIN activo a ON a.id = m.activo_id
+             LEFT JOIN vista_usuarios u ON u.id = m.usuario_mantenimiento_id
+             WHERE m.usuario_mantenimiento_id = :tecnico_id
+               AND m.estado = 'completado'
+             ORDER BY m.fecha_completada DESC, m.fecha_reporte DESC, m.id DESC"
+        );
+        $stmt->execute(['tecnico_id' => $tecnicoId]);
 
         return $stmt->fetchAll();
     }
@@ -280,7 +369,7 @@ final class MantenimientoRepository
 
             // 3. Obtener el activo_id para actualizar su estado si fue resuelto
             // (sp_completar_mantenimiento no cambia el estado del activo)
-            $stmtData = $this->db->prepare("SELECT activo_id FROM vista_mis_mantenimientos WHERE id = :id");
+            $stmtData = $this->db->prepare('SELECT activo_id FROM mantenimiento WHERE id = :id');
             $stmtData->execute(['id' => $id]);
             $activoId = (int)$stmtData->fetchColumn();
             $stmtData->closeCursor();

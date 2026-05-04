@@ -104,7 +104,8 @@ final class SigmuController
             return;
         }
 
-        $salas = $this->service->obtenerMisSalas($edificioId);
+        $user = $this->getSessionUser();
+        $salas = $this->service->obtenerSalasParaUbicacion($edificioId, is_array($user) ? $user : []);
         header('Content-Type: application/json');
         echo json_encode($salas);
     }
@@ -116,7 +117,13 @@ final class SigmuController
             return;
         }
 
-        $activos = $this->service->obtenerMisActivos($salaId);
+        $user = $this->getSessionUser();
+        $edificioId = filter_input(INPUT_GET, 'edificio_id', FILTER_VALIDATE_INT);
+        $activos = $this->service->obtenerActivosParaUbicacion(
+            $salaId,
+            is_array($user) ? $user : [],
+            is_int($edificioId) && $edificioId > 0 ? $edificioId : null
+        );
         header('Content-Type: application/json');
         echo json_encode($activos);
     }

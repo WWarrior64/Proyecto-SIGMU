@@ -137,20 +137,44 @@
 
         comboSala.addEventListener('change', function() {
             const salaId = this.value;
+            const edificioId = comboEdificio.value;
             comboActivo.innerHTML = '<option value="">-- Seleccione un activo --</option>';
             comboActivo.disabled = true;
 
             if (salaId) {
                 loaderActivos.style.display = 'inline';
-                fetch('/sigmu/ajax/activos?sala_id=' + salaId)
-                    .then(r => r.json())
+                const qs = new URLSearchParams({ sala_id: salaId, edificio_id: edificioId || '' });
+                fetch('/sigmu/ajax/activos?' + qs.toString())
+                    .then(r => {
+                        if (!r.ok) {
+                            throw new Error('HTTP ' + r.status);
+                        }
+                        return r.json();
+                    })
                     .then(data => {
+                        if (!Array.isArray(data)) {
+                            throw new Error('Respuesta inválida');
+                        }
                         data.forEach(a => {
                             const opt = document.createElement('option');
                             opt.value = a.id;
-                            opt.textContent = '[' + a.codigo + '] ' + a.nombre + ' (' + a.estado + ')';
+                            const codigo = a.codigo != null ? a.codigo : '';
+                            const nombre = a.nombre != null ? a.nombre : '';
+                            const estado = a.estado != null ? a.estado : '';
+                            opt.textContent = '[' + codigo + '] ' + nombre + ' (' + estado + ')';
                             comboActivo.appendChild(opt);
                         });
+                        if (data.length === 0) {
+                            const opt = document.createElement('option');
+                            opt.value = '';
+                            opt.textContent = '-- No hay activos en esta sala --';
+                            comboActivo.appendChild(opt);
+                        }
+                        comboActivo.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        comboActivo.innerHTML = '<option value="">-- Error al cargar activos; reintente --</option>';
                         comboActivo.disabled = false;
                     })
                     .finally(() => loaderActivos.style.display = 'none');

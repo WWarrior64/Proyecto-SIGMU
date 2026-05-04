@@ -91,6 +91,19 @@ final class MantenimientoService
         return $this->repository->obtenerListadoMantenimientos();
     }
 
+    /**
+     * @param array<string, mixed> $sessionUser
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerListadoParaUsuario(array $sessionUser): array
+    {
+        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+            return $this->repository->obtenerListadoMantenimientosPorTecnico((int) ($sessionUser['id'] ?? 0));
+        }
+
+        return $this->repository->obtenerListadoMantenimientos();
+    }
+
     public function finalizarMantenimiento(int $id, string $notas = '', string $fechaReal = '', string $resultado = 'resuelto', string $observaciones = ''): bool
     {
         return $this->repository->completarMantenimiento($id, $notas, $fechaReal, $resultado, $observaciones);

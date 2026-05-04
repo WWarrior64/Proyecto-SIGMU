@@ -86,6 +86,22 @@ final class SigmuService
     }
 
     /**
+     * Edificios para flujos de localización (reporte de falla, etc.).
+     * Personal Mantenimiento suele no tener filas en usuario_edificio: usar catálogo completo.
+     *
+     * @param array<string, mixed> $sessionUser
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerEdificiosParaUbicacion(array $sessionUser): array
+    {
+        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+            return $this->repository->catalogoEdificios();
+        }
+
+        return $this->repository->misEdificios();
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function obtenerMisSalas(int $edificioId): array
@@ -95,11 +111,41 @@ final class SigmuService
     }
 
     /**
+     * Salas para selección en formularios (respeta rol mantenimiento como en obtenerEdificiosParaUbicacion).
+     *
+     * @param array<string, mixed> $sessionUser
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerSalasParaUbicacion(int $edificioId, array $sessionUser): array
+    {
+        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+            return $this->repository->catalogoSalasPorEdificio($edificioId);
+        }
+
+        return $this->repository->misSalasPorEdificio($edificioId);
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function obtenerMisActivos(int $salaId): array
     {
         // Se apoya en vista_mis_activos (ya incluye foto principal si existe).
+        return $this->repository->misActivosPorSala($salaId);
+    }
+
+    /**
+     * Activos para selección en formularios (misma lógica que salas/edificios).
+     *
+     * @param array<string, mixed> $sessionUser
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerActivosParaUbicacion(int $salaId, array $sessionUser, ?int $edificioId = null): array
+    {
+        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+            return $this->repository->catalogoActivosPorSala($salaId, $edificioId);
+        }
+
         return $this->repository->misActivosPorSala($salaId);
     }
 

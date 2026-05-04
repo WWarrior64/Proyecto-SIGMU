@@ -131,7 +131,7 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
                 <div class="card-header-red">
                     <span>PENDIENTES DE REPARACIÓN</span>
                     <a href="/sigmu/mantenimiento/listado" class="view-all-btn" style="color: white; font-size: 11px; text-decoration: underline; font-weight: 500;">
-                        VER HISTORIAL COMPLETO
+                        VER LISTADO COMPLETO
                     </a>
                 </div>
                 <div class="card-subheader" style="background: #8b0000; padding: 0 15px 10px 15px;">

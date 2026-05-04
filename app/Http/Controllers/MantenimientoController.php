@@ -79,7 +79,7 @@ final class MantenimientoController
         }
 
         $sessionUser = Session::get('auth_user');
-        $edificios = $this->sigmuService->obtenerMisEdificios();
+        $edificios = $this->sigmuService->obtenerEdificiosParaUbicacion($sessionUser);
 
         return view('mantenimiento.reportar_falla', [
             'sessionUser' => $sessionUser,
@@ -143,8 +143,8 @@ final class MantenimientoController
         }
 
         try {
-            $mantenimientos = $this->mantenimientoService->obtenerListadoCompleto();
             $sessionUser = Session::get('auth_user');
+            $mantenimientos = $this->mantenimientoService->obtenerListadoParaUsuario($sessionUser);
 
             return view('mantenimiento.listado_mantenimientos', [
                 'sessionUser' => $sessionUser,
