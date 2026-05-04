@@ -184,6 +184,19 @@ $router->get('/sigmu/activo/tipos', static function (): void {
     $controller->index();
 });
 
+// Endpoints AJAX para selección dinámica
+$router->get('/sigmu/ajax/salas', static function (): void {
+    $edificioId = (int) ($_GET['edificio_id'] ?? 0);
+    $controller = new SigmuController();
+    $controller->getSalasAjax($edificioId);
+});
+
+$router->get('/sigmu/ajax/activos', static function (): void {
+    $salaId = (int) ($_GET['sala_id'] ?? 0);
+    $controller = new SigmuController();
+    $controller->getActivosAjax($salaId);
+});
+
 // RUTAS ADMINISTRACION USUARIOS
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
     return view('administracion_usuarios.gestion_usuarios');
@@ -322,4 +335,35 @@ $router->get('/sigmu/reporte-falla', static function (): string {
 $router->post('/sigmu/reporte-falla/guardar', static function (): string {
     $controller = new \App\Http\Controllers\FallaController();
     return $controller->guardar();
+});
+
+// RUTAS MANTENIMIENTO
+$router->get('/sigmu/mantenimiento', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->index();
+});
+
+$router->get('/sigmu/mantenimiento/reportar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->reportarFallaForm();
+});
+
+$router->post('/sigmu/mantenimiento/reportar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->registrarFalla();
+});
+
+$router->post('/sigmu/mantenimiento/agendar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->agendar();
+});
+
+$router->get('/sigmu/mantenimiento/listado', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->listado();
+});
+
+$router->post('/sigmu/mantenimiento/completar', static function (): string {
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->completar();
 });
