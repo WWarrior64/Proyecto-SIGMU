@@ -30,6 +30,25 @@ final class MantenimientoService
         ];
     }
 
+    public function obtenerDatosDashboardTecnico(int $tecnicoId): array
+    {
+        $mesActual = (int) date('m');
+        $anioActual = (int) date('Y');
+
+        return [
+            'asignados' => $this->repository->obtenerMantenimientosPorTecnico($tecnicoId),
+            'calendario' => $this->repository->obtenerCalendarioPorTecnico($tecnicoId, $mesActual, $anioActual),
+            'mes' => $mesActual,
+            'anio' => $anioActual
+        ];
+    }
+
+    public function registrarFalla(int $activoId, int $usuarioId, string $tipoFalla, string $descripcion, string $fecha): int
+    {
+        $descripcionCompleta = "[$tipoFalla] $descripcion";
+        return $this->repository->registrarFalla($activoId, $usuarioId, $descripcionCompleta, $fecha);
+    }
+
     public function obtenerEstadisticas(): array
     {
         $pendientes = $this->repository->obtenerMantenimientosPendientes();

@@ -26,9 +26,15 @@ final class MantenimientoController
             return '';
         }
 
+        $sessionUser = Session::get('auth_user');
+
+        // Redirección si es técnico
+        if ($sessionUser['rol_nombre'] === 'Personal Mantenimiento') {
+            return $this->dashboardTecnico();
+        }
+
         try {
             $data = $this->mantenimientoService->obtenerDatosDashboard();
-            $sessionUser = Session::get('auth_user');
 
             return view('mantenimiento.mantenimiento', [
                 'sessionUser' => $sessionUser,
@@ -41,6 +47,68 @@ final class MantenimientoController
             ]);
         } catch (Throwable $e) {
             return "Error: " . $e->getMessage();
+        }
+    }
+
+    public function dashboardTecnico(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        try {
+            $sessionUser = Session::get('auth_user');
+            $data = $this->mantenimientoService->obtenerDatosDashboardTecnico((int) $sessionUser['id']);
+
+            return view('mantenimiento.dashboard_tecnico', [
+                'sessionUser' => $sessionUser,
+                'asignados' => $data['asignados'],
+                'calendario' => $data['calendario'],
+                'mes' => $data['mes'],
+                'anio' => $data['anio']
+            ]);
+        } catch (Throwable $e) {
+            return "Error: " . $e->getMessage();
+        }
+    }
+
+    public function reportarFallaForm(): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $sessionUser = Session::get('auth_user');
+        $edificios = $this->sigmuService->obtenerMisEdificios();
+
+        return view('mantenimiento.reportar_falla', [
+            'sessionUser' => $sessionUser,
+            'edificios' => $edificios
+        ]);
+    }
+
+    public function registrarFalla(): string
+    {
+        if (!$this->requireAuth()) {
+            return json_encode(['success' => false, 'message' => 'No autorizado']);
+        }
+
+        try {
+            $activoId = (int) ($_POST['activo_id'] ?? 0);
+            $tipoFalla = $_POST['tipo_falla'] ?? '';
+            $descripcion = $_POST['descripcion'] ?? '';
+            $fecha = $_POST['fecha_deteccion'] ?? date('Y-m-d');
+            $usuarioId = (int) Session::get('auth_user')['id'];
+
+            if ($activoId <= 0 || empty($tipoFalla) || empty($descripcion)) {
+                return json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            }
+
+            $mantenimientoId = $this->mantenimientoService->registrarFalla($activoId, $usuarioId, $tipoFalla, $descripcion, $fecha);
+
+            return json_encode(['success' => true, 'mantenimiento_id' => $mantenimientoId]);
+        } catch (Throwable $e) {
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
