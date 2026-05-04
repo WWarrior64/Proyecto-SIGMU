@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Support\Router;
 
+// Configuración de zona horaria (UNICAES - El Salvador)
+date_default_timezone_set('America/El_Salvador');
+
 // Cargamos autoload de Composer para poder usar nuestras clases con namespace (App\...).
 require_once __DIR__ . '/../vendor/autoload.php';
 

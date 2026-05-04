@@ -50,6 +50,12 @@ final class SigmuController
             ]);
         }
 
+        // Si es PERSONAL DE MANTENIMIENTO, redirigir a su panel específico
+        if ($sessionUser['rol_nombre'] === 'Personal Mantenimiento') {
+            header('Location: /sigmu/mantenimiento');
+            return '';
+        }
+
         // Para demas roles mostrar panel normal de edificios
         return view('localizacion_asignacion.panel_edificios', [
             'sessionUser' => $sessionUser,
@@ -77,7 +83,7 @@ final class SigmuController
         return is_array($user) ? $user : null;
     }
 
-    private function requireAuth(): bool
+    public function requireAuth(): bool
     {
         // Guard simple: si no hay usuario, regresamos al login.
         $user = $this->getSessionUser();
@@ -91,4 +97,28 @@ final class SigmuController
         return true;
     }
 
+    public function getSalasAjax(int $edificioId): void
+    {
+        if (!$this->requireAuth()) {
+            http_response_code(401);
+            return;
+        }
+
+        $salas = $this->service->obtenerMisSalas($edificioId);
+        header('Content-Type: application/json');
+        echo json_encode($salas);
+    }
+
+    public function getActivosAjax(int $salaId): void
+    {
+        if (!$this->requireAuth()) {
+            http_response_code(401);
+            return;
+        }
+
+        $activos = $this->service->obtenerMisActivos($salaId);
+        header('Content-Type: application/json');
+        echo json_encode($activos);
+    }
 }
+

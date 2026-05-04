@@ -83,11 +83,11 @@ final class SigmuRepository
      */
     public function misEdificios(): array
     {
-        // Vista filtrada por usuario en sesión (fn_usuario_sesion / fn_tiene_acceso_edificio).
+        // Usar vista_fotos_edificio en lugar de edificio_foto (acceso restringido)
         $stmt = $this->db->query(
             'SELECT vme.*, ef.ruta_foto as foto
              FROM vista_mis_edificios vme
-             LEFT JOIN edificio_foto ef ON ef.edificio_id = vme.id
+             LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = vme.id
              ORDER BY vme.nombre'
         );
 
@@ -116,16 +116,16 @@ final class SigmuRepository
      */
     public function misActivosPorSala(int $salaId): array
     {
-        // Activos de la sala (solo si el usuario tiene acceso al edificio).
+        // Activos de la sala. Usar vistas en lugar de tablas base.
         $stmt = $this->db->prepare(
             'SELECT a.id, a.codigo, a.nombre, a.estado, a.sala_id, a.foto_principal,
                     COALESCE(ta.nombre, "Sin tipo") as tipo,
                     COALESCE(s.nombre, "Sin sala") as sala_nombre,
                     COALESCE(e.nombre, "Sin edificio") as edificio_nombre
              FROM vista_mis_activos a
-             LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
-             LEFT JOIN sala s ON a.sala_id = s.id
-             LEFT JOIN edificio e ON s.edificio_id = e.id
+             LEFT JOIN vista_tipos_activo ta ON a.tipo_activo_id = ta.id
+             LEFT JOIN vista_mis_salas s ON a.sala_id = s.id
+             LEFT JOIN vista_mis_edificios e ON s.edificio_id = e.id
              WHERE a.sala_id = :sala_id
              ORDER BY a.nombre'
         );
