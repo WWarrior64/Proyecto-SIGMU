@@ -8,42 +8,23 @@ $success = $success ?? '';
 $error = $error ?? '';
 
 $fechaCreado = isset($usuario['fecha_creado']) ? date('d-m-Y', strtotime($usuario['fecha_creado'])) : '01-01-2026';
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Mi Perfil</title>
-    <link rel="stylesheet" href="/assets/css/perfil.css">
-</head>
-<body>
 
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-        </div>
-        <div class="header-right">
-            <button class="logout-btn" title="Cerrar Sesion" onclick="window.location.href='/sigmu/logout'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
-                    <path d="M6 4v16h10M6 4h10M6 4v16" />
-                    <path d="M11 12h11" />
-                    <path d="M19 8l4 4-4 4" />
-                </svg>
-            </button>
-        </div>
-    </header>
+$sigmuPageTitle = 'MI PERFIL';
+$sigmuLayoutAdmin = false;
+$sigmuExtraCss = ['/assets/css/perfil.css'];
+$sigmuExtraScripts = ['/assets/js/perfil.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
+?>
 
     <div class="back-container">
-        <button class="back-btn" onclick="window.history.back()">
+        <button type="button" class="back-btn" onclick="window.history.back()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
         </button>
     </div>
 
-    <main class="main-container">
+    <div class="main-container">
         <?php if ($success): ?>
             <div class="alert alert-success">Perfil actualizado correctamente</div>
         <?php endif; ?>
@@ -117,9 +98,5 @@ $fechaCreado = isset($usuario['fecha_creado']) ? date('d-m-Y', strtotime($usuari
                 </div>
             </form>
         </div>
-    </main>
-
-    <script src="/assets/js/perfil.js"></script>
-    <script src="/assets/js/global-menu.js"></script>
-</body>
-</html>
+    </div>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

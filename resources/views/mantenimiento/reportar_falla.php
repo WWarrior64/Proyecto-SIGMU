@@ -1,15 +1,13 @@
 <?php
 /** @var array $sessionUser */
 /** @var array $edificios */
+
+$sigmuPageTitle = 'REPORTAR FALLA';
+$sigmuLayoutAdmin = false;
+$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Reportar Falla</title>
-    <link rel="stylesheet" href="/assets/css/mantenimiento.css">
-    <style>
+<style>
         .report-container { padding: 40px 20px; max-width: 700px; margin: 0 auto; }
         .report-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
         .report-header { background: #8b0000; color: white; padding: 20px; text-align: center; font-size: 18px; font-weight: 700; }
@@ -18,16 +16,6 @@
         .form-section-title { font-size: 14px; font-weight: 700; color: #8b0000; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; }
         .loader { display: none; margin-left: 10px; }
     </style>
-</head>
-<body>
-
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">REPORTAR NUEVA FALLA</h1>
-        </div>
-    </header>
 
     <div class="back-btn-container">
         <button class="back-btn" onclick="window.location.href='/sigmu/mantenimiento'" title="Regresar">
@@ -38,7 +26,7 @@
         </button>
     </div>
 
-    <main class="report-container">
+    <div class="report-container">
         <div class="report-card">
             <div class="report-header">FORMULARIO DE REPORTE DE INCIDENCIA</div>
             <form id="formReportarFalla" class="report-body">
@@ -101,9 +89,8 @@
                 </div>
             </form>
         </div>
-    </main>
+    </div>
 
-    <script src="/assets/js/global-menu.js"></script>
     <script>
         const comboEdificio = document.getElementById('edificio_id');
         const comboSala = document.getElementById('sala_id');
@@ -210,5 +197,4 @@
             });
         });
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

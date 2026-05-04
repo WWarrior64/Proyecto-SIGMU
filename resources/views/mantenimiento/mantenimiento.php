@@ -35,34 +35,13 @@ foreach ($calendario as $evento) {
 
 // Clases de colores para eventos
 $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-orange'];
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Mantenimiento</title>
-    <link rel="stylesheet" href="/assets/css/mantenimiento.css">
-</head>
-<body>
 
-    <!-- BARRA SUPERIOR -->
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">MANTENIMIENTO</h1>
-        </div>
-        <div class="header-right">
-            <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-        </div>
-    </header>
+$sigmuPageTitle = 'MANTENIMIENTO';
+$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+$sigmuExtraScripts = ['/assets/js/mantenimiento.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
+?>
 
     <div class="back-btn-container">
         <button class="back-btn" onclick="if(document.referrer.indexOf(window.location.host) !== -1) { history.back(); } else { window.location.href='/sigmu'; }" title="Regresar">
@@ -73,8 +52,7 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
         </button>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-container">
+    <div class="main-container">
         <div class="layout-grid">
             
             <!-- IZQUIERDA: CALENDARIO -->
@@ -193,7 +171,7 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
                 </div>
             </section>
         </div>
-    </main>
+    </div>
 
     <!-- MODAL AGENDAR -->
     <div class="modal-overlay" id="modalProgramar">
@@ -247,7 +225,4 @@ $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-ora
         </div>
     </div>
 
-    <script src="/assets/js/global-menu.js"></script>
-    <script src="/assets/js/mantenimiento.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

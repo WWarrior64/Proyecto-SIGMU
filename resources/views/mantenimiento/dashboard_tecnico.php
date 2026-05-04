@@ -25,15 +25,13 @@ foreach ($calendario as $evento) {
         $eventosPorDia[$diaEvento][] = $evento;
     }
 }
+
+$sigmuPageTitle = 'PANEL TÉCNICO';
+$sigmuLayoutAdmin = false;
+$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Panel Técnico</title>
-    <link rel="stylesheet" href="/assets/css/mantenimiento.css">
-    <style>
+<style>
         .tech-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
         .welcome-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .report-btn { background: #8b0000; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
@@ -50,27 +48,8 @@ foreach ($calendario as $evento) {
         .btn-finish { background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
         @media (max-width: 900px) { .grid-tech { grid-template-columns: 1fr; } }
     </style>
-</head>
-<body>
 
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">PANEL DE MANTENIMIENTO</h1>
-        </div>
-        <div class="header-right">
-            <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-        </div>
-    </header>
-
-    <main class="tech-dashboard">
+    <div class="tech-dashboard">
         <div class="welcome-section">
             <div>
                 <h2 style="margin: 0; color: #2d3748;">Hola, <?= htmlspecialchars($sessionUser['nombre_completo']) ?></h2>
@@ -180,7 +159,7 @@ foreach ($calendario as $evento) {
                 </div>
             </section>
         </div>
-    </main>
+    </div>
 
     <!-- MODAL FINALIZAR (Reusado de listado_mantenimientos) -->
     <div class="modal-overlay" id="modalCompletar">
@@ -222,7 +201,6 @@ foreach ($calendario as $evento) {
         </div>
     </div>
 
-    <script src="/assets/js/global-menu.js"></script>
     <script>
         function abrirModalCompletar(id, codigo) {
             document.getElementById('mantenimiento_id_completar').value = id;
@@ -243,5 +221,4 @@ foreach ($calendario as $evento) {
             });
         });
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

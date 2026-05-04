@@ -1,15 +1,13 @@
 <?php
 /** @var array $sessionUser */
 /** @var array $mantenimientos */
+
+$sigmuPageTitle = 'LISTADO MANTENIMIENTOS';
+$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Listado de Mantenimientos</title>
-    <link rel="stylesheet" href="/assets/css/mantenimiento.css">
-    <style>
+<style>
         .list-container {
             padding: 20px;
             max-width: 1200px;
@@ -81,26 +79,6 @@
             color: #718096;
         }
     </style>
-</head>
-<body>
-
-    <!-- BARRA SUPERIOR -->
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">MANTENIMIENTOS</h1>
-        </div>
-        <div class="header-right">
-            <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-        </div>
-    </header>
 
     <div class="back-btn-container">
         <button class="back-btn" onclick="window.location.href='/sigmu/mantenimiento'" title="Regresar al Panel">
@@ -111,7 +89,7 @@
         </button>
     </div>
 
-    <main class="list-container">
+    <div class="list-container">
         <div class="table-card">
             <div class="table-header">
                 LISTADO GENERAL DE REPARACIONES
@@ -167,7 +145,7 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
     <!-- MODAL FINALIZAR -->
     <div class="modal-overlay" id="modalCompletar">
@@ -215,7 +193,6 @@
         </div>
     </div>
 
-    <script src="/assets/js/global-menu.js"></script>
     <script>
         const modal = document.getElementById('modalCompletar');
         
@@ -252,5 +229,4 @@
             });
         });
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

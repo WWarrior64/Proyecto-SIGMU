@@ -1,34 +1,13 @@
 <?php
 /** @var array $sessionUser */
 /** @var array $activo */
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Reportar Falla</title>
-    <link rel="stylesheet" href="/assets/css/reporte-falla.css">
-</head>
-<body>
 
-    <!-- BARRA SUPERIOR -->
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">REPORTAR FALLA</h1>
-        </div>
-        <div class="header-right">
-            <button class="icon-btn logout-btn" title="Cerrar Sesión" onclick="window.location.href='/sigmu/logout'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-        </div>
-    </header>
+$sigmuPageTitle = 'REPORTAR FALLA';
+$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuExtraCss = ['/assets/css/reporte-falla.css'];
+$sigmuExtraScripts = ['/assets/js/reporte-falla.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
+?>
 
     <div class="back-btn-container">
         <button class="back-btn" onclick="history.back()" title="Regresar">
@@ -39,8 +18,7 @@
         </button>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-container">
+    <div class="main-container">
         <div class="ticket-card">
             <div class="ticket-header">
                 <h2>TICKETS</h2>
@@ -102,17 +80,14 @@
                 </div>
             </form>
         </div>
-    </main>
+    </div>
 
     <script>
-        // Datos del usuario para el menú global
         globalThis.authUser = {
             id: <?= (int)$sessionUser['id'] ?>,
-            nombre_completo: '<?= addslashes($sessionUser['nombre_completo']) ?>',
-            foto: '<?= $sessionUser['foto'] ?? '' ?>'
+            nombre_completo: <?= json_encode($sessionUser['nombre_completo'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
+            foto: <?= json_encode($sessionUser['foto'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
+            rol_nombre: <?= json_encode($sessionUser['rol_nombre'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
-    <script src="/assets/js/global-menu.js"></script>
-    <script src="/assets/js/reporte-falla.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

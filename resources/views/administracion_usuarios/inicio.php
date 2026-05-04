@@ -16,38 +16,11 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
     header('Location: /sigmu');
     exit;
 }
+$sigmuPageTitle = 'INICIO';
+$sigmuLayoutAdmin = true;
+$sigmuExtraCss = ['/assets/css/admin-panel.css'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - Panel Administrador</title>
-    <link rel="stylesheet" href="/assets/css/admin-panel.css">
-</head>
-<body>
-
-    <!-- BARRA SUPERIOR -->
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-            <h1 class="header-title">INICIO</h1>
-        </div>
-        <div class="header-right">
-            <button class="icon-btn" title="Opciones Administrador">🔑</button>
-            <button class="icon-btn logout-btn" title="Cerrar Sesion" onclick="window.location.href='/sigmu/logout'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-        </div>
-    </header>
-
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-container">
         <div class="content-card">
             <h2 class="page-title">INICIO</h2>
             
@@ -81,7 +54,7 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
                 </a>
 
                 <!-- REPORTES -->
-                <a href="/sigmu/reportes" class="menu-card">
+                <a href="/sigmu/historial" class="menu-card">
                     <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -89,7 +62,7 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
                         <line x1="16" y1="17" x2="8" y2="17"></line>
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
-                    <span class="menu-label">REPORTES</span>
+                    <span class="menu-label">HISTORIAL / REPORTES</span>
                 </a>
 
                 <!-- MANTENIMIENTO -->
@@ -101,8 +74,4 @@ if ($sessionUser['rol_nombre'] !== 'Administrador') {
                 </a>
             </div>
         </div>
-    </main>
-
-    <script src="/assets/js/global-menu.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';
