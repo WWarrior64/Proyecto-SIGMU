@@ -44,7 +44,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
 
     <div class="back-btn-container">
-        <button class="back-btn" onclick="if(document.referrer.indexOf(window.location.host) !== -1) { history.back(); } else { window.location.href='/sigmu'; }" title="Regresar">
+        <button class="back-btn" onclick="window.location.href='/sigmu'" title="Regresar al Panel Principal">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
