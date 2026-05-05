@@ -1,15 +1,15 @@
 /* CSS for asset listing in SIGMU - Modern Dashboard Design */
 
 :root {
-    --unicaes-red: #9F2A2A;
-    --unicaes-red-dark: #7a1f1f;
-    --unicaes-red-light: #B71C1C;
+    --unicaes-red: #9a2018;
+    --unicaes-red-dark: #7a1912;
+    --unicaes-red-light: #b7241b;
     --text-primary: #212121;
-    --text-secondary: #757575;
+    --text-secondary: #616161;
     --text-dark: #424242;
-    --bg-gray: #F5F5F5;
+    --bg-gray: #f3f3f3;
     --bg-white: #ffffff;
-    --border-color: #E0E0E0;
+    --border-color: #e0e0e0;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
     --error-color: #dc3545;

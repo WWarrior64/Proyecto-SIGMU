@@ -1,10 +1,10 @@
 :root {
-    --primary-red: #9C1C1C;
+    --primary-red: #9a2018;
     --dark-grey: #455A64;
-    --light-grey: #F5F5F5;
-    --border-color: #E0E0E0;
+    --light-grey: #f3f3f3;
+    --border-color: #e0e0e0;
     --text-color: #333;
-    --white: #FFFFFF;
+    --white: #ffffff;
 }
 
 body {

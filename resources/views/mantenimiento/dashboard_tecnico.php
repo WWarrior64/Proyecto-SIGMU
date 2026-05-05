@@ -150,7 +150,15 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                         </svg>
                                     </a>
                                     <?php if (($m['estado'] ?? '') === 'en_proceso' || ($m['estado'] ?? '') === 'pendiente'): ?>
-                                        <button type="button" class="btn-finish" onclick="abrirModalCompletar(<?= (int) $m['id'] ?>, <?= json_encode((string) ($m['activo_codigo'] ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>)">COMPLETAR</button>
+                                        <button
+                                            type="button"
+                                            class="btn-finish"
+                                            data-mantenimiento-id="<?= (int) $m['id'] ?>"
+                                            data-activo-codigo="<?= htmlspecialchars((string) ($m['activo_codigo'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                            onclick="abrirModalCompletarDesdeBoton(this)"
+                                        >
+                                            COMPLETAR
+                                        </button>
                                     <?php endif; ?>
                                 </div>
                             </article>
@@ -202,6 +210,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
     </div>
 
     <script>
+        function abrirModalCompletarDesdeBoton(btn) {
+            if (!btn) return;
+            const id = parseInt(btn.dataset.mantenimientoId || '0', 10);
+            const codigo = btn.dataset.activoCodigo || '';
+            if (!id) return;
+            abrirModalCompletar(id, codigo);
+        }
+
         function abrirModalCompletar(id, codigo) {
             document.getElementById('mantenimiento_id_completar').value = id;
             document.getElementById('modalActivoCodigo').textContent = codigo;

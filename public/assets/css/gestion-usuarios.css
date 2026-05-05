@@ -5,15 +5,15 @@
 */
 
 :root {
-    --unicaes-red: #9C1C1C;
-    --unicaes-red-hover: #b71c1c;
-    --bg-main: #F5F5F5;
+    --unicaes-red: #9a2018;
+    --unicaes-red-hover: #b7241b;
+    --bg-main: #f3f3f3;
     --bg-card: #ffffff;
     --bg-item: #f1f1f1;
     --text-primary: #212121;
     --text-secondary: #616161;
-    --border-color: #9E9E9E;
-    --radius-md: 10px;
+    --border-color: #e0e0e0;
+    --radius-md: 8px;
     --radius-sm: 6px;
 }
 
