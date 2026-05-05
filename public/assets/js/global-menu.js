@@ -45,7 +45,6 @@
         html += link("/sigmu/perfil", "Mi información", svg.user, "/sigmu/perfil");
         html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
         html += link("/sigmu/historial", "Historial general", svg.clock, "/sigmu/historial");
-        html += link("/sigmu/reporte-falla", "Reporte de falla", svg.file, "/sigmu/reporte-falla");
         html += link("/sigmu/mantenimiento", "Panel mantenimiento", svg.wrench, "/sigmu/mantenimiento");
         html += link("/sigmu/mantenimiento/listado", "Lista de reparaciones", svg.list, "/sigmu/mantenimiento/listado");
 
