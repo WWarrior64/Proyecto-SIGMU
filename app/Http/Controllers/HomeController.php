@@ -8,8 +8,9 @@ namespace App\Http\Controllers;
 // Todo lo real del sistema cuelga de /sigmu.
 final class HomeController
 {
-    public function index(): string
+    public function index(): void
     {
-        return '<h1>SIGMU funcionando</h1><p><a href="/sigmu">Ir al flujo MVC SIGMU</a></p>';
+        header('Location: /sigmu');
+        exit;
     }
 }

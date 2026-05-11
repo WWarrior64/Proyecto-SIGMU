@@ -13,6 +13,23 @@ if (!function_exists('config_path')) {
     }
 }
 
+if (!function_exists('partial')) {
+    /**
+     * Incluye un partial desde resources/views/partials/{nombre}.php
+     *
+     * @param array<string, mixed> $data
+     */
+    function partial(string $name, array $data = []): void
+    {
+        $path = __DIR__ . '/../resources/views/partials/' . $name . '.php';
+        if (!is_file($path)) {
+            return;
+        }
+        extract($data, EXTR_SKIP);
+        require $path;
+    }
+}
+
 if (!function_exists('view')) {
     /**
      * Renderiza una vista PHP desde /resources/views.

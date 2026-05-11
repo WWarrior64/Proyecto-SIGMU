@@ -83,12 +83,30 @@ final class SigmuRepository
      */
     public function misEdificios(): array
     {
-        // Vista filtrada por usuario en sesión (fn_usuario_sesion / fn_tiene_acceso_edificio).
+        // Usar vista_fotos_edificio en lugar de edificio_foto (acceso restringido)
         $stmt = $this->db->query(
             'SELECT vme.*, ef.ruta_foto as foto
              FROM vista_mis_edificios vme
-             LEFT JOIN edificio_foto ef ON ef.edificio_id = vme.id
+             LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = vme.id
              ORDER BY vme.nombre'
+        );
+
+        return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    /**
+     * Catálogo completo de edificios (sin filtro usuario_edificio).
+     * Necesario para Personal Mantenimiento al reportar fallas: suele no tener edificios asignados.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function catalogoEdificios(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT e.*, ef.ruta_foto as foto
+             FROM edificio e
+             LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = e.id
+             ORDER BY e.nombre'
         );
 
         return $stmt === false ? [] : $stmt->fetchAll();
@@ -112,24 +130,76 @@ final class SigmuRepository
     }
 
     /**
+     * Salas de un edificio sin filtrar por asignación de usuario.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function catalogoSalasPorEdificio(int $edificioId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, edificio_id, nombre, descripcion, numero_piso
+             FROM sala
+             WHERE edificio_id = :edificio_id
+             ORDER BY numero_piso, nombre'
+        );
+        $stmt->execute(['edificio_id' => $edificioId]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function misActivosPorSala(int $salaId): array
     {
-        // Activos de la sala (solo si el usuario tiene acceso al edificio).
+        // Activos de la sala. Usar vistas en lugar de tablas base.
         $stmt = $this->db->prepare(
             'SELECT a.id, a.codigo, a.nombre, a.estado, a.sala_id, a.foto_principal,
                     COALESCE(ta.nombre, "Sin tipo") as tipo,
                     COALESCE(s.nombre, "Sin sala") as sala_nombre,
                     COALESCE(e.nombre, "Sin edificio") as edificio_nombre
              FROM vista_mis_activos a
-             LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
-             LEFT JOIN sala s ON a.sala_id = s.id
-             LEFT JOIN edificio e ON s.edificio_id = e.id
+             LEFT JOIN vista_tipos_activo ta ON a.tipo_activo_id = ta.id
+             LEFT JOIN vista_mis_salas s ON a.sala_id = s.id
+             LEFT JOIN vista_mis_edificios e ON s.edificio_id = e.id
              WHERE a.sala_id = :sala_id
              ORDER BY a.nombre'
         );
         $stmt->execute(['sala_id' => $salaId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Activos de una sala sin filtrar por asignación de usuario.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function catalogoActivosPorSala(int $salaId, ?int $edificioId = null): array
+    {
+        // Nota: en BD v2, foto_principal no existe en tabla activo (solo en vista_mis_activos).
+        // El formulario de reporte solo necesita id, codigo, nombre, estado.
+        $sql = 'SELECT a.id, a.codigo, a.nombre, a.estado, a.sala_id,
+                    COALESCE(ta.nombre, \'Sin tipo\') as tipo,
+                    COALESCE(s.nombre, \'Sin sala\') as sala_nombre,
+                    COALESCE(e.nombre, \'Sin edificio\') as edificio_nombre
+             FROM activo a
+             INNER JOIN sala s ON s.id = a.sala_id
+             LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
+             LEFT JOIN edificio e ON s.edificio_id = e.id
+             WHERE a.sala_id = :sala_id';
+
+        $params = ['sala_id' => $salaId];
+
+        if ($edificioId !== null && $edificioId > 0) {
+            $sql .= ' AND s.edificio_id = :edificio_id';
+            $params['edificio_id'] = $edificioId;
+        }
+
+        $sql .= ' ORDER BY a.nombre';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

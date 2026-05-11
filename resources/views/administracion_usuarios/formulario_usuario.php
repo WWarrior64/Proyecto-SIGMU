@@ -37,47 +37,21 @@ if ($modo === 'editar' && $usuario_id) {
     }
 }
 
+$sigmuPageTitle = $modo === 'editar' ? 'EDITAR USUARIO' : 'REGISTRAR USUARIO';
+$sigmuLayoutAdmin = true;
+$sigmuExtraCss = ['/assets/css/gestion-usuarios.css', '/assets/css/formulario-usuario.css'];
+$sigmuExtraScripts = ['/assets/js/formulario-usuario.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGMU - <?= ($modo === 'editar' ? 'Editar Usuario' : 'Registrar Usuario') ?></title>
-    <link rel="stylesheet" href="/assets/css/gestion-usuarios.css">
-    <link rel="stylesheet" href="/assets/css/formulario-usuario.css">
-</head>
-<body>
-
-    <!-- BARRA SUPERIOR -->
-    <header class="header-bar">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">☰</button>
-            <img src="/assets/img/unicaes_logo.png" alt="UNICAES" class="logo">
-        </div>
-        <div class="header-right">
-            <button class="icon-btn" title="Opciones Administrador">🔑</button>
-            <button class="icon-btn logout-btn" title="Cerrar Sesion" onclick="window.location.href='/sigmu/logout'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
-                    <path d="M6 4v16h10M6 4h10M6 4v16" />
-                    <path d="M11 12h11" />
-                    <path d="M19 8l4 4-4 4" />
-                </svg>
-            </button>
-        </div>
-    </header>
-
-    <!-- BOTON VOLVER -->
     <div class="back-container">
-        <button class="back-btn" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'">
+        <button type="button" class="back-btn" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
         </button>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-container">
+    <div class="main-container">
         <div class="content-card">
             
             <h2 class="page-title">
@@ -211,9 +185,5 @@ if ($modo === 'editar' && $usuario_id) {
             </form>
 
         </div>
-    </main>
-
-    <script src="/assets/js/global-menu.js"></script>
-    <script src="/assets/js/formulario-usuario.js"></script>
-    </body>
-</html>
+    </div>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

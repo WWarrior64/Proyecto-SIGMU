@@ -16,44 +16,14 @@ $activo = $activo ?? null;
 
 // Generar token CSRF
 $csrfToken = Csrf::getToken();
-?>
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SIGMU - Editar Activo</title>
-    <link rel="stylesheet" href="/assets/css/activo-form.css">
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="menu-btn" id="menuBtn" onclick="openSidebarMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <div class="logo">
-                <img src="/assets/img/logo_unicaes.png" alt="UNICAES" class="logo-img">
-            </div>
-            <span class="page-title">Editar activo</span>
-        </div>
-        <div class="header-right">
-            <button class="logout-btn" onclick="window.location.href='/sigmu/logout'" title="Cerrar sesión">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
-                    <path d="M6 4v16h10M6 4h10M6 4v16" />
-                    <path d="M11 12h11" />
-                    <path d="M19 8l4 4-4 4" />
-                </svg>
-            </button>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
+$sigmuPageTitle = 'EDITAR ACTIVO';
+$sigmuLayoutAdmin = false;
+$sigmuExtraCss = ['/assets/css/activo-form.css'];
+$sigmuExtraScripts = ['/assets/js/activo-form.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
+?>
+    <div class="main-content">
         <div class="form-card">
             <h1 class="form-title">EDITAR ACTIVO</h1>
 
@@ -252,9 +222,5 @@ $csrfToken = Csrf::getToken();
                 </div>
             <?php endif; ?>
         </div>
-    </main>
-
-    <script src="/assets/js/global-menu.js"></script>
-    <script src="/assets/js/activo-form.js"></script>
-</body>
-</html>
+    </div>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';

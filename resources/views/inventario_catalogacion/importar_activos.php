@@ -14,15 +14,13 @@ if ($results) {
 }
 
 $csrfToken = Csrf::getToken();
+
+$sigmuPageTitle = 'IMPORTAR ACTIVOS';
+$sigmuLayoutAdmin = false;
+$sigmuExtraCss = ['/assets/css/activo-form.css'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SIGMU - Importar Activos</title>
-    <link rel="stylesheet" href="/assets/css/activo-form.css">
-    <style>
+<style>
         .import-info {
             background-color: #f3f4f6;
             padding: 15px;
@@ -51,26 +49,7 @@ $csrfToken = Csrf::getToken();
             font-size: 0.9em;
         }
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="menu-btn" onclick="openSidebarMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <div class="logo">
-                <img src="/assets/img/logo_unicaes.png" alt="UNICAES" class="logo-img">
-            </div>
-            <span class="page-title">Importar activos</span>
-        </div>
-    </header>
-
-    <main class="main-content">
+    <div class="main-content">
         <div class="form-card">
             <h1 class="form-title">IMPORTAR ACTIVOS</h1>
 
@@ -140,19 +119,18 @@ $csrfToken = Csrf::getToken();
                 </div>
             </form>
         </div>
-    </main>
+    </div>
 
-    <script src="/assets/js/global-menu.js"></script>
     <script>
         // Animación simple para el input de archivo
         const fileInput = document.querySelector('.file-input');
         const fileLabel = document.querySelector('.file-input-label span');
-        
+        if (fileInput && fileLabel) {
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 fileLabel.textContent = e.target.files[0].name;
             }
         });
+        }
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php';
