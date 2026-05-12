@@ -4,82 +4,114 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\EspacioService;
 use App\Services\SigmuService;
+use App\Support\Session;
 use Throwable;
 
 final class EdificioController
 {
-    public function __construct(
-        private readonly SigmuService $service = new SigmuService()
-    ) {
+    private EspacioService $espacioService;
+    private SigmuService $sigmuService;
+
+    public function __construct()
+    {
+        $this->espacioService = new EspacioService();
+        $this->sigmuService = new SigmuService();
     }
 
+    private function requireAuth(): ?array
+    {
+        if (!Session::has('auth_user')) {
+            header('Location: /sigmu?error=debes_iniciar_sesion');
+            exit;
+        }
+
+        $user = Session::get('auth_user');
+        $this->sigmuService->iniciarSesionBd((int)$user['id']);
+        return $user;
+    }
+
+    /**
+     * Vista principal de edificios (Panel de Espacios)
+     */
     public function dashboard(): string
     {
-        $error = null;
-        $sessionUser = $this->getSessionUser();
-        $edificios = [];
-
-        if ($sessionUser) {
-            try {
-                $this->syncDatabaseSession();
-                $edificios = $this->service->obtenerMisEdificios();
-            } catch (Throwable $exception) {
-                $error = $exception->getMessage();
-            }
-        }
-
-        if (!$sessionUser) {
-            return view('administracion_usuarios.login', [
-                'error' => $error,
-            ]);
-        }
-
-        return view('localizacion_asignacion.panel_edificios', [
-            'sessionUser' => $sessionUser,
-            'edificios' => $edificios,
-            'error' => $error,
-        ]);
-    }
-
-    public function salasPorEdificio(): string
-    {
-        if (!$this->requireAuth()) {
-            return '';
-        }
-
-        $edificioId = filter_input(INPUT_GET, 'edificio_id', FILTER_VALIDATE_INT);
-        if (!$edificioId) {
-            return '<h2>edificio_id invalido</h2><p><a href="/sigmu">Volver</a></p>';
-        }
-
-        try {
-            $salas = $this->service->obtenerMisSalas($edificioId);
-            return view('localizacion_asignacion.salas', [
-                'edificioId' => $edificioId,
-                'salas' => $salas,
-            ]);
-        } catch (Throwable $exception) {
-            return '<h2>Error</h2><p>' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
-        }
-    }
-
-    public function updatePhoto(): void
-    {
-        if (!$this->requireAuth()) {
-            header('Location: /sigmu?error=acceso_denegado');
-            return;
-        }
-
-        $edificioId = (int)($_POST['edificio_id'] ?? 0);
+        $user = $this->requireAuth();
         
         try {
+            $edificios = $this->espacioService->listarEdificios();
+            return view('localizacion_asignacion.panel_edificios', [
+                'sessionUser' => $user,
+                'edificios' => $edificios
+            ]);
+        } catch (Throwable $e) {
+            return view('localizacion_asignacion.panel_edificios', [
+                'sessionUser' => $user,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Vista de salas de un edificio
+     */
+    public function salasPorEdificio(): string
+    {
+        $user = $this->requireAuth();
+        $edificioId = (int)($_GET['edificio_id'] ?? 0);
+        
+        try {
+            $edificio = $this->espacioService->obtenerEdificio($edificioId);
+            $salas = $this->espacioService->listarSalas($edificioId);
+            
+            return view('localizacion_asignacion.salas', [
+                'sessionUser' => $user,
+                'edificio' => $edificio,
+                'salas' => $salas,
+                'edificioId' => $edificioId
+            ]);
+        } catch (Throwable $e) {
+            header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
+            return '';
+        }
+    }
+
+    /**
+     * Guardar/Editar edificio
+     */
+    public function guardar(): string
+    {
+        $this->requireAuth();
+
+        try {
+            $data = $_POST;
+            $edificioId = $this->espacioService->guardarEdificio($data);
+
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-                // Necesitamos procesarFotoEdificio que está en ActivoController.
-                // Lo moveré a un trait o helper si fuera necesario, pero por ahora lo implementaré aquí o usaré una instancia de ActivoController.
-                // Mejor lo implemento aquí para no complicar.
                 $fotoPath = $this->procesarFotoEdificio($_FILES['foto']);
-                $this->service->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
+                $this->sigmuService->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
+            }
+
+            header('Location: /sigmu/edificios?success=edificio_guardado');
+        } catch (Throwable $e) {
+            header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
+        }
+        return '';
+    }
+
+    /**
+     * Actualizar solo la foto de un edificio
+     */
+    public function updatePhoto(): string
+    {
+        $this->requireAuth();
+        
+        $edificioId = (int)($_POST['edificio_id'] ?? 0);
+        try {
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                $fotoPath = $this->procesarFotoEdificio($_FILES['foto']);
+                $this->sigmuService->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
                 header("Location: /sigmu/edificios?success=foto_actualizada");
             } else {
                 header("Location: /sigmu/edificios?error=error_al_subir_foto");
@@ -87,6 +119,26 @@ final class EdificioController
         } catch (Throwable $e) {
             header("Location: /sigmu/edificios?error=" . urlencode($e->getMessage()));
         }
+        return '';
+    }
+
+    /**
+     * Guardar/Editar sala
+     */
+    public function guardarSala(): string
+    {
+        $this->requireAuth();
+        
+        try {
+            $data = $_POST;
+            $this->espacioService->guardarSala($data);
+            $edificioId = (int)($data['edificio_id'] ?? 0);
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=sala_guardada');
+        } catch (Throwable $e) {
+            $edificioId = (int)($_POST['edificio_id'] ?? 0);
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($e->getMessage()));
+        }
+        return '';
     }
 
     private function procesarFotoEdificio(array $file): string
@@ -96,7 +148,7 @@ final class EdificioController
 
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $fileName = uniqid('edificio_', true) . '.' . $extension;
-        
+
         if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
             return 'uploads/edificios/' . $fileName;
         }
@@ -105,30 +157,47 @@ final class EdificioController
 
     private function syncDatabaseSession(): void
     {
-        $userId = $this->getSessionUser()['id'] ?? null;
-        if (is_int($userId) && $userId > 0) {
-            $this->service->iniciarSesionBd($userId);
+        $user = Session::get('auth_user');
+        $userId = $user['id'] ?? null;
+        if (is_numeric($userId) && (int)$userId > 0) {
+            $this->sigmuService->iniciarSesionBd((int)$userId);
         }
     }
 
     /**
-     * @return array<string, mixed>|null
+     * Eliminar edificio con validación de contraseña
      */
-    private function getSessionUser(): ?array
+    public function eliminar(): string
     {
-        $user = $_SESSION['auth_user'] ?? null;
-        return is_array($user) ? $user : null;
+        $user = $this->requireAuth();
+        $id = (int)($_POST['id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
+
+        try {
+            $this->espacioService->eliminarEdificio($id, (int)$user['id'], $password);
+            header('Location: /sigmu/edificios?success=edificio_eliminado');
+        } catch (Throwable $e) {
+            header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
+        }
+        return '';
     }
 
-    private function requireAuth(): bool
+    /**
+     * Eliminar sala con validación de contraseña
+     */
+    public function eliminarSala(): string
     {
-        $user = $this->getSessionUser();
-        if (!$user || empty($user['id'])) {
-            header('Location: /sigmu?error=debes_iniciar_sesion');
-            return false;
-        }
+        $user = $this->requireAuth();
+        $id = (int)($_POST['id'] ?? 0);
+        $edificioId = (int)($_POST['edificio_id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
 
-        $this->syncDatabaseSession();
-        return true;
+        try {
+            $this->espacioService->eliminarSala($id, (int)$user['id'], $password);
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=sala_eliminada');
+        } catch (Throwable $e) {
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($e->getMessage()));
+        }
+        return '';
     }
 }

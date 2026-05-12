@@ -776,6 +776,7 @@ final class SigmuRepository
                 u.id,
                 u.username,
                 u.email,
+                u.contrasena_hash,
                 u.nombre_completo,
                 u.rol_id,
                 r.nombre AS rol_nombre,
