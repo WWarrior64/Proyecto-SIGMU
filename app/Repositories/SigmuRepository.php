@@ -837,4 +837,67 @@ final class SigmuRepository
             'nombre' => $nombreCompleto
         ]);
     }
+
+    /**
+     * Obtiene usuarios por el nombre de su rol
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerUsuariosPorRolNombre(string $rolNombre): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT u.id, u.username, u.nombre_completo, u.email
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             WHERE r.nombre = :rol_nombre AND u.activo = 1
+             ORDER BY u.nombre_completo'
+        );
+        $stmt->execute(['rol_nombre' => $rolNombre]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene los usuarios asignados a un edificio
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerUsuariosAsignadosAEdificio(int $edificioId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT u.id, u.username, u.nombre_completo
+             FROM usuario_edificio ue
+             JOIN usuario u ON u.id = ue.usuario_id
+             WHERE ue.edificio_id = :edificio_id'
+        );
+        $stmt->execute(['edificio_id' => $edificioId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Asigna un edificio a un usuario (usa el SP seguro)
+     */
+    public function asignarEdificioAUsuario(int $usuarioId, int $edificioId): bool
+    {
+        $stmt = $this->db->prepare('CALL sp_asignar_edificio(:usuario_id, :edificio_id)');
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'edificio_id' => $edificioId
+        ]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        return isset($res['filas_afectadas']);
+    }
+
+    /**
+     * Quita la asignación de un edificio a un usuario
+     */
+    public function quitarAsignacionEdificio(int $usuarioId, int $edificioId): bool
+    {
+        $stmt = $this->db->prepare('CALL sp_quitar_edificio(:usuario_id, :edificio_id)');
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'edificio_id' => $edificioId
+        ]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        return isset($res['filas_afectadas']);
+    }
 }

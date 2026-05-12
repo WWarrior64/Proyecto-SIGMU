@@ -40,8 +40,18 @@ function abrirModalEdificio(data = null) {
         document.getElementById('edificio_nombre').value = data.nombre;
         document.getElementById('edificio_descripcion').value = data.descripcion || '';
         document.getElementById('edificio_pisos').value = data.cantidad_pisos;
+
+        // Poblar responsable si existe el select (solo admin)
+        const selectResp = document.getElementById('edificio_responsable_id');
+        if (selectResp && data.responsable_id) {
+            selectResp.value = data.responsable_id;
+        } else if (selectResp) {
+            selectResp.value = '0';
+        }
     } else {
         title.innerText = 'NUEVO EDIFICIO';
+        const selectResp = document.getElementById('edificio_responsable_id');
+        if (selectResp) selectResp.value = '0';
     }
 
     modal.style.display = 'flex';

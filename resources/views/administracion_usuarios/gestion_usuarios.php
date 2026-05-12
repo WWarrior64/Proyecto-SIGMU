@@ -49,7 +49,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="header-row">
                 <h2 class="page-title">USUARIOS</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary">ADMINISTRAR ESPACIOS</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/sigmu/edificios'">ADMINISTRAR ESPACIOS</button>
                     <button class="btn btn-primary" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=crear'">+</button>
                 </div>
             </div>
@@ -101,7 +101,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="users-list" id="usersList">
 
                 <!-- ENCABEZADO -->
-                <div class="user-item header">
+                <div class="user-item list-header">
                     <div class="user-avatar"></div>
                     <div class="user-username">Nombre de Usuario</div>
                     <div class="user-role">Rol</div>

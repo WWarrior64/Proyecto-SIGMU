@@ -450,4 +450,37 @@ final class SigmuService
     {
         return $this->repository->agregarFotoActivo($activoId, $rutaFoto, $descripcion, $esPrincipal);
     }
+
+    /**
+     * Obtiene todos los usuarios con rol "Responsable de Area"
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerResponsablesArea(): array
+    {
+        return $this->repository->obtenerUsuariosPorRolNombre('Responsable de Area');
+    }
+
+    /**
+     * Obtiene los usuarios asignados a un edificio
+     */
+    public function obtenerUsuariosAsignadosAEdificio(int $edificioId): array
+    {
+        return $this->repository->obtenerUsuariosAsignadosAEdificio($edificioId);
+    }
+
+    /**
+     * Asigna un edificio a un usuario
+     */
+    public function asignarEdificio(int $usuarioId, int $edificioId): bool
+    {
+        return $this->repository->asignarEdificioAUsuario($usuarioId, $edificioId);
+    }
+
+    /**
+     * Quita la asignación de un edificio a un usuario
+     */
+    public function quitarAsignacionEdificio(int $usuarioId, int $edificioId): bool
+    {
+        return $this->repository->quitarAsignacionEdificio($usuarioId, $edificioId);
+    }
 }

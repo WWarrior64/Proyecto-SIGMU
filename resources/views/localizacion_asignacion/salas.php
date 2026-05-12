@@ -48,7 +48,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
     <div class="espacios-grid">
         <?php foreach ($salas as $sala): ?>
-            <article class="sala-card">
+            <article class="sala-card" onclick="if(!event.target.closest('.card-actions')) window.location.href='/sigmu/sala?sala_id=<?= (int) $sala['id'] ?>'">
                 <div class="card-media" style="height: 100px; background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);">
                     <div style="text-align: center; color: var(--sigmu-red); opacity: 0.25;">
                         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

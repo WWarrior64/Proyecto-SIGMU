@@ -54,7 +54,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
     <div class="espacios-grid">
         <?php foreach ($edificios as $edificio): ?>
-            <article class="edificio-card">
+            <article class="edificio-card" onclick="if(!event.target.closest('.card-actions')) window.location.href='/sigmu/edificio?edificio_id=<?= (int) $edificio['id'] ?>'">
                 <div class="card-media">
                     <?php if (!empty($edificio['foto'])): ?>
                         <img src="/<?= htmlspecialchars((string) $edificio['foto'], ENT_QUOTES, 'UTF-8') ?>"
@@ -75,6 +75,11 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <?= htmlspecialchars((string) $edificio['nombre'], ENT_QUOTES, 'UTF-8') ?>
                         </a>
                     </h3>
+                    <?php if (($sessionUser['rol_nombre'] ?? '') === 'Administrador'): ?>
+                        <p style="margin: 4px 0; font-size: 0.85rem; color: var(--sigmu-muted);">
+                            Responsable: <strong><?= htmlspecialchars($edificio['responsable_nombre'] ?? 'Sin asignar') ?></strong>
+                        </p>
+                    <?php endif; ?>
                     <div class="card-divider"></div>
                     <p class="card-stats">
                         <?= (int) $edificio['total_activos'] ?> activos
@@ -119,6 +124,21 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <label>Cantidad de Pisos</label>
                         <input type="number" name="cantidad_pisos" id="edificio_pisos" class="form-control" value="1" min="1">
                     </div>
+
+                    <?php if (($sessionUser['rol_nombre'] ?? '') === 'Administrador'): ?>
+                        <div class="form-group">
+                            <label>Responsable de Área</label>
+                            <select name="responsable_id" id="edificio_responsable_id" class="form-control">
+                                <option value="0">-- Sin asignar --</option>
+                                <?php foreach ($responsables ?? [] as $resp): ?>
+                                    <option value="<?= (int)$resp['id'] ?>">
+                                        <?= htmlspecialchars($resp['nombre_completo']) ?> (<?= htmlspecialchars($resp['username']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+
                     <div class="form-group">
                         <label>Foto representativa (Opcional)</label>
                         <input type="file" name="foto" class="form-control" accept="image/*">

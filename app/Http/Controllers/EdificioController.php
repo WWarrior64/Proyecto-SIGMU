@@ -41,9 +41,24 @@ final class EdificioController
         
         try {
             $edificios = $this->espacioService->listarEdificios();
+            $responsables = [];
+            
+            // Si es administrador, obtener lista de responsables de area
+            if (($user['rol_nombre'] ?? '') === 'Administrador') {
+                $responsables = $this->sigmuService->obtenerResponsablesArea();
+                
+                // Para cada edificio, obtener quien es el responsable actual
+                foreach ($edificios as &$e) {
+                    $asignados = $this->sigmuService->obtenerUsuariosAsignadosAEdificio((int)$e['id']);
+                    $e['responsable_id'] = !empty($asignados) ? $asignados[0]['id'] : null;
+                    $e['responsable_nombre'] = !empty($asignados) ? $asignados[0]['nombre_completo'] : 'Sin asignar';
+                }
+            }
+
             return view('localizacion_asignacion.panel_edificios', [
                 'sessionUser' => $user,
-                'edificios' => $edificios
+                'edificios' => $edificios,
+                'responsables' => $responsables
             ]);
         } catch (Throwable $e) {
             return view('localizacion_asignacion.panel_edificios', [
@@ -82,11 +97,31 @@ final class EdificioController
      */
     public function guardar(): string
     {
-        $this->requireAuth();
+        $user = $this->requireAuth();
 
         try {
             $data = $_POST;
             $edificioId = $this->espacioService->guardarEdificio($data);
+
+            // Gestionar responsable de area (solo si el que guarda es administrador)
+            if (($user['rol_nombre'] ?? '') === 'Administrador' && isset($data['responsable_id'])) {
+                $nuevoResponsableId = (int)$data['responsable_id'];
+                
+                // Obtener asignaciones actuales
+                $actuales = $this->sigmuService->obtenerUsuariosAsignadosAEdificio($edificioId);
+                $actualId = !empty($actuales) ? (int)$actuales[0]['id'] : 0;
+
+                if ($nuevoResponsableId > 0 && $nuevoResponsableId !== $actualId) {
+                    // Si ya habia uno, quitarlo (asumimos uno por edificio para esta HU)
+                    if ($actualId > 0) {
+                        $this->sigmuService->quitarAsignacionEdificio($actualId, $edificioId);
+                    }
+                    $this->sigmuService->asignarEdificio($nuevoResponsableId, $edificioId);
+                } elseif ($nuevoResponsableId === 0 && $actualId > 0) {
+                    // Si se seleccionó "Sin asignar"
+                    $this->sigmuService->quitarAsignacionEdificio($actualId, $edificioId);
+                }
+            }
 
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
                 $fotoPath = $this->procesarFotoEdificio($_FILES['foto']);
