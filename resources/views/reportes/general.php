@@ -1,0 +1,156 @@
+<?php
+/**
+ * @var array $edificios
+ * @var array $tiposActivo
+ * @var array $usuarios
+ * @var array $authUser
+ */
+declare(strict_types=1);
+
+$sigmuPageTitle = 'REPORTE GENERAL CONFIGURABLE';
+$sigmuLayoutAdmin = true; // Mostrados en menu admin
+$sigmuExtraCss = ['/assets/css/reportes.css'];
+$sigmuExtraJs = ['/assets/js/reportes.js'];
+require __DIR__ . '/../partials/sigmu_shell_start.php';
+
+$user = \App\Support\Session::get('auth_user');
+$homeUrl = ($user['rol_nombre'] === 'Administrador') ? '/sigmu' : '/sigmu/edificios';
+?>
+
+<div class="report-config-card">
+    <div class="sigmu-back-row">
+        <a href="<?= $homeUrl ?>" class="btn-home">
+            <i class="fas fa-home"></i> Ir al Inicio
+        </a>
+    </div>
+
+    <div class="section-header">
+        <h1 class="section-title"><i class="fas fa-file-invoice"></i> Reporte General de Activos</h1>
+    </div>
+
+    <form action="/sigmu/reporte/general/exportar" method="POST" id="reportForm">
+        <div class="content-grid">
+            <!-- Left Column: Filters -->
+            <div class="left-column">
+                <div class="detail-group">
+                    <label class="detail-label"><i class="fas fa-filter"></i> Filtros de Alcance</label>
+                    
+                    <div class="filter-group">
+                        <label class="form-label">Edificios</label>
+                        <div class="scroll-checkbox-list">
+                            <?php foreach($edificios as $e): ?>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="edificios[]" value="<?= $e['id'] ?>">
+                                <span><?= htmlspecialchars($e['nombre']) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <small class="text-muted">Si no selecciona ninguno, se incluirán todos los accesibles.</small>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="form-label">Tipos de Activo</label>
+                        <div class="scroll-checkbox-list">
+                            <?php foreach($tiposActivo as $t): ?>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="tipos[]" value="<?= $t['id'] ?>">
+                                <span><?= htmlspecialchars($t['nombre']) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="form-label">Estados</label>
+                        <div class="d-flex flex-wrap gap-3 p-3 bg-light rounded border">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="estados[]" value="disponible" checked>
+                                <span>Disponible</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="estados[]" value="en_uso" checked>
+                                <span>En Uso</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="estados[]" value="reparacion" checked>
+                                <span>Reparación</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="estados[]" value="descartado">
+                                <span>Descartado</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($usuarios)): ?>
+                    <div class="filter-group">
+                        <label class="form-label">Usuario Creador</label>
+                        <select name="usuario_creador_id" class="form-select">
+                            <option value="">Todos los usuarios</option>
+                            <?php foreach($usuarios as $u): ?>
+                            <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_completo']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="filter-group">
+                        <label class="form-label">Rango de Fecha (Registro)</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" name="fecha_inicio" class="form-control">
+                            <span class="align-self-center">a</span>
+                            <input type="date" name="fecha_fin" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Sections -->
+            <div class="right-column">
+                <div class="detail-group">
+                    <label class="detail-label"><i class="fas fa-cog"></i> Secciones a Incluir</label>
+                    
+                    <div class="sections-list">
+                        <label class="list-group-item">
+                            <input class="form-check-input" type="checkbox" name="sec_datos" checked value="1">
+                            <div>
+                                <strong>Datos generales</strong>
+                                <small class="text-muted">Código, nombre, tipo, descripción, estado, ubicación y fechas.</small>
+                            </div>
+                        </label>
+                        <label class="list-group-item">
+                            <input class="form-check-input" type="checkbox" name="sec_historial" value="1">
+                            <div>
+                                <strong>Historial de movimientos</strong>
+                                <small class="text-muted">Registros de traslados, cambios de estado y modificaciones.</small>
+                            </div>
+                        </label>
+                        <label class="list-group-item">
+                            <input class="form-check-input" type="checkbox" name="sec_mantenimientos" value="1">
+                            <div>
+                                <strong>Historial de mantenimientos</strong>
+                                <small class="text-muted">Detalle de fallas, técnicos y notas de intervención.</small>
+                            </div>
+                        </label>
+                        <label class="list-group-item">
+                            <input class="form-check-input" type="checkbox" name="sec_resumen" checked value="1">
+                            <div>
+                                <strong>Resumen estadístico</strong>
+                                <small class="text-muted">Conteos y distribución por estado, sala y edificio.</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn-reporte">
+                            <i class="fas fa-file-pdf"></i>
+                            GENERAR REPORTE PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php'; ?>

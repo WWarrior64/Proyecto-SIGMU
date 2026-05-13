@@ -48,12 +48,14 @@ class Activo
         $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'id';
         $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
 
-        $sql = "SELECT a.id, a.nombre, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
-                       COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre
+        $sql = "SELECT a.id, a.nombre, a.descripcion, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
+                       COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre,
+                       af.ruta_foto as foto_principal
                 FROM activo a
                 LEFT JOIN tipo_activo ta ON a.tipo_activo_id = ta.id
                 LEFT JOIN sala s ON a.sala_id = s.id
                 LEFT JOIN edificio e ON s.edificio_id = e.id
+                LEFT JOIN activo_foto af ON af.activo_id = a.id AND af.es_principal = 1
                 WHERE 1=1";
             
             $params = [];

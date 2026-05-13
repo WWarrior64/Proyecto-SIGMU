@@ -173,6 +173,33 @@ $router->get('/sigmu/activo/historial', static function (): string {
     return $controller->historial($id);
 });
 
+// RUTAS DE REPORTES
+$router->get('/sigmu/reporte/individual', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new \App\Http\Controllers\ReporteController();
+    return $controller->individualConfig($id);
+});
+
+$router->post('/sigmu/reporte/individual/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarIndividual();
+});
+
+$router->get('/sigmu/reportes', static function (): string {
+    $controller = new \App\Http\Controllers\ReporteController();
+    return $controller->general();
+});
+
+$router->post('/sigmu/reporte/general/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarGeneral();
+});
+
+$router->get('/sigmu/reporte/inventario/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarInventario();
+});
+
 // Endpoints AJAX
 $router->get('/sigmu/activo/generar-codigo', static function (): void {
     $controller = new ActivoController();
