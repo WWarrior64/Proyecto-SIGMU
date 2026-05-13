@@ -193,6 +193,17 @@ input[type="date"] {
     transform: translateY(0);
 }
 
+.btn-reporte--preview {
+    background-color: #4a5568;
+}
+
+.btn-reporte--preview:hover {
+    background-color: #2d3748;
+}
+
+.d-flex { display: flex; }
+.gap-3 { gap: 1rem; }
+
 .content-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

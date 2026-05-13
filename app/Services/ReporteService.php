@@ -65,7 +65,7 @@ final class ReporteService
     /**
      * Exporta a PDF usando Dompdf
      */
-    public function exportarAPdf(string $html, string $filename): void
+    public function exportarAPdf(string $html, string $filename, bool $inline = false): void
     {
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
@@ -76,7 +76,11 @@ final class ReporteService
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
         
-        $dompdf->stream($filename . ".pdf", ["Attachment" => true]);
+        // Limpiar cualquier salida previa para evitar PDFs corruptos
+        if (ob_get_length()) ob_end_clean();
+        
+        $dompdf->stream($filename . ".pdf", ["Attachment" => !$inline]);
+        exit; // Asegurar que no se envíe nada más
     }
 
     /**

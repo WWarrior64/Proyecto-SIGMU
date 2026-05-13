@@ -57,6 +57,19 @@ final class ReporteController
      */
     public function exportarIndividual(): void
     {
+        $this->procesarIndividual(false);
+    }
+
+    /**
+     * Muestra una vista previa del reporte individual
+     */
+    public function previewIndividual(): void
+    {
+        $this->procesarIndividual(true);
+    }
+
+    private function procesarIndividual(bool $inline): void
+    {
         if (!$this->requireAuth()) return;
 
         $activoId = (int)($_POST['activo_id'] ?? 0);
@@ -85,7 +98,7 @@ final class ReporteController
 
         try {
             $html = $this->reporteService->generarReporteIndividual($activoId, $secciones);
-            $this->reporteService->exportarAPdf($html, "Reporte_Activo_" . $activoId);
+            $this->reporteService->exportarAPdf($html, "Reporte_Activo_" . $activoId, $inline);
         } catch (Throwable $e) {
             echo "Error al generar reporte: " . $e->getMessage();
         }
@@ -119,6 +132,19 @@ final class ReporteController
      * Procesa la exportación del reporte general
      */
     public function exportarGeneral(): void
+    {
+        $this->procesarGeneral(false);
+    }
+
+    /**
+     * Muestra una vista previa del reporte general
+     */
+    public function previewGeneral(): void
+    {
+        $this->procesarGeneral(true);
+    }
+
+    private function procesarGeneral(bool $inline): void
     {
         if (!$this->requireAuth()) return;
 
@@ -156,7 +182,7 @@ final class ReporteController
 
         try {
             $html = $this->reporteService->generarReporteGeneral($filtros, $secciones);
-            $this->reporteService->exportarAPdf($html, "Reporte_General_Activos_" . date('Ymd'));
+            $this->reporteService->exportarAPdf($html, "Reporte_General_Activos_" . date('Ymd'), $inline);
         } catch (Throwable $e) {
             echo "Error al generar reporte: " . $e->getMessage();
         }

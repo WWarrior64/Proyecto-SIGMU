@@ -10,7 +10,7 @@ declare(strict_types=1);
 $sigmuPageTitle = 'REPORTE GENERAL CONFIGURABLE';
 $sigmuLayoutAdmin = true; // Mostrados en menu admin
 $sigmuExtraCss = ['/assets/css/reportes.css'];
-$sigmuExtraJs = ['/assets/js/reportes.js'];
+$sigmuExtraScripts = ['/assets/js/reportes.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 
 $user = \App\Support\Session::get('auth_user');
@@ -141,10 +141,14 @@ $homeUrl = ($user['rol_nombre'] === 'Administrador') ? '/sigmu' : '/sigmu/edific
                         </label>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-4 d-flex gap-3">
                         <button type="submit" class="btn-reporte">
                             <i class="fas fa-file-pdf"></i>
                             GENERAR REPORTE PDF
+                        </button>
+                        <button type="button" class="btn-reporte btn-reporte--preview" id="btnPreview">
+                            <i class="fas fa-eye"></i>
+                            VISTA PREVIA
                         </button>
                     </div>
                 </div>

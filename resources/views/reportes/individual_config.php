@@ -7,7 +7,7 @@ declare(strict_types=1);
 $sigmuPageTitle = 'CONFIGURAR REPORTE';
 $sigmuLayoutAdmin = false;
 $sigmuExtraCss = ['/assets/css/reportes.css'];
-$sigmuExtraJs = ['/assets/js/reportes.js'];
+$sigmuExtraScripts = ['/assets/js/reportes.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 
 $user = \App\Support\Session::get('auth_user');
@@ -61,10 +61,14 @@ $user = \App\Support\Session::get('auth_user');
             </div>
         </div>
 
-        <div class="mt-4">
+        <div class="mt-4 d-flex gap-3">
             <button type="submit" class="btn-reporte">
                 <i class="fas fa-download"></i>
                 GENERAR Y DESCARGAR REPORTE PDF
+            </button>
+            <button type="button" class="btn-reporte btn-reporte--preview" id="btnPreview">
+                <i class="fas fa-eye"></i>
+                VISTA PREVIA
             </button>
         </div>
     </form>
