@@ -301,10 +301,13 @@ class Activo
                 $usuarioId = isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : 0;
 
                 foreach ($cambios as $cambio) {
+                    $valAnt = str_replace(['_', '-'], ' ', (string)$cambio['anterior']);
+                    $valNue = str_replace(['_', '-'], ' ', (string)$cambio['nuevo']);
+                    
                     $detalle = sprintf('Se modificó %s: "%s" → "%s"',
                         $cambio['nombre'],
-                        $cambio['anterior'],
-                        $cambio['nuevo']
+                        $valAnt,
+                        $valNue
                     );
 
                     // ✅ Detectar tipo de accion correctamente

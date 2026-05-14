@@ -124,7 +124,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     <td><?= htmlspecialchars($m['responsable'] ?? 'Sin asignar') ?></td>
                                     <td>
                                         <span class="status-badge status-<?= $m['estado'] ?>">
-                                            <?= str_replace('_', ' ', $m['estado']) ?>
+                                            <?= str_replace(['_', '-'], ' ', $m['estado']) ?>
                                         </span>
                                     </td>
                                     <td>

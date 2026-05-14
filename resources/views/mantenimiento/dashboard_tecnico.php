@@ -136,7 +136,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     </p>
                                     <p class="problem-desc" title="<?= htmlspecialchars($desc) ?>"><?= htmlspecialchars($descSnippet) ?></p>
                                     <p style="margin: 6px 0 0;">
-                                        <span class="status-badge status-<?= htmlspecialchars((string) ($m['estado'] ?? '')) ?>"><?= str_replace('_', ' ', (string) ($m['estado'] ?? '')) ?></span>
+                                        <span class="status-badge status-<?= htmlspecialchars((string) ($m['estado'] ?? '')) ?>"><?= str_replace(['_', '-'], ' ', (string) ($m['estado'] ?? '')) ?></span>
                                         <?php if (!empty($m['fecha_agendada'])): ?>
                                             <span style="margin-left: 10px; font-weight: 600;"><?= date('d/m/Y', strtotime((string) $m['fecha_agendada'])) ?></span>
                                         <?php endif; ?>

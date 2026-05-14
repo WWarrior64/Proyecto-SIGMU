@@ -30,6 +30,12 @@ if (is_file($envFile)) {
 
 // Creamos el router y cargamos las rutas web.
 $router = new Router();
+
+// Registrar middleware de autorización
+$router->middleware(static function (string $method, string $path): bool {
+    return \App\Middleware\AuthorizationMiddleware::handle($method, $path);
+});
+
 require __DIR__ . '/../routes/web.php';
 
 return $router;

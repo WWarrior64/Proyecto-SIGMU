@@ -125,7 +125,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <?php endif; ?>
                     </div>
                     <div class="user-username"><?= htmlspecialchars($usuario['username']) ?></div>
-                    <div class="user-role"><?= htmlspecialchars($usuario['rol_nombre']) ?></div>
+                    <div class="user-role"><?= str_replace(['_', '-'], ' ', htmlspecialchars($usuario['rol_nombre'])) ?></div>
                     <div class="user-status"><?= $usuario['activo'] ? '✅ Activo' : '❌ Inactivo' ?></div>
                     <div class="user-actions">
                         <button class="icon-btn edit-btn" title="Editar usuario" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=editar&id=<?= $usuario['id'] ?>'">

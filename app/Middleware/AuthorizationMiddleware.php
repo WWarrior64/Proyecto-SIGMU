@@ -71,42 +71,27 @@ final class AuthorizationMiddleware
 
     /**
      * Mapeo de rutas a recursos de permisos
-     * 
-     * NOTA: Este mapeo se completará cuando se implementen las rutas de administración
      */
     private const ROUTE_RESOURCE_MAP = [
-        // Rutas de activos (se agregarán cuando se implementen)
-        // '/sigmu/activo/registrar' => 'activos.registrar',
-        // '/sigmu/activo/editar' => 'activos.editar',
-        // '/sigmu/activo/eliminar' => 'activos.eliminar',
-        // '/sigmu/activo/ver' => 'activos.ver',
+        // Rutas de activos
+        '/sigmu/activo/registrar' => 'activos.registrar',
+        '/sigmu/activo/editar' => 'activos.editar',
+        '/sigmu/activo/eliminar' => 'activos.eliminar',
+        '/sigmu/activo/ver' => 'activos.ver',
+        '/sigmu/activo/actualizar' => 'activos.editar',
+        '/sigmu/activo/dar-baja' => 'activos.eliminar',
         
-        // Rutas de fotos (se agregarán cuando se implementen)
-        // '/sigmu/foto/agregar' => 'fotos.agregar',
-        // '/sigmu/foto/eliminar' => 'fotos.eliminar',
-        // '/sigmu/foto/ver' => 'fotos.ver',
+        // Rutas de mantenimientos
+        '/sigmu/mantenimiento' => 'mantenimientos.ver',
+        '/sigmu/mantenimiento/agendar' => 'mantenimientos.registrar',
+        '/sigmu/mantenimiento/completar' => 'mantenimientos.completar',
+        '/sigmu/mantenimiento/reportar' => 'mantenimientos.registrar',
+        '/sigmu/reporte-falla' => 'mantenimientos.registrar',
         
-        // Rutas de mantenimientos (se agregarán cuando se implementen)
-        // '/sigmu/mantenimiento/registrar' => 'mantenimientos.registrar',
-        // '/sigmu/mantenimiento/completar' => 'mantenimientos.completar',
-        // '/sigmu/mantenimiento/ver' => 'mantenimientos.ver',
-        
-        // Rutas de edificios (se agregarán cuando se implementen)
-        // '/sigmu/edificio/registrar' => 'edificios.registrar',
-        // '/sigmu/edificio/editar' => 'edificios.editar',
-        // '/sigmu/edificio/eliminar' => 'edificios.eliminar',
-        // '/sigmu/edificio' => 'edificios.ver',
-        
-        // Rutas de salas (se agregarán cuando se implementen)
-        // '/sigmu/sala/registrar' => 'salas.registrar',
-        // '/sigmu/sala/editar' => 'salas.editar',
-        // '/sigmu/sala/eliminar' => 'salas.eliminar',
-        // '/sigmu/sala' => 'salas.ver',
-        
-        // Rutas de administración (se agregarán cuando se implementen)
-        // '/sigmu/admin/usuarios' => 'admin.usuarios',
-        // '/sigmu/admin/tipos-activo' => 'admin.tipos_activo',
-        // '/sigmu/admin/asignaciones' => 'admin.asignaciones',
+        // Rutas de administración
+        '/sigmu/admin/usuarios' => 'admin.usuarios',
+        '/sigmu/administracion_usuarios/asignacion_espacios' => 'admin.asignaciones',
+        '/sigmu/administracion_usuarios/guardar_usuario' => 'admin.usuarios',
     ];
 
     /**
@@ -126,13 +111,10 @@ final class AuthorizationMiddleware
      * 
      * @param string $method Método HTTP (GET, POST, etc.)
      * @param string $uri URI de la solicitud
-     * @return bool True si tiene permiso, false si no
+     * @return bool True si tiene permiso, false si no (y maneja la respuesta)
      */
-    public static function check(string $method, string $uri): bool
+    public static function handle(string $method, string $path): bool
     {
-        // Normalizar la URI
-        $path = parse_url($uri, PHP_URL_PATH) ?: '/';
-        
         // Verificar si es ruta pública
         if (self::isPublicRoute($path)) {
             return true;
@@ -140,24 +122,30 @@ final class AuthorizationMiddleware
         
         // Verificar si el usuario está autenticado
         if (!self::isAuthenticated()) {
+            self::denyAccess('Debes iniciar sesión para acceder.');
             return false;
         }
         
         // Obtener el rol del usuario
         $userRole = self::getUserRole();
         if ($userRole === null) {
+            self::denyAccess('Error de sesión: Rol no encontrado.');
             return false;
         }
         
         // Verificar si la ruta está mapeada a un recurso
         $resource = self::getResourceForRoute($path);
         if ($resource === null) {
-            // Si la ruta no está mapeada, permitir acceso (ruta no protegida)
             return true;
         }
         
         // Verificar si el rol tiene permiso para el recurso
-        return self::hasPermission($userRole, $resource);
+        if (!self::hasPermission($userRole, $resource)) {
+            self::denyAccess();
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -173,7 +161,7 @@ final class AuthorizationMiddleware
      */
     private static function isAuthenticated(): bool
     {
-        return Session::has('auth_user') && Session::isActive();
+        return Session::has('auth_user');
     }
 
     /**

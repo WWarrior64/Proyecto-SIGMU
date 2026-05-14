@@ -187,7 +187,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <label class="detail-label">Estado</label>
                             <div class="detail-value">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                             </div>
                         </div>
