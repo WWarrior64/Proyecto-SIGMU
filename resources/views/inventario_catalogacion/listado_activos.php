@@ -48,6 +48,21 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <?php endif; ?>
             </h1>
             <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="exportarInventario('pdf')" class="btn-reporte" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    PDF
+                </button>
+                <button type="button" onclick="exportarInventario('excel')" class="btn-reporte" style="background: #198754; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Excel
+                </button>
+                <script>
+                function exportarInventario(formato) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('formato', formato);
+                    window.location.href = '/sigmu/reporte/inventario/exportar?' + urlParams.toString();
+                }
+                </script>
                 <button class="add-btn" style="background-color: #4b5563;" onclick="window.location.href='/sigmu/activo/importar?sala_id=<?= $salaId ?>'" title="Importar activos desde Excel/CSV">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

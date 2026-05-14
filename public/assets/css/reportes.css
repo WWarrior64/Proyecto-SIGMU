@@ -1,0 +1,217 @@
+/* Reportes Config Styles - SIGMU Modern UI */
+:root {
+    --primary-color: #9a2018; /* SIGMU Red */
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --bg-light: #f8f9fa;
+    --sigmu-red: #9a2018;
+    --sigmu-ink: #212121;
+    --sigmu-border: #e0e0e0;
+}
+
+.report-config-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.section-header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--sigmu-red);
+    padding-bottom: 12px;
+}
+
+.section-title {
+    color: var(--sigmu-red);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.detail-group {
+    margin-bottom: 24px;
+}
+
+.detail-label {
+    display: block;
+    font-weight: 700;
+    color: var(--sigmu-ink);
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Form Controls Improvement */
+.form-select, .form-control {
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background-color: #fff;
+    width: 100%;
+    color: var(--sigmu-ink);
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: var(--sigmu-red);
+    box-shadow: 0 0 0 3px rgba(154, 32, 24, 0.1);
+    outline: none;
+}
+
+input[type="date"] {
+    cursor: pointer;
+    position: relative;
+}
+
+/* Back Row Alignment */
+.sigmu-back-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-home {
+    background: #f0f0f0;
+    border: 1px solid var(--sigmu-border);
+    color: var(--sigmu-ink);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-home:hover {
+    background: #e5e5e5;
+    color: var(--sigmu-red);
+    border-color: var(--sigmu-red);
+}
+
+/* Scrollable Checkbox List */
+.scroll-checkbox-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.checkbox-item:hover {
+    background: #f5f5f5;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Custom Section List */
+.sections-list .list-group-item {
+    border: 1px solid var(--sigmu-border);
+    margin-bottom: 12px;
+    border-radius: 10px !important;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    transition: all 0.2s ease;
+}
+
+.sections-list .list-group-item:hover {
+    border-color: var(--sigmu-red);
+    background-color: #fff9f9;
+}
+
+.sections-list .form-check-input {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: 2px;
+}
+
+.sections-list strong {
+    color: var(--sigmu-red);
+    font-size: 1.05rem;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.btn-reporte {
+    background-color: var(--sigmu-red);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-reporte:hover {
+    background-color: #7a1912;
+    transform: translateY(-1px);
+}
+
+.btn-reporte:active {
+    transform: translateY(0);
+}
+
+.btn-reporte--preview {
+    background-color: #4a5568;
+}
+
+.btn-reporte--preview:hover {
+    background-color: #2d3748;
+}
+
+.d-flex { display: flex; }
+.gap-3 { gap: 1rem; }
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
