@@ -85,7 +85,9 @@ final class SigmuRepository
     {
         // Usar vista_fotos_edificio en lugar de edificio_foto (acceso restringido)
         $stmt = $this->db->query(
-            'SELECT vme.*, ef.ruta_foto as foto
+            'SELECT vme.*, ef.ruta_foto as foto,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = vme.id) as total_activos,
+                    (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = vme.id LIMIT 1) as responsable_nombre
              FROM vista_mis_edificios vme
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = vme.id
              ORDER BY vme.nombre'
@@ -103,7 +105,9 @@ final class SigmuRepository
     public function catalogoEdificios(): array
     {
         $stmt = $this->db->query(
-            'SELECT e.*, ef.ruta_foto as foto
+            'SELECT e.*, ef.ruta_foto as foto,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = e.id) as total_activos,
+                    (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = e.id LIMIT 1) as responsable_nombre
              FROM edificio e
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = e.id
              ORDER BY e.nombre'
@@ -869,6 +873,31 @@ final class SigmuRepository
         );
         $stmt->execute(['edificio_id' => $edificioId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene todas las asignaciones de edificios a usuarios
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodasAsignaciones(): array
+    {
+        $stmt = $this->db->query('SELECT * FROM vista_usuario_edificios ORDER BY nombre_completo, edificio_nombre');
+        return $stmt === false ? [] : $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene edificios que no tienen ningún usuario asignado
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerEdificiosNoAsignados(): array
+    {
+        $sql = 'SELECT e.id, e.nombre 
+                FROM edificio e 
+                LEFT JOIN usuario_edificio ue ON e.id = ue.edificio_id 
+                WHERE ue.edificio_id IS NULL 
+                ORDER BY e.nombre';
+        $stmt = $this->db->query($sql);
+        return $stmt === false ? [] : $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

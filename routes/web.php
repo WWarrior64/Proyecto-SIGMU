@@ -223,6 +223,26 @@ $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function 
     return view('administracion_usuarios.gestion_usuarios');
 });
 
+$router->get('/sigmu/administracion_usuarios/asignacion_espacios', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/administracion_usuarios/asignar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->asignar();
+});
+
+$router->post('/sigmu/administracion_usuarios/quitar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->quitar();
+});
+
+$router->get('/sigmu/administracion_usuarios/edificios_disponibles', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->edificiosDisponibles();
+});
+
 $router->get('/sigmu/administracion_usuarios/formulario_usuario', static function (): string {
     return view('administracion_usuarios.formulario_usuario');
 });

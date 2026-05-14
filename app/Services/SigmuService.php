@@ -469,6 +469,22 @@ final class SigmuService
     }
 
     /**
+     * Obtiene todas las asignaciones de edificios a usuarios
+     */
+    public function obtenerTodasAsignaciones(): array
+    {
+        return $this->repository->obtenerTodasAsignaciones();
+    }
+
+    /**
+     * Obtiene edificios que no están asignados a ningún usuario
+     */
+    public function obtenerEdificiosNoAsignados(): array
+    {
+        return $this->repository->obtenerEdificiosNoAsignados();
+    }
+
+    /**
      * Asigna un edificio a un usuario
      */
     public function asignarEdificio(int $usuarioId, int $edificioId): bool

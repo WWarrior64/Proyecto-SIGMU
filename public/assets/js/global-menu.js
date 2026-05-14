@@ -55,6 +55,7 @@
         if (isAdmin) {
             html += '<div class="sigmu-sidebar__group-label">Administración</div>';
             html += link("/sigmu/admin/usuarios", "Gestión de usuarios", svg.key, "/sigmu/admin/usuarios");
+            html += link("/sigmu/administracion_usuarios/asignacion_espacios", "Asignación de espacios", svg.building, "/sigmu/administracion_usuarios/asignacion_espacios");
         }
 
         return html;
