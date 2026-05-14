@@ -128,6 +128,11 @@ final class MantenimientoController
                 return json_encode(['success' => false, 'message' => 'Datos incompletos']);
             }
 
+            // Validar que la fecha no sea pasada
+            if (strtotime($fecha) < strtotime(date('Y-m-d'))) {
+                return json_encode(['success' => false, 'message' => 'No se puede agendar en una fecha pasada']);
+            }
+
             $success = $this->mantenimientoService->agendarReparacion($mantenimientoId, $tecnicoId, $fecha, $notas);
 
             return json_encode(['success' => $success]);

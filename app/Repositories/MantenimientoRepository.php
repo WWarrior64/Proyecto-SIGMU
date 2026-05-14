@@ -35,7 +35,7 @@ final class MantenimientoRepository
              JOIN vista_mis_activos a ON a.id = m.activo_id
              WHERE MONTH(m.fecha_agendada) = :mes 
                AND YEAR(m.fecha_agendada) = :anio
-               AND m.estado != 'cancelado'"
+               AND m.estado NOT IN ('cancelado', 'completado')"
         );
 
         $stmt->execute(['mes' => $mes, 'anio' => $anio]);

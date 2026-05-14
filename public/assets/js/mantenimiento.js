@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            const fechaInput = document.getElementById('fecha');
+            const fechaSeleccionada = new Date(fechaInput.value + 'T00:00:00');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            if (fechaSeleccionada < hoy) {
+                alert('No se puede agendar en una fecha pasada');
+                return;
+            }
+
             const formData = new FormData(form);
             const submitBtn = this.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
