@@ -106,10 +106,9 @@ if (!function_exists('view')) {
 
 /**
  * ✅ TIMEOUT DE SESION POR INACTIVIDAD (Nativo)
+ * NOTA: session_start() ya se llama en public/index.php, no duplicar aquí
+ * para evitar conflictos con configuraciones estrictas de sesión.
  */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 // Tiempo de inactividad permitido: 15 MINUTOS (900 segundos)
 if (!defined('SESSION_TIMEOUT')) {

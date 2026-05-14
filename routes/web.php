@@ -188,6 +188,7 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
     return '';
 });
 
+// Historial de cambios del activo
 $router->get('/sigmu/activo/historial', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
@@ -389,13 +390,6 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
         http_response_code(500);
         return json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-});
-
-// Historial de cambios del activo
-$router->get('/sigmu/activo/historial', static function (): string {
-    $id = (int) ($_GET['id'] ?? 0);
-    $controller = new ActivoController();
-    return $controller->historial($id);
 });
 
 // Historial General de Cambios

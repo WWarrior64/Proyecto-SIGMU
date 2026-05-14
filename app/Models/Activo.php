@@ -446,7 +446,7 @@ class Activo
     /**
      * Obtener todas las salas para el select, incluyendo el edificio_id
      */
-    public function obtenerHabitaciones(): array
+    public function obtenerSalas(): array
     {
         try {
             $stmt = $this->db->query("SELECT id, nombre, edificio_id FROM sala ORDER BY nombre");

@@ -317,8 +317,17 @@ final class AuthorizationMiddleware
             return true;
         }
         
-        // Para otros roles, verificar en la base de datos
-        // Esta verificación se hace en el Repository con la función fn_tiene_acceso_edificio
-        return true; // La validación real se hace en el Repository
+        // Verificar en base de datos usando la función fn_tiene_acceso_edificio
+        try {
+            $db = \App\Support\Database::connection();
+            $stmt = $db->prepare("SELECT fn_tiene_acceso_edificio(?, ?) AS tiene_acceso");
+            $stmt->execute([self::getUserId(), $edificioId]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $result && (bool) $result['tiene_acceso'];
+        } catch (\Throwable $e) {
+            // Si la función no existe, denegar acceso por seguridad
+            error_log("Error verificando acceso a edificio: " . $e->getMessage());
+            return false;
+        }
     }
 }

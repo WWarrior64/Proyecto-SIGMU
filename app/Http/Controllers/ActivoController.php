@@ -228,7 +228,7 @@ final class ActivoController
         }
 
         $activo = $this->modelo->obtenerPorId($id);
-        $habitaciones = $this->modelo->obtenerHabitaciones();
+        $habitaciones = $this->modelo->obtenerSalas();
         $tiposActivo = $this->modelo->obtenerTiposActivo();
         $edificios = $this->modelo->obtenerEdificios();
         
@@ -248,7 +248,7 @@ final class ActivoController
 
         return view('inventario_catalogacion.editar_activo', [
             'activo' => $activo,
-            'habitaciones' => $this->modelo->obtenerHabitaciones(),
+            'habitaciones' => $this->modelo->obtenerSalas(),
             'tiposActivo' => $this->sigmuService->obtenerTiposActivo(),
             'edificios' => $edificios,
             'edificioActualId' => $edificioActualId,
