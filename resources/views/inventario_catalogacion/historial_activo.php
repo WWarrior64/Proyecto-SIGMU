@@ -110,7 +110,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <!-- ACCIÓN / DETALLE -->
                             <div class="table-cell cell-name" data-label="Acción / Detalle">
                                 <span class="action-badge action-<?= htmlspecialchars((string) ($registro['accion'] ?? 'desconocida'), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                                 <span class="detail-text">
                                     <?= htmlspecialchars((string) ($registro['detalle'] ?? 'Sin detalle'), ENT_QUOTES, 'UTF-8') ?>
