@@ -137,7 +137,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                             ? '/' . ltrim($item['foto_principal'], '/') 
                                             : 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png';
                                     ?>
-                                    <img src="<?= $fotoPath ?>" 
+                                    <img src="<?= $fotoPath ?>"
                                          alt="<?= htmlspecialchars($item['activo_codigo']) ?>" 
                                          class="asset-img"
                                          onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png'">
@@ -195,7 +195,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fecha">Fecha:</label>
-                            <input type="date" name="fecha" id="fecha" class="form-control" required value="<?= date('Y-m-d') ?>">
+                            <input type="date" name="fecha" id="fecha" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="form-group">
                             <label for="hora">Hora:</label>

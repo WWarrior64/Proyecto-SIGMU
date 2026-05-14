@@ -228,16 +228,17 @@ body {
     min-height: 52px;
 }
 
-.user-item.header {
+.user-item.list-header {
     font-weight: 700;
     font-size: 1.1rem;
+    background: #e0e0e0; /* Un color gris claro para el encabezado */
 }
 
-.user-item.header .user-avatar {
+.user-item.list-header .user-avatar {
     display: none;
 }
 
-.user-item.header .user-username {
+.user-item.list-header .user-username {
     grid-column-start: 1;
     grid-column-end: 3;
     padding-left: 60px;

@@ -16,7 +16,8 @@ use App\Http\Controllers\TipoActivoController;
 // Rutas públicas / navegación base.
 $router->get('/', static function (): string {
     $controller = new HomeController();
-    return $controller->index();
+    $controller->index();
+    return '';
 });
 
 // Rutas de autenticación
@@ -90,9 +91,29 @@ $router->get('/sigmu/edificio', static function (): string {
     return $controller->salasPorEdificio();
 });
 
-$router->post('/sigmu/edificio/actualizar-foto', static function (): void {
+$router->post('/sigmu/edificios/guardar', static function (): string {
     $controller = new EdificioController();
-    $controller->updatePhoto();
+    return $controller->guardar();
+});
+
+$router->post('/sigmu/edificio/actualizar-foto', static function (): string {
+    $controller = new EdificioController();
+    return $controller->updatePhoto();
+});
+
+$router->post('/sigmu/edificios/guardar-sala', static function (): string {
+    $controller = new EdificioController();
+    return $controller->guardarSala();
+});
+
+$router->post('/sigmu/edificio/eliminar', static function (): string {
+    $controller = new EdificioController();
+    return $controller->eliminar();
+});
+
+$router->post('/sigmu/sala/eliminar', static function (): string {
+    $controller = new EdificioController();
+    return $controller->eliminarSala();
 });
 
 // Rutas de salas (NUEVO)
@@ -200,6 +221,26 @@ $router->get('/sigmu/ajax/activos', static function (): void {
 // RUTAS ADMINISTRACION USUARIOS
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
     return view('administracion_usuarios.gestion_usuarios');
+});
+
+$router->get('/sigmu/administracion_usuarios/asignacion_espacios', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/administracion_usuarios/asignar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->asignar();
+});
+
+$router->post('/sigmu/administracion_usuarios/quitar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->quitar();
+});
+
+$router->get('/sigmu/administracion_usuarios/edificios_disponibles', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->edificiosDisponibles();
 });
 
 $router->get('/sigmu/administracion_usuarios/formulario_usuario', static function (): string {

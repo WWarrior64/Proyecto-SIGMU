@@ -85,7 +85,9 @@ final class SigmuRepository
     {
         // Usar vista_fotos_edificio en lugar de edificio_foto (acceso restringido)
         $stmt = $this->db->query(
-            'SELECT vme.*, ef.ruta_foto as foto
+            'SELECT vme.*, ef.ruta_foto as foto,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = vme.id) as total_activos,
+                    (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = vme.id LIMIT 1) as responsable_nombre
              FROM vista_mis_edificios vme
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = vme.id
              ORDER BY vme.nombre'
@@ -103,7 +105,9 @@ final class SigmuRepository
     public function catalogoEdificios(): array
     {
         $stmt = $this->db->query(
-            'SELECT e.*, ef.ruta_foto as foto
+            'SELECT e.*, ef.ruta_foto as foto,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = e.id) as total_activos,
+                    (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = e.id LIMIT 1) as responsable_nombre
              FROM edificio e
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = e.id
              ORDER BY e.nombre'
@@ -776,6 +780,7 @@ final class SigmuRepository
                 u.id,
                 u.username,
                 u.email,
+                u.contrasena_hash,
                 u.nombre_completo,
                 u.rol_id,
                 r.nombre AS rol_nombre,
@@ -835,5 +840,93 @@ final class SigmuRepository
             'email' => $email,
             'nombre' => $nombreCompleto
         ]);
+    }
+
+    /**
+     * Obtiene usuarios por el nombre de su rol
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerUsuariosPorRolNombre(string $rolNombre): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT u.id, u.username, u.nombre_completo, u.email
+             FROM usuario u
+             JOIN rol r ON r.id = u.rol_id
+             WHERE r.nombre = :rol_nombre AND u.activo = 1
+             ORDER BY u.nombre_completo'
+        );
+        $stmt->execute(['rol_nombre' => $rolNombre]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene los usuarios asignados a un edificio
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerUsuariosAsignadosAEdificio(int $edificioId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT u.id, u.username, u.nombre_completo
+             FROM usuario_edificio ue
+             JOIN usuario u ON u.id = ue.usuario_id
+             WHERE ue.edificio_id = :edificio_id'
+        );
+        $stmt->execute(['edificio_id' => $edificioId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene todas las asignaciones de edificios a usuarios
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerTodasAsignaciones(): array
+    {
+        $stmt = $this->db->query('SELECT * FROM vista_usuario_edificios ORDER BY nombre_completo, edificio_nombre');
+        return $stmt === false ? [] : $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene edificios que no tienen ningún usuario asignado
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerEdificiosNoAsignados(): array
+    {
+        $sql = 'SELECT e.id, e.nombre 
+                FROM edificio e 
+                LEFT JOIN usuario_edificio ue ON e.id = ue.edificio_id 
+                WHERE ue.edificio_id IS NULL 
+                ORDER BY e.nombre';
+        $stmt = $this->db->query($sql);
+        return $stmt === false ? [] : $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Asigna un edificio a un usuario (usa el SP seguro)
+     */
+    public function asignarEdificioAUsuario(int $usuarioId, int $edificioId): bool
+    {
+        $stmt = $this->db->prepare('CALL sp_asignar_edificio(:usuario_id, :edificio_id)');
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'edificio_id' => $edificioId
+        ]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        return isset($res['filas_afectadas']);
+    }
+
+    /**
+     * Quita la asignación de un edificio a un usuario
+     */
+    public function quitarAsignacionEdificio(int $usuarioId, int $edificioId): bool
+    {
+        $stmt = $this->db->prepare('CALL sp_quitar_edificio(:usuario_id, :edificio_id)');
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'edificio_id' => $edificioId
+        ]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        return isset($res['filas_afectadas']);
     }
 }
