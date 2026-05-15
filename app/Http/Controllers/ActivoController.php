@@ -302,10 +302,32 @@ final class ActivoController
                 }
             }
 
+            $activoAnterior = $this->modelo->obtenerPorId($id);
+            $salaAnteriorId = (int)$activoAnterior['sala_id'];
+            $salaNuevaId = (int)$datos['sala_id'];
+
             $this->modelo->actualizar($id, $datos);
-            header("Location: /sigmu/activo/ver?id={$id}&success=activo_actualizado");
+
+            // Determinar mensaje de éxito
+            $mensaje = "El activo fue actualizado correctamente.";
+            if ($salaAnteriorId !== $salaNuevaId) {
+                $mensaje = "El activo fue trasladado con éxito.";
+                
+                // Verificar acceso del usuario a la nueva sala
+                $user = Session::get('auth_user');
+                if ($user['rol_nombre'] !== 'Administrador') {
+                    $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
+                    $idsSalas = array_column($salasAccesibles, 'id');
+                    
+                    if (!in_array($salaNuevaId, $idsSalas)) {
+                        $mensaje .= " Sin embargo, el activo ha sido movido a una ubicación a la que no tienes permisos de acceso.";
+                    }
+                }
+            }
+
+            header("Location: /sigmu/activo/ver?id={$id}&success=" . urlencode($mensaje));
         } catch (Throwable $e) {
-            header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($e->getMessage()));
+            header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode("No fue posible actualizar el activo: " . $e->getMessage()));
         }
     }
 
@@ -321,9 +343,9 @@ final class ActivoController
             $activo = $this->modelo->obtenerPorId($id);
             
             if ($this->modelo->darDeBaja($id, (int)$user['id'])) {
-                header("Location: /sigmu/sala?sala_id={$activo['sala_id']}&success=activo_descartado");
+                header("Location: /sigmu/sala?sala_id={$activo['sala_id']}&success=Activo descartado correctamente");
             } else {
-                header("Location: /sigmu/activo/ver?id={$id}&error=error_al_descartar");
+                header("Location: /sigmu/activo/ver?id={$id}&error=No fue posible descartar el activo");
             }
         } catch (Throwable $e) {
             header("Location: /sigmu/activo/ver?id={$id}&error=" . urlencode($e->getMessage()));
@@ -342,9 +364,9 @@ final class ActivoController
             $salaId = $activo['sala_id'];
             
             if ($this->modelo->eliminar($id)) {
-                header("Location: /sigmu/sala?sala_id={$salaId}&success=activo_eliminado");
+                header("Location: /sigmu/sala?sala_id={$salaId}&success=Activo eliminado permanentemente");
             } else {
-                header("Location: /sigmu/sala?sala_id={$salaId}&error=error_al_eliminar");
+                header("Location: /sigmu/sala?sala_id={$salaId}&error=No fue posible eliminar el activo");
             }
         } catch (Throwable $e) {
             header("Location: /sigmu/edificios?error=" . urlencode($e->getMessage()));

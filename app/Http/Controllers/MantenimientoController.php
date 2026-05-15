@@ -108,7 +108,7 @@ final class MantenimientoController
 
             return json_encode(['success' => true, 'mantenimiento_id' => $mantenimientoId]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'No se pudo registrar la falla: ' . $e->getMessage()]);
         }
     }
 
@@ -130,14 +130,14 @@ final class MantenimientoController
 
             // Validar que la fecha no sea pasada
             if (strtotime($fecha) < strtotime(date('Y-m-d'))) {
-                return json_encode(['success' => false, 'message' => 'No se puede agendar en una fecha pasada']);
+                return json_encode(['success' => false, 'message' => 'La fecha seleccionada no puede ser pasada']);
             }
 
             $success = $this->mantenimientoService->agendarReparacion($mantenimientoId, $tecnicoId, $fecha, $notas);
 
             return json_encode(['success' => $success]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'Error al agendar: ' . $e->getMessage()]);
         }
     }
 
@@ -156,7 +156,7 @@ final class MantenimientoController
                 'mantenimientos' => $mantenimientos
             ]);
         } catch (Throwable $e) {
-            return "Error: " . $e->getMessage();
+            return "Ocurrió un error al cargar el listado: " . $e->getMessage();
         }
     }
 
@@ -174,14 +174,14 @@ final class MantenimientoController
             $observaciones = $_POST['observaciones'] ?? '';
 
             if ($id <= 0) {
-                return json_encode(['success' => false, 'message' => 'ID inválido']);
+                return json_encode(['success' => false, 'message' => 'Identificador no válido']);
             }
 
             $success = $this->mantenimientoService->finalizarMantenimiento($id, $notas, $fechaReal, $resultado, $observaciones);
 
             return json_encode(['success' => $success]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'Error al finalizar mantenimiento: ' . $e->getMessage()]);
         }
     }
 

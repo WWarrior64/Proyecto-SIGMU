@@ -128,7 +128,7 @@ final class EdificioController
                 $this->sigmuService->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
             }
 
-            header('Location: /sigmu/edificios?success=edificio_guardado');
+            header('Location: /sigmu/edificios?success=Edificio guardado correctamente');
         } catch (Throwable $e) {
             header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
         }
@@ -147,9 +147,9 @@ final class EdificioController
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
                 $fotoPath = $this->procesarFotoEdificio($_FILES['foto']);
                 $this->sigmuService->agregarFotoEdificio($edificioId, $fotoPath, 'Foto del edificio');
-                header("Location: /sigmu/edificios?success=foto_actualizada");
+                header("Location: /sigmu/edificios?success=Foto actualizada correctamente");
             } else {
-                header("Location: /sigmu/edificios?error=error_al_subir_foto");
+                header("Location: /sigmu/edificios?error=No se pudo subir la foto");
             }
         } catch (Throwable $e) {
             header("Location: /sigmu/edificios?error=" . urlencode($e->getMessage()));
@@ -168,7 +168,7 @@ final class EdificioController
             $data = $_POST;
             $this->espacioService->guardarSala($data);
             $edificioId = (int)($data['edificio_id'] ?? 0);
-            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=sala_guardada');
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=Sala guardada correctamente');
         } catch (Throwable $e) {
             $edificioId = (int)($_POST['edificio_id'] ?? 0);
             header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($e->getMessage()));
@@ -210,7 +210,7 @@ final class EdificioController
 
         try {
             $this->espacioService->eliminarEdificio($id, (int)$user['id'], $password);
-            header('Location: /sigmu/edificios?success=edificio_eliminado');
+            header('Location: /sigmu/edificios?success=Edificio eliminado correctamente');
         } catch (Throwable $e) {
             header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
         }
@@ -229,7 +229,7 @@ final class EdificioController
 
         try {
             $this->espacioService->eliminarSala($id, (int)$user['id'], $password);
-            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=sala_eliminada');
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=Sala eliminada correctamente');
         } catch (Throwable $e) {
             header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($e->getMessage()));
         }

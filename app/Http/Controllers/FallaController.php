@@ -68,7 +68,7 @@ final class FallaController
 
             return json_encode(['success' => $success]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'Ocurrió un error al procesar el reporte: ' . $e->getMessage()]);
         }
     }
 

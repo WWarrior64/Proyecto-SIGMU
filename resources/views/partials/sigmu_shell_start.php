@@ -12,10 +12,12 @@ $sigmuExtraCss = isset($sigmuExtraCss) && is_array($sigmuExtraCss) ? $sigmuExtra
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIGMU — <?= htmlspecialchars((string) $sigmuPageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="stylesheet" href="/assets/css/sigmu-layout.css">
+    <link rel="stylesheet" href="/assets/css/sigmu-toast.css">
     <?php foreach ($sigmuExtraCss as $href): ?>
         <link rel="stylesheet" href="<?= htmlspecialchars((string) $href, ENT_QUOTES, 'UTF-8') ?>">
     <?php endforeach; ?>
 </head>
 <body class="sigmu-shell<?= $sigmuLayoutAdmin ? ' sigmu-shell--admin' : '' ?>">
 <?php require __DIR__ . '/sigmu_topbar.php'; ?>
+<script src="/assets/js/sigmu-toast.js"></script>
 <main class="sigmu-main">

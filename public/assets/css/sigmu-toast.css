@@ -1,0 +1,26 @@
+/* Sistema de Notificaciones Temporales (Toasts) */
+.sigmu-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.sigmu-toast {
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 4s forwards;
+    display: flex;
+    align-items: center;
+}
+
+.sigmu-toast--success { background-color: #2e7d32; }
+.sigmu-toast--error { background-color: #c62828; }
+.sigmu-toast--info { background-color: #1976d2; }
+
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; } }

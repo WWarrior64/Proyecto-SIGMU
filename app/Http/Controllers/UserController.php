@@ -53,7 +53,7 @@ final class UserController
         }
 
         if (!Csrf::validate()) {
-            header('Location: /sigmu/perfil?error=' . urlencode('Token CSRF inválido'));
+            header('Location: /sigmu/perfil?error=' . urlencode('Token de seguridad inválido'));
             return;
         }
 
@@ -80,7 +80,7 @@ final class UserController
                 $this->procesarFotoPerfil($userId);
             }
 
-            header('Location: /sigmu/perfil?success=perfil_actualizado');
+            header('Location: /sigmu/perfil?success=Perfil actualizado correctamente');
         } catch (Throwable $e) {
             header('Location: /sigmu/perfil?error=' . urlencode($e->getMessage()));
         }
