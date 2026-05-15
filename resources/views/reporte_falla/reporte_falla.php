@@ -84,12 +84,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        globalThis.authUser = {
-            id: <?= (int)$sessionUser['id'] ?>,
-            nombre_completo: <?= json_encode($sessionUser['nombre_completo'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
-            foto: <?= json_encode($sessionUser['foto'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
-            rol_nombre: <?= json_encode($sessionUser['rol_nombre'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>
-        };
-    </script>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

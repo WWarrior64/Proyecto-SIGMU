@@ -1,3 +1,7 @@
+/**
+ * JS para Reporte de Falla
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formReporteFalla');
     if (!form) return;

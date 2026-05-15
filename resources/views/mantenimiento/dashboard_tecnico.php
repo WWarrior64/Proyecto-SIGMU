@@ -28,26 +28,10 @@ foreach ($calendario as $evento) {
 
 $sigmuPageTitle = 'PANEL TÉCNICO';
 $sigmuLayoutAdmin = false;
-$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+$sigmuExtraCss = ['/assets/css/mantenimiento.css', '/assets/css/dashboard-tecnico.css'];
+$sigmuExtraScripts = ['/assets/js/dashboard-tecnico.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<style>
-        .tech-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .welcome-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .report-btn { background: #8b0000; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
-        .report-btn:hover { transform: translateY(-2px); background: #a50000; }
-        .grid-tech { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .maint-list-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
-        .maint-header { background: #8b0000; color: white; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; }
-        .maint-body { padding: 10px; max-height: 500px; overflow-y: auto; }
-        .maint-item { padding: 12px; border-bottom: 1px solid #edf2f7; }
-        .maint-tech-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; text-transform: uppercase; }
-        .status-pendiente { background: #fef3c7; color: #92400e; }
-        .status-en_proceso { background: #dcfce7; color: #166534; }
-        .btn-finish { background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        @media (max-width: 900px) { .grid-tech { grid-template-columns: 1fr; } }
-    </style>
 
     <div class="tech-dashboard">
         <div class="welcome-section">
@@ -210,32 +194,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        function abrirModalCompletarDesdeBoton(btn) {
-            if (!btn) return;
-            const id = parseInt(btn.dataset.mantenimientoId || '0', 10);
-            const codigo = btn.dataset.activoCodigo || '';
-            if (!id) return;
-            abrirModalCompletar(id, codigo);
-        }
-
-        function abrirModalCompletar(id, codigo) {
-            document.getElementById('mantenimiento_id_completar').value = id;
-            document.getElementById('modalActivoCodigo').textContent = codigo;
-            document.getElementById('modalCompletar').style.display = 'flex';
-        }
-        function cerrarModalCompletar() {
-            document.getElementById('modalCompletar').style.display = 'none';
-        }
-        document.getElementById('formCompletar').addEventListener('submit', function(e) {
-            e.preventDefault();
-            fetch('/sigmu/mantenimiento/completar', {
-                method: 'POST',
-                body: new FormData(this)
-            }).then(r => r.json()).then(data => {
-                if (data.success) { alert('Guardado con éxito'); location.reload(); }
-                else alert('Error: ' + data.message);
-            });
-        });
-    </script>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

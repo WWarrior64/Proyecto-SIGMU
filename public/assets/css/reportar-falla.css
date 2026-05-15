@@ -1,0 +1,11 @@
+/**
+ * CSS para Reportar Falla
+ */
+
+.report-container { padding: 40px 20px; max-width: 700px; margin: 0 auto; }
+.report-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+.report-header { background: #8b0000; color: white; padding: 20px; text-align: center; font-size: 18px; font-weight: 700; }
+.report-body { padding: 30px; }
+.form-section { margin-bottom: 25px; }
+.form-section-title { font-size: 14px; font-weight: 700; color: #8b0000; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; }
+.loader { display: none; margin-left: 10px; }

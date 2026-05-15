@@ -17,38 +17,10 @@ $csrfToken = Csrf::getToken();
 
 $sigmuPageTitle = 'IMPORTAR ACTIVOS';
 $sigmuLayoutAdmin = false;
-$sigmuExtraCss = ['/assets/css/activo-form.css'];
+$sigmuExtraCss = ['/assets/css/activo-form.css', '/assets/css/importar-activos.css'];
+$sigmuExtraScripts = ['/assets/js/importar-activos.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<style>
-        .import-info {
-            background-color: #f3f4f6;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #4b5563;
-        }
-        .import-info ul {
-            margin-top: 10px;
-            margin-left: 20px;
-        }
-        .results-container {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-        }
-        .error-list {
-            max-height: 200px;
-            overflow-y: auto;
-            background: #fff5f5;
-            padding: 10px;
-            border: 1px solid #feb2b2;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-    </style>
     <div class="main-content">
         <div class="form-card">
             <h1 class="form-title">IMPORTAR ACTIVOS</h1>
@@ -121,16 +93,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        // Animación simple para el input de archivo
-        const fileInput = document.querySelector('.file-input');
-        const fileLabel = document.querySelector('.file-input-label span');
-        if (fileInput && fileLabel) {
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                fileLabel.textContent = e.target.files[0].name;
-            }
-        });
-        }
-    </script>
-<?php require __DIR__ . '/../partials/sigmu_shell_end.php';
+    <?php require __DIR__ . '/../partials/sigmu_shell_end.php';
