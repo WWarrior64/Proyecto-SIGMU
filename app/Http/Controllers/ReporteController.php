@@ -98,7 +98,10 @@ final class ReporteController
 
         try {
             $timestamp = date('Ymd_His');
-            $nombreArchivo = sprintf("Reporte_Activo_%d_%s", $activoId, $timestamp);
+            // Usar el código del activo si existe, de lo contrario usar el ID
+            $codigo = $activo['codigo'] ?? 'ID_' . $activoId;
+            $nombreArchivo = "Reporte_Activo_{$codigo}_{$timestamp}";
+            
             $html = $this->reporteService->generarReporteIndividual($activoId, $secciones);
             $this->reporteService->exportarAPdf($html, $nombreArchivo, $inline);
         } catch (Throwable $e) {

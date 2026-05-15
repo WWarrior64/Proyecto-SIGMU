@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- 3. NOMBRE Y GENERACIÓN DE CÓDIGO ---
+    let isManualCode = false; // Flag para detectar edición manual
+
     if (nombreField) {
         let timeoutId = null;
         nombreField.addEventListener('input', function() {
@@ -68,19 +70,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const nombre = this.value.trim();
             if (timeoutId) clearTimeout(timeoutId);
             
-            if (nombre.length >= 3 && codigoField && codigoField.hasAttribute('readonly')) {
+            // Solo autogenerar si no es manual y tiene contenido
+            if (nombre.length >= 3 && codigoField && !isManualCode) {
                 timeoutId = setTimeout(function() {
                     fetch('/sigmu/activo/generar-codigo?nombre=' + encodeURIComponent(nombre))
                         .then(res => res.json())
                         .then(data => {
-                            if (data.success) {
+                            if (data.success && !isManualCode) {
                                 codigoField.value = data.codigo;
                                 codigoField.classList.remove('error');
                             }
                         })
                         .catch(err => console.error('Error al generar código:', err));
                 }, 500);
-            } else if (codigoField && nombre.length === 0) {
+            } else if (codigoField && nombre.length === 0 && !isManualCode) {
                 codigoField.value = '';
             }
         });
@@ -89,6 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (codigoField) {
         codigoField.addEventListener('input', function() {
             this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '');
+            
+            // Si el campo está vacío, permitir autogeneración nuevamente
+            if (this.value.length === 0) {
+                isManualCode = false;
+            } else {
+                isManualCode = true; // Activar flag al editar manualmente
+            }
         });
     }
 

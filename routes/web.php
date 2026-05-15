@@ -257,6 +257,11 @@ $router->get('/sigmu/ajax/activos', static function (): void {
 });
 
 // RUTAS ADMINISTRACION USUARIOS
+$router->get('/sigmu/administracion_usuarios/gestion_roles', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->index();
+});
+
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
     return view('administracion_usuarios.gestion_usuarios');
 });

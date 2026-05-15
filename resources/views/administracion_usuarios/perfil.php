@@ -16,8 +16,8 @@ $sigmuExtraScripts = ['/assets/js/perfil.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
 
-    <div class="back-container">
-        <button type="button" class="back-btn" onclick="window.history.back()">
+    <div class="back-button">
+        <button type="button" class="back-btn" onclick="window.location.href='/sigmu'" title="Volver al inicio">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
@@ -25,13 +25,6 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
     </div>
 
     <div class="main-container">
-        <?php if ($success): ?>
-            <div class="alert alert-success">Perfil actualizado correctamente</div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
 
         <div class="profile-header-card">
             <div class="avatar-section">

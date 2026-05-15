@@ -804,7 +804,7 @@ final class SigmuRepository
      */
     public function obtenerRoles(): array
     {
-        $stmt = $this->db->query('SELECT id, nombre, descripcion FROM vista_roles ORDER BY id');
+        $stmt = $this->db->query('SELECT id, nombre, descripcion, ver_todo FROM vista_roles ORDER BY id');
         return $stmt === false ? [] : $stmt->fetchAll();
     }
 

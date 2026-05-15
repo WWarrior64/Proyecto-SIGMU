@@ -43,7 +43,10 @@
         let html = "";
         html += link("/sigmu", "Inicio", svg.home, "/sigmu");
         html += link("/sigmu/perfil", "Mi información", svg.user, "/sigmu/perfil");
-        html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
+        
+        if (!isMantenimiento) {
+            html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
+        }
         
         if (isAdmin || role === "Responsable de Area") {
             html += link("/sigmu/reportes", "Reportes", svg.file, "/sigmu/reportes");

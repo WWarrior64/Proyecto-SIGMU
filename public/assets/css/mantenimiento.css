@@ -86,7 +86,7 @@ body {
 .back-btn {
     background: none;
     border: none;
-    color: #718096;
+    color: #696969;
     padding: 5px;
     cursor: pointer;
     display: flex;
@@ -94,7 +94,7 @@ body {
 }
 
 .back-btn:hover {
-    background: #edf2f7;
+    background: #ffffff;
 }
 
 /* CONTENEDOR PRINCIPAL */
