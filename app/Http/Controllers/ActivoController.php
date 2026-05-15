@@ -355,13 +355,30 @@ final class ActivoController
     /**
      * Eliminar (borrado físico)
      */
-    public function destroy(int $id): void
+    public function destroy(): void
     {
         if (!$this->requireAuth()) return;
 
+        $id = (int)($_POST['id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
+        $userSession = Session::get('auth_user');
+
         try {
+            // 1. Validar contraseña
+            $user = $this->sigmuService->obtenerUsuarioPorId((int)$userSession['id']);
+            if (!$user || !password_verify($password, (string)$user['contrasena_hash'])) {
+                header("Location: /sigmu/edificios?error=Contraseña incorrecta");
+                return;
+            }
+
+            // 2. Eliminar
             $activo = $this->modelo->obtenerPorId($id);
-            $salaId = $activo['sala_id'];
+            if (!$activo) {
+                header("Location: /sigmu/edificios?error=Activo no encontrado");
+                return;
+            }
+
+            $salaId = (int)$activo['sala_id'];
             
             if ($this->modelo->eliminar($id)) {
                 header("Location: /sigmu/sala?sala_id={$salaId}&success=Activo eliminado permanentemente");

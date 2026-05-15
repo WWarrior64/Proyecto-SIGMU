@@ -94,11 +94,17 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <!-- Search and Filter Bar -->
         <div class="search-filter-bar">
             <div class="search-container">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" class="search-input" placeholder="Buscar activos..." id="searchInput">
+                <form onsubmit="return false;" style="display:inline-block; width: 100%;">
+                    <!-- Campos trampa para engañar al autocompletador -->
+                    <input type="text" name="prevent_autofill_user" style="display:none">
+                    <input type="password" name="prevent_autofill_pass" style="display:none">
+                    
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Buscar activos..." id="searchInput" autocomplete="off" name="search_field_dummy">
+                </form>
             </div>
             <button class="filter-btn" id="filterBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

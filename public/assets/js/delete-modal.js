@@ -4,16 +4,10 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Crear el modal de confirmación
     createDeleteModal();
-    
-    // Configurar todos los formularios de eliminación
     setupDeleteForms();
 });
 
-/**
- * Crea el modal de confirmación de eliminación
- */
 function createDeleteModal() {
     const modalHTML = `
         <div class="delete-overlay" id="deleteOverlay">
@@ -23,6 +17,7 @@ function createDeleteModal() {
                 </div>
                 <div class="delete-modal-body">
                     <p>¿Estás seguro de que deseas eliminar este activo? Esta acción no se puede deshacer.</p>
+                    <div id="passwordContainer" style="margin: 15px 0;"></div>
                     <div class="delete-modal-actions">
                         <button class="btn-delete" id="confirmDelete">Eliminar</button>
                         <button class="btn-cancel" id="cancelDelete">Cancelar</button>
@@ -31,88 +26,60 @@ function createDeleteModal() {
             </div>
         </div>
     `;
-    
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Configure modal events
-    const overlay = document.getElementById('deleteOverlay');
-    const confirmBtn = document.getElementById('confirmDelete');
-    const cancelBtn = document.getElementById('cancelDelete');
-    
-    // Cerrar modal al hacer clic en cancelar
-    cancelBtn.addEventListener('click', closeDeleteModal);
-    
-    // Cerrar modal al hacer clic en el overlay
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeDeleteModal();
-        }
-    });
-    
-    // Cerrar modal con tecla Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && overlay.classList.contains('active')) {
-            closeDeleteModal();
-        }
+
+    document.getElementById('cancelDelete').addEventListener('click', closeDeleteModal);
+    document.getElementById('deleteOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'deleteOverlay') closeDeleteModal();
     });
 }
 
-/**
- * Configura todos los formularios de eliminación
- */
 function setupDeleteForms() {
-    const deleteForms = document.querySelectorAll('form[action*="eliminar"]');
-    
-    deleteForms.forEach(function(form) {
-        form.addEventListener('submit', function(e) {
+    document.querySelectorAll('form[action*="eliminar"]').forEach(form => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             showDeleteModal(form);
         });
     });
 }
 
-/**
- * Muestra el modal de confirmación
- * @param {HTMLFormElement} form - Formulario de eliminación
- */
 function showDeleteModal(form) {
     const overlay = document.getElementById('deleteOverlay');
+    const container = document.getElementById('passwordContainer');
     const confirmBtn = document.getElementById('confirmDelete');
     
-    // Guardar referencia al formulario
+    container.innerHTML = `
+        <label style="display:block; margin-bottom: 5px;">Ingrese su contraseña para autorizar:</label>
+        <input type="password" id="password_confirm" autocomplete="new-password" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+    `;
+    
     window.currentDeleteForm = form;
-    
-    // Mostrar el modal
     overlay.classList.add('active');
+    document.getElementById('password_confirm').focus();
     
-    // Enfocar el botón de cancelar para accesibilidad
-    document.getElementById('cancelDelete').focus();
-    
-    // Configurar confirmación
     confirmBtn.onclick = function() {
+        const password = document.getElementById('password_confirm').value;
+        if (!password) {
+            alert('Debe ingresar su contraseña.');
+            return;
+        }
+        
+        let passHidden = form.querySelector('input[name="password"]');
+        if (!passHidden) {
+            passHidden = document.createElement('input');
+            passHidden.type = 'hidden';
+            passHidden.name = 'password';
+            form.appendChild(passHidden);
+        }
+        passHidden.value = password;
+        
         closeDeleteModal();
         form.submit();
     };
 }
 
-/**
- * Cierra el modal de confirmación
- */
 function closeDeleteModal() {
-    const overlay = document.getElementById('deleteOverlay');
-    overlay.classList.remove('active');
-    
-    // Limpiar referencia al formulario
+    document.getElementById('deleteOverlay').classList.remove('active');
+    document.getElementById('passwordContainer').innerHTML = '';
     window.currentDeleteForm = null;
 }
-
-/**
- * Función global para mostrar el modal (puede ser llamada desde otros scripts)
- * @param {string} formId - ID del formulario de eliminación
- */
-window.showDeleteConfirmation = function(formId) {
-    const form = document.getElementById(formId);
-    if (form) {
-        showDeleteModal(form);
-    }
-};
