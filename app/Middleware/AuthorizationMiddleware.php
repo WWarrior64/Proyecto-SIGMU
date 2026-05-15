@@ -141,7 +141,17 @@ final class AuthorizationMiddleware
 
     private static function hasPermission(int $roleId, string $resource): bool
     {
+        $user = Session::get('auth_user');
+        $hasGlobalAccess = (bool)($user['ver_todo'] ?? false);
+
+        // El administrador tiene acceso total
         if (Roles::is($roleId, Roles::ADMIN)) return true;
+
+        // Si el recurso es de visualización (.ver) y el usuario tiene acceso global, permitir
+        if ($hasGlobalAccess && str_ends_with($resource, '.ver')) {
+            return true;
+        }
+        
         if (!isset(self::ROLE_PERMISSIONS[$resource])) return false;
         return Roles::in($roleId, self::ROLE_PERMISSIONS[$resource]);
     }

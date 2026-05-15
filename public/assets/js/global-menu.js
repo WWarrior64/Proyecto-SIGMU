@@ -37,6 +37,7 @@
     function buildNavHtml() {
         const u = globalThis.authUser || {};
         const roleId = parseInt(u.rol_id) || 0;
+        const hasGlobalAccess = !!u.ver_todo;
         
         // Asumiendo que 1=Admin, 2=Responsable, 3=Mantenimiento (según BD)
         const isAdmin = roleId === 1;
@@ -47,11 +48,13 @@
         html += link("/sigmu", "Inicio", svg.home, "/sigmu");
         html += link("/sigmu/perfil", "Mi información", svg.user, "/sigmu/perfil");
         
-        if (!isMantenimiento) {
+        // Visible si NO es mantenimiento O si tiene acceso global
+        if (!isMantenimiento || hasGlobalAccess) {
             html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
         }
         
-        if (isAdmin || isResponsable) {
+        // Reportes visibles para Admin, Responsable o cualquier rol con Acceso Global
+        if (isAdmin || isResponsable || hasGlobalAccess) {
             html += link("/sigmu/reportes", "Reportes", svg.file, "/sigmu/reportes");
         }
 

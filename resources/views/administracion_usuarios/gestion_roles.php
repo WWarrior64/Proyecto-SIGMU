@@ -177,8 +177,14 @@ document.getElementById('formRol').addEventListener('submit', function(e) {
 function eliminarRol(id) {
     if (!confirm('¿Estás seguro de eliminar este rol? Esta acción no se puede deshacer.')) return;
     
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('#formRol [name="_csrf_token"]')?.value;
+    
     const formData = new FormData();
     formData.append('id', id);
+    if (csrfToken) {
+        formData.append('_csrf_token', csrfToken);
+    }
     
     fetch('/sigmu/administracion_usuarios/rol/eliminar', {
         method: 'POST',
