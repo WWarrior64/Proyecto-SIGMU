@@ -425,12 +425,20 @@ class Activo
             $stmt->closeCursor();
 
             if ($ejecutado) {
-                // 3. Si el borrado en DB fue exitoso, borrar los archivos físicos
+                // 3. Si el borrado en DB fue exitoso, verificar referencias y borrar los archivos físicos
                 foreach ($fotos as $rutaFoto) {
                     if ($rutaFoto) {
-                        $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
-                        if (file_exists($rutaCompleta)) {
-                            unlink($rutaCompleta);
+                        // Verificar si existe otra fila en activo_foto con la misma ruta
+                        $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM activo_foto WHERE ruta_foto = :ruta");
+                        $stmtCheck->execute([':ruta' => $rutaFoto]);
+                        $referencias = (int)$stmtCheck->fetchColumn();
+
+                        // Si no quedan más referencias, borrar el archivo
+                        if ($referencias === 0) {
+                            $rutaCompleta = __DIR__ . '/../../public/' . ltrim($rutaFoto, '/');
+                            if (file_exists($rutaCompleta)) {
+                                unlink($rutaCompleta);
+                            }
                         }
                     }
                 }
