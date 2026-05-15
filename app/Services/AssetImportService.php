@@ -36,14 +36,49 @@ final class AssetImportService
         try {
             return match ($extension) {
                 'xlsx'  => $this->importFromXlsx($filePath, $tmpDir, $salaId),
+                'xls'   => $this->importFromExcelXml($filePath, $salaId),
                 'csv'   => $this->importFromCsv($filePath, $salaId),
-                default => throw new RuntimeException("Formato no soportado: .$extension. Use .xlsx o .csv"),
+                default => throw new RuntimeException("Formato no soportado: .$extension. Use .xlsx, .xls o .csv"),
             };
         } catch (Throwable $e) {
             return ['success' => 0, 'errors' => ["Error crítico: " . $e->getMessage()], 'total' => 0];
         } finally {
             $this->recursiveRemove($tmpDir);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // EXCEL 2003 XML (XLS)
+    // -------------------------------------------------------------------------
+
+    private function importFromExcelXml(string $filePath, int $salaId): array
+    {
+        $xml = simplexml_load_file($filePath);
+        if (!$xml) {
+            throw new RuntimeException("No se pudo parsear el archivo XML.");
+        }
+
+        // Registrar namespaces para el XML de Excel
+        $xml->registerXPathNamespace('ss', 'urn:schemas-microsoft-com:office:spreadsheet');
+        
+        $rows = $xml->xpath('//ss:Row');
+        $matrix = [];
+
+        foreach ($rows as $row) {
+            $rowData = [];
+            foreach ($row->Cell as $cell) {
+                $rowData[] = (string) $cell->Data;
+            }
+            if (!empty(array_filter($rowData, static fn($v) => trim($v) !== ''))) {
+                $matrix[] = $rowData;
+            }
+        }
+
+        if (empty($matrix)) {
+            throw new RuntimeException("No se encontraron datos en el archivo XML.");
+        }
+
+        return $this->processMatrix($matrix, $salaId);
     }
 
     // -------------------------------------------------------------------------

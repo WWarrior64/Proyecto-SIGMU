@@ -183,7 +183,7 @@
                                         <td><?= $h['fecha'] ?></td>
                                         <td><strong><?= strtoupper($h['accion']) ?></strong></td>
                                         <td><?= htmlspecialchars($h['usuario_nombre'] ?? 'N/A') ?></td>
-                                        <td><?= htmlspecialchars($h['detalle']) ?></td>
+                                        <td><?= htmlspecialchars(str_replace('→', ' -> ', $h['detalle'])) ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>

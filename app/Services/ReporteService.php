@@ -122,52 +122,94 @@ final class ReporteService
     }
 
     /**
-     * Genera el "Excel" (HTML Table)
+     * Genera el contenido para exportar a formato Excel 2003 XML con estilos
      */
     public function generarExcelListado(array $activos): string
     {
-        $html = '<table border="1">';
-        $html .= '<thead>
-                    <tr>
-                        <th>Codigo</th>
-                        <th>Nombre</th>
-                        <th>Tipo</th>
-                        <th>Descripcion</th>
-                        <th>Estado</th>
-                        <th>Sala</th>
-                        <th>Edificio</th>
-                        <th>Fecha Registro</th>
-                    </tr>
-                  </thead>';
-        $html .= '<tbody>';
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>
+        <?mso-application progid="Excel.Sheet"?>
+        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+                  xmlns:x="urn:schemas-microsoft-com:office:excel"
+                  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+            <Styles>
+                <Style ss:ID="Default" ss:Name="Normal">
+                    <Alignment ss:Vertical="Bottom"/>
+                    <Borders/>
+                    <Font ss:FontName="Calibri" x:Family="Swiss"/>
+                    <Interior/>
+                    <NumberFormat/>
+                    <Protection/>
+                </Style>
+                <Style ss:ID="Header">
+                    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+                    <Borders>
+                        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+                    </Borders>
+                    <Font ss:FontName="Calibri" x:Family="Swiss" ss:Bold="1" ss:Color="#FFFFFF"/>
+                    <Interior ss:Color="#4F81BD" ss:Pattern="Solid"/>
+                </Style>
+                <Style ss:ID="SalaHeader">
+                    <Font ss:FontName="Calibri" x:Family="Swiss" ss:Bold="1"/>
+                    <Interior ss:Color="#D9E1F2" ss:Pattern="Solid"/>
+                </Style>
+            </Styles>
+            <Worksheet ss:Name="Inventario">
+                <Table>
+                    <Column ss:Width="100"/>
+                    <Column ss:Width="150"/>
+                    <Column ss:Width="100"/>
+                    <Column ss:Width="200"/>
+                    <Column ss:Width="80"/>
+                    <Column ss:Width="120"/>
+                    <Column ss:Width="120"/>
+                    <Column ss:Width="100"/>
+                    <Row>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Codigo</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Nombre</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Tipo</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Descripcion</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Estado</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Sala</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Edificio</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Fecha Registro</Data></Cell>
+                    </Row>';
 
         $salaActual = '';
         foreach ($activos as $a) {
             $salaLabel = $a['sala_nombre'] . " (" . $a['edificio_nombre'] . ")";
             if ($salaActual !== $salaLabel) {
-                $html .= '<tr style="background-color: #f2f2f2;"><td colspan="8"><b>Sala: ' . $salaLabel . '</b></td></tr>';
+                $xml .= '
+                    <Row>
+                        <Cell ss:StyleID="SalaHeader" ss:MergeAcross="7"><Data ss:Type="String">Sala: ' . htmlspecialchars($salaLabel) . '</Data></Cell>
+                    </Row>';
                 $salaActual = $salaLabel;
             }
-            $html .= '<tr>';
-            $html .= '<td>' . htmlspecialchars($a['codigo']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['nombre']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['tipo_nombre']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['descripcion'] ?? '') . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['estado']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['sala_nombre']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['edificio_nombre']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($a['fecha_creado']) . '</td>';
-            $html .= '</tr>';
+
+            $xml .= '
+                    <Row>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['codigo']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['nombre']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['tipo_nombre']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['descripcion'] ?? '') . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['estado']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['sala_nombre']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['edificio_nombre']) . '</Data></Cell>
+                        <Cell><Data ss:Type="String">' . htmlspecialchars($a['fecha_creado']) . '</Data></Cell>
+                    </Row>';
         }
 
-        $html .= '</tbody></table>';
-        return $html;
+        $xml .= '
+                </Table>
+            </Worksheet>
+        </Workbook>';
+
+        return $xml;
     }
 
-    public function descargarExcel(string $html, string $filename): void
+    public function descargarExcel(string $content, string $filename): void
     {
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment; filename="' . $filename . '.xls"');
-        echo $html;
+        echo $content;
     }
 }

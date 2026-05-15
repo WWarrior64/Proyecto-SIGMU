@@ -56,7 +56,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="import-info">
                 <p><strong>Instrucciones:</strong></p>
                 <ul>
-                    <li>Sube un archivo en formato <strong>Excel (.xlsx)</strong> o <strong>CSV</strong>.</li>
+                    <li>Sube un archivo en formato <strong>Excel (.xlsx .xls)</strong> o <strong>CSV</strong>.</li>
                     <li>El sistema intentará identificar automáticamente las columnas (Nombre, Código, Tipo, etc.).</li>
                     <li>La columna <strong>Nombre</strong> es obligatoria.</li>
                     <li>Si no se proporciona un código, el sistema generará uno automáticamente.</li>
@@ -101,14 +101,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <div class="form-group">
                     <label for="archivo">Seleccionar archivo Excel o CSV:</label>
                     <div class="file-input-wrapper">
-                        <input type="file" id="archivo" name="archivo" accept=".xlsx, .csv" required class="file-input">
+                        <input type="file" id="archivo" name="archivo" accept=".xlsx, .xls, .csv" required class="file-input">
                         <div class="file-input-label">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            <span>Seleccionar archivo (.xlsx, .csv)</span>
+                            <span>Seleccionar archivo (.xlsx, .xls, .csv)</span>
                         </div>
                     </div>
                 </div>

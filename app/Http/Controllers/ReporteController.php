@@ -97,8 +97,10 @@ final class ReporteController
         ];
 
         try {
+            $timestamp = date('Ymd_His');
+            $nombreArchivo = sprintf("Reporte_Activo_%d_%s", $activoId, $timestamp);
             $html = $this->reporteService->generarReporteIndividual($activoId, $secciones);
-            $this->reporteService->exportarAPdf($html, "Reporte_Activo_" . $activoId, $inline);
+            $this->reporteService->exportarAPdf($html, $nombreArchivo, $inline);
         } catch (Throwable $e) {
             echo "Error al generar reporte: " . $e->getMessage();
         }
@@ -181,8 +183,9 @@ final class ReporteController
         ];
 
         try {
+            $timestamp = date('Ymd_His');
             $html = $this->reporteService->generarReporteGeneral($filtros, $secciones);
-            $this->reporteService->exportarAPdf($html, "Reporte_General_Activos_" . date('Ymd'), $inline);
+            $this->reporteService->exportarAPdf($html, "Reporte_General_{$timestamp}", $inline);
         } catch (Throwable $e) {
             echo "Error al generar reporte: " . $e->getMessage();
         }
@@ -198,10 +201,13 @@ final class ReporteController
         $formato = $_GET['formato'] ?? 'pdf';
         
         // Simular los filtros que vienen de la pantalla de listado
+        $estados = $_GET['estados'] ?? [];
+        $tipos = $_GET['tipos'] ?? [];
+
         $filtros = [
             'busqueda' => $_GET['busqueda'] ?? '',
-            'estados' => !empty($_GET['estados']) ? explode(',', $_GET['estados']) : [],
-            'tipos' => !empty($_GET['tipos']) ? explode(',', $_GET['tipos']) : [],
+            'estados' => is_array($estados) ? $estados : explode(',', $estados),
+            'tipos' => is_array($tipos) ? $tipos : explode(',', $tipos),
             'sala_id' => (int)($_GET['sala_id'] ?? 0)
         ];
 
@@ -214,9 +220,36 @@ final class ReporteController
             $a['tipo_nombre'] = $a['tipo'];
         }
 
+        $timestamp = date('Ymd_His');
+        $nombreBase = "Inventario";
+        if ($filtros['sala_id'] > 0) {
+            $sala = $activoModel->obtenerSalaConEdificio($filtros['sala_id']);
+            if ($sala) {
+                // Función interna para crear abreviación: mantiene mayúsculas o toma primeras letras
+                $abreviar = function($nombre) {
+                    $nombre = preg_replace('/[^a-zA-Z0-9\s]/', '', $nombre);
+                    preg_match_all('/[A-Z0-9]/', $nombre, $matches);
+                    $abrev = implode('', $matches[0]);
+                    // Si el nombre no tenía mayúsculas, tomamos las primeras letras de cada palabra
+                    if (strlen($abrev) < 2) {
+                        $palabras = explode(' ', $nombre);
+                        foreach ($palabras as $p) {
+                            $abrev .= strtoupper(substr($p, 0, 1));
+                        }
+                    }
+                    return substr($abrev, 0, 5); // Máximo 5 caracteres
+                };
+
+                $edificioAbrev = $abreviar($sala['edificio_nombre']);
+                $salaAbrev = $abreviar($sala['sala_nombre']);
+                $nombreBase .= "_" . $edificioAbrev . "_" . $salaAbrev;
+            }
+        }
+        $nombreArchivo = "{$nombreBase}_{$timestamp}";
+
         if ($formato === 'excel') {
             $html = $this->reporteService->generarExcelListado($activos);
-            $this->reporteService->descargarExcel($html, "Inventario_" . date('Ymd'));
+            $this->reporteService->descargarExcel($html, $nombreArchivo);
         } else {
             // PDF rápido
             $datos = [
@@ -225,7 +258,7 @@ final class ReporteController
                 'titulo' => 'Listado General de Inventario'
             ];
             $html = $this->renderView('reportes/pdf_listado_rapido', $datos);
-            $this->reporteService->exportarAPdf($html, "Inventario_" . date('Ymd'));
+            $this->reporteService->exportarAPdf($html, $nombreArchivo);
         }
     }
 
