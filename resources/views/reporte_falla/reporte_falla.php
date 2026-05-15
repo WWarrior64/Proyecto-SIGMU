@@ -3,7 +3,7 @@
 /** @var array $activo */
 
 $sigmuPageTitle = 'REPORTAR FALLA';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
 $sigmuExtraCss = ['/assets/css/reporte-falla.css'];
 $sigmuExtraScripts = ['/assets/js/reporte-falla.js'];
 $fechaDeteccion = $fechaDeteccion ?? date('Y-m-d H:i');

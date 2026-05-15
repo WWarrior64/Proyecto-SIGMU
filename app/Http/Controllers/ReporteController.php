@@ -38,7 +38,7 @@ final class ReporteController
 
         // VALIDACIÓN DE PERMISOS
         $user = Session::get('auth_user');
-        if ($user['rol_nombre'] !== 'Administrador') {
+        if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             $misEdificios = array_column($this->sigmuService->obtenerMisEdificios(), 'id');
             $sala = $activoModel->obtenerSalaConEdificio((int)$activo['sala_id']);
             if (!$sala || !in_array((int)$sala['edificio_id'], $misEdificios)) {
@@ -80,7 +80,7 @@ final class ReporteController
         if (!$activo) return;
 
         $user = Session::get('auth_user');
-        if ($user['rol_nombre'] !== 'Administrador') {
+        if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             $misEdificios = array_column($this->sigmuService->obtenerMisEdificios(), 'id');
             $sala = $activoModel->obtenerSalaConEdificio((int)$activo['sala_id']);
             if (!$sala || !in_array((int)$sala['edificio_id'], $misEdificios)) {
@@ -117,14 +117,14 @@ final class ReporteController
         if (!$this->requireAuth()) return '';
 
         $user = Session::get('auth_user');
-        if ($user['rol_nombre'] === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::MANTENIMIENTO)) {
             header('Location: /sigmu?error=acceso_denegado');
             return '';
         }
 
         $edificios = $this->sigmuService->obtenerMisEdificios();
         $tiposActivo = $this->sigmuService->obtenerTiposActivo();
-        $usuarios = ($user['rol_nombre'] === 'Administrador') ? $this->sigmuService->obtenerTodosUsuarios() : [];
+        $usuarios = \App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN) ? $this->sigmuService->obtenerTodosUsuarios() : [];
 
         return view('reportes.general', [
             'edificios' => $edificios,

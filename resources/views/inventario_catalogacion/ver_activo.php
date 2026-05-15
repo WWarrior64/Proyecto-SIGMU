@@ -13,11 +13,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
     <div class="main-content">
         <!-- Back Button -->
         <div class="back-button">
-            <button class="back-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) ($activo['sala_id'] ?? 0) ?>'">
+            <button class="back-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) ($activo['sala_id'] ?? 0) ?>'" title="Volver a la sala">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
+                <span>Volver</span>
             </button>
         </div>
 
@@ -71,8 +72,8 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     
                     <?php 
                         // Mostrar botón dar de baja solo si usuario tiene permisos y activo no esta descartado
-                        $usuarioRol = $_SESSION['auth_user']['rol_nombre'] ?? '';
-                        $puedeDarBaja = in_array($usuarioRol, ['Administrador', 'Responsable de Area']);
+                        $user = $_SESSION['auth_user'] ?? [];
+                        $puedeDarBaja = \App\Support\Roles::in($user['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA]);
                         
                         if ($puedeDarBaja && $activo['estado'] !== 'descartado'): 
                     ?>

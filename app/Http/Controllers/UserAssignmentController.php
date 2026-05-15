@@ -28,7 +28,7 @@ final class UserAssignmentController
         }
 
         $user = Session::get('auth_user');
-        if (($user['rol_nombre'] ?? '') !== 'Administrador') {
+        if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             header('Location: /sigmu?error=acceso_denegado');
             exit;
         }
@@ -50,8 +50,8 @@ final class UserAssignmentController
             // FILTRAR: Solo permitir asignar a Responsables de Área
             // (Excluir Personal Mantenimiento y Administradores según requerimiento)
             $usuarios = array_filter($todosUsuarios, function($u) {
-                $rol = $u['rol_nombre'] ?? '';
-                return $rol !== 'Personal Mantenimiento' && $rol !== 'Administrador';
+                $roleId = (int)($u['rol_id'] ?? 0);
+                return !\App\Support\Roles::in($roleId, [\App\Support\Roles::MANTENIMIENTO, \App\Support\Roles::ADMIN]);
             });
 
             $edificiosDisponibles = $this->sigmuService->obtenerEdificiosNoAsignados();
@@ -115,11 +115,11 @@ final class UserAssignmentController
             // VALIDACIÓN EXTRA: No permitir asignar a Personal Mantenimiento o Administradores
             $usuario = $this->sigmuService->obtenerUsuarioPorId($usuarioId);
             if ($usuario) {
-                $rol = $usuario['rol_nombre'] ?? '';
-                if ($rol === 'Personal Mantenimiento') {
+                $roleId = (int)($usuario['rol_id'] ?? 0);
+                if (\App\Support\Roles::is($roleId, \App\Support\Roles::MANTENIMIENTO)) {
                     throw new \RuntimeException("No se pueden asignar espacios al personal de mantenimiento.");
                 }
-                if ($rol === 'Administrador') {
+                if (\App\Support\Roles::is($roleId, \App\Support\Roles::ADMIN)) {
                     throw new \RuntimeException("El administrador ya tiene acceso global, no necesita asignaciones.");
                 }
             }

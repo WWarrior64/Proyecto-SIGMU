@@ -36,9 +36,12 @@
 
     function buildNavHtml() {
         const u = globalThis.authUser || {};
-        const role = u.rol_nombre || "";
-        const isAdmin = role === "Administrador";
-        const isMantenimiento = role === "Personal Mantenimiento";
+        const roleId = parseInt(u.rol_id) || 0;
+        
+        // Asumiendo que 1=Admin, 2=Responsable, 3=Mantenimiento (según BD)
+        const isAdmin = roleId === 1;
+        const isMantenimiento = roleId === 3;
+        const isResponsable = roleId === 2;
 
         let html = "";
         html += link("/sigmu", "Inicio", svg.home, "/sigmu");
@@ -48,7 +51,7 @@
             html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
         }
         
-        if (isAdmin || role === "Responsable de Area") {
+        if (isAdmin || isResponsable) {
             html += link("/sigmu/reportes", "Reportes", svg.file, "/sigmu/reportes");
         }
 

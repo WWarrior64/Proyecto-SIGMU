@@ -12,7 +12,7 @@ if (!Session::has('auth_user')) {
 $sessionUser = Session::get('auth_user');
 
 // Verificar que sea Administrador exclusivamente
-if ($sessionUser['rol_nombre'] !== 'Administrador') {
+if (!\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN)) {
     header('Location: /sigmu');
     exit;
 }

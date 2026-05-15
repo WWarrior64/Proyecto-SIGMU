@@ -97,7 +97,7 @@ final class MantenimientoService
      */
     public function obtenerListadoParaUsuario(array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->obtenerListadoMantenimientosPorTecnico((int) ($sessionUser['id'] ?? 0));
         }
 

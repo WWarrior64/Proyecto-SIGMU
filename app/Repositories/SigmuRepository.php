@@ -804,8 +804,36 @@ final class SigmuRepository
      */
     public function obtenerRoles(): array
     {
-        $stmt = $this->db->query('SELECT id, nombre, descripcion, ver_todo FROM vista_roles ORDER BY id');
+        $stmt = $this->db->query('SELECT id, nombre, descripcion, ver_todo FROM rol ORDER BY id');
         return $stmt === false ? [] : $stmt->fetchAll();
+    }
+
+    public function obtenerRolPorId(int $id): ?array
+    {
+        $stmt = $this->db->prepare('SELECT id, nombre, descripcion, ver_todo FROM rol WHERE id = ?');
+        $stmt->execute([$id]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $res ?: null;
+    }
+
+    public function guardarRol(int $id, string $nombre, string $descripcion, bool $verTodo): int
+    {
+        if ($id > 0) {
+            $stmt = $this->db->prepare('UPDATE rol SET nombre = ?, descripcion = ?, ver_todo = ? WHERE id = ?');
+            $stmt->execute([$nombre, $descripcion, $verTodo ? 1 : 0, $id]);
+            return $id;
+        } else {
+            $stmt = $this->db->prepare('INSERT INTO rol (nombre, descripcion, ver_todo) VALUES (?, ?, ?)');
+            $stmt->execute([$nombre, $descripcion, $verTodo ? 1 : 0]);
+            return (int)$this->db->lastInsertId();
+        }
+    }
+
+    public function eliminarRol(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM rol WHERE id = ?');
+        $stmt->execute([$id]);
+        return $stmt->rowCount() > 0;
     }
 
     /**
@@ -843,19 +871,18 @@ final class SigmuRepository
     }
 
     /**
-     * Obtiene usuarios por el nombre de su rol
+     * Obtiene usuarios por el ID de su rol
      * @return array<int, array<string, mixed>>
      */
-    public function obtenerUsuariosPorRolNombre(string $rolNombre): array
+    public function obtenerUsuariosPorRolId(int $rolId): array
     {
         $stmt = $this->db->prepare(
             'SELECT u.id, u.username, u.nombre_completo, u.email
              FROM usuario u
-             JOIN rol r ON r.id = u.rol_id
-             WHERE r.nombre = :rol_nombre AND u.activo = 1
+             WHERE u.rol_id = :rol_id AND u.activo = 1
              ORDER BY u.nombre_completo'
         );
-        $stmt->execute(['rol_nombre' => $rolNombre]);
+        $stmt->execute(['rol_id' => $rolId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

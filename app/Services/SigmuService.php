@@ -18,6 +18,11 @@ final class SigmuService
         $this->repository = $repository ?? new SigmuRepository();
     }
 
+    public function getRepository(): SigmuRepository
+    {
+        return $this->repository;
+    }
+
     public function iniciarSesionBd(int $userId): void
     {
         // Esto ejecuta el SP set_usuario_sesion y deja el usuario "activo" para las vistas restringidas.
@@ -94,7 +99,7 @@ final class SigmuService
      */
     public function obtenerEdificiosParaUbicacion(array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoEdificios();
         }
 
@@ -118,7 +123,7 @@ final class SigmuService
      */
     public function obtenerSalasParaUbicacion(int $edificioId, array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoSalasPorEdificio($edificioId);
         }
 
@@ -142,7 +147,7 @@ final class SigmuService
      */
     public function obtenerActivosParaUbicacion(int $salaId, array $sessionUser, ?int $edificioId = null): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoActivosPorSala($salaId, $edificioId);
         }
 
@@ -457,7 +462,7 @@ final class SigmuService
      */
     public function obtenerResponsablesArea(): array
     {
-        return $this->repository->obtenerUsuariosPorRolNombre('Responsable de Area');
+        return $this->repository->obtenerUsuariosPorRolId(\App\Support\Roles::RESPONSABLE_AREA);
     }
 
     /**

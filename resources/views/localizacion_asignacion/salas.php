@@ -33,7 +33,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 Salas y laboratorios en este edificio.
             </p>
         </div>
-        <?php if (in_array($sessionUser['rol_nombre'] ?? '', ['Administrador', 'Responsable de Area'], true)): ?>
+        <?php if (\App\Support\Roles::in($sessionUser['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA])): ?>
             <button type="button" class="sigmu-btn sigmu-btn--primary" onclick="abrirModalSala()">
                 + NUEVA SALA
             </button>
@@ -70,7 +70,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <?= (int) $sala['total_activos'] ?> activos
                     </p>
                 </div>
-                <?php if (in_array($sessionUser['rol_nombre'] ?? '', ['Administrador', 'Responsable de Area'], true)): ?>
+                <?php if (\App\Support\Roles::in($sessionUser['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA])): ?>
                     <div class="card-actions">
                         <button type="button" class="btn-icon" onclick='abrirModalSala(<?= json_encode($sala) ?>)' title="Editar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>

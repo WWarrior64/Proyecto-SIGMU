@@ -9,12 +9,12 @@ $edificios = (isset($edificios) && is_array($edificios)) ? $edificios : [];
 $error = isset($error) ? (string) $error : null;
 
 $sigmuPageTitle = 'EDIFICIOS';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
 $sigmuExtraCss = ['/assets/css/gestion-espacios.css'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
 
-    <?php if (!empty($sessionUser['rol_nombre']) && $sessionUser['rol_nombre'] === 'Administrador'): ?>
+    <?php if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN)): ?>
     <div class="sigmu-back-row">
         <button type="button" class="sigmu-back-btn" onclick="window.location.href='/sigmu'" title="Volver al panel administrador">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,7 +33,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 Jerarquía: edificio → sala → activos.
             </p>
         </div>
-        <?php if (in_array($sessionUser['rol_nombre'] ?? '', ['Administrador', 'Responsable de Area'], true)): ?>
+        <?php if (\App\Support\Roles::in($sessionUser['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA])): ?>
             <button type="button" class="sigmu-btn sigmu-btn--primary" onclick="abrirModalEdificio()">
                 + NUEVO EDIFICIO
             </button>
@@ -75,7 +75,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <?= htmlspecialchars((string) $edificio['nombre'], ENT_QUOTES, 'UTF-8') ?>
                         </a>
                     </h3>
-                    <?php if (($sessionUser['rol_nombre'] ?? '') === 'Administrador'): ?>
+                    <?php if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN)): ?>
                         <p style="margin: 4px 0; font-size: 0.85rem; color: var(--sigmu-muted);">
                             Responsable: <strong><?= htmlspecialchars($edificio['responsable_nombre'] ?? 'Sin asignar') ?></strong>
                         </p>
@@ -85,7 +85,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <?= (int) $edificio['total_activos'] ?> activos
                     </p>
                 </div>
-                <?php if (in_array($sessionUser['rol_nombre'] ?? '', ['Administrador', 'Responsable de Area'], true)): ?>
+                <?php if (\App\Support\Roles::in($sessionUser['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA])): ?>
                     <div class="card-actions">
                         <button type="button" class="btn-icon" onclick="abrirModalFoto(<?= (int) $edificio['id'] ?>)" title="Cambiar foto">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
@@ -126,7 +126,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <input type="number" name="cantidad_pisos" id="edificio_pisos" class="form-control" value="1" min="1">
                     </div>
 
-                    <?php if (($sessionUser['rol_nombre'] ?? '') === 'Administrador'): ?>
+                    <?php if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN)): ?>
                         <div class="form-group">
                             <label>Responsable de Área</label>
                             <select name="responsable_id" id="edificio_responsable_id" class="form-control">

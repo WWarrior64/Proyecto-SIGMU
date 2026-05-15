@@ -262,6 +262,16 @@ $router->get('/sigmu/administracion_usuarios/gestion_roles', static function ():
     return $controller->index();
 });
 
+$router->post('/sigmu/administracion_usuarios/rol/guardar', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->guardar();
+});
+
+$router->post('/sigmu/administracion_usuarios/rol/eliminar', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->eliminar();
+});
+
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
     return view('administracion_usuarios.gestion_usuarios');
 });
@@ -298,7 +308,7 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
     }
 
     $sessionUser = Session::get('auth_user');
-    if ($sessionUser['rol_nombre'] !== 'Administrador') {
+    if (!\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN)) {
         http_response_code(403);
         return json_encode(['success' => false, 'message' => 'Acceso denegado']);
     }
@@ -314,13 +324,13 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
                 $usuarioAEditar = $service->obtenerUsuarioPorId((int)$_POST['usuario_id']);
                 
                 // Si el usuario es Administrador
-                if ($usuarioAEditar && $usuarioAEditar['rol_nombre'] === 'Administrador') {
+                if ($usuarioAEditar && \App\Support\Roles::is($usuarioAEditar['rol_id'] ?? 0, \App\Support\Roles::ADMIN)) {
                     // Contar cuantos administradores activos quedarian
                     $todosUsuarios = $service->obtenerTodosUsuarios();
                     $contadorAdminsActivos = 0;
                     
-                    foreach ($todosUsuarios as $user) {
-                        if ($user['rol_nombre'] === 'Administrador' && $user['activo'] && $user['id'] != (int)$_POST['usuario_id']) {
+                    foreach ($todosUsuarios as $u) {
+                        if (\App\Support\Roles::is($u['rol_id'] ?? 0, \App\Support\Roles::ADMIN) && $u['activo'] && $u['id'] != (int)$_POST['usuario_id']) {
                             $contadorAdminsActivos++;
                         }
                     }

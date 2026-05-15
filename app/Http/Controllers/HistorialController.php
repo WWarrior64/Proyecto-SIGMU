@@ -27,7 +27,7 @@ class HistorialController
         try {
             // Obtener usuario de sesion
             $usuario = $_SESSION['auth_user'] ?? [];
-            $esAdministrador = isset($usuario['rol_nombre']) && $usuario['rol_nombre'] === 'Administrador';
+            $esAdministrador = isset($usuario['rol_id']) && \App\Support\Roles::is($usuario['rol_id'], \App\Support\Roles::ADMIN);
             $userId = (int)($usuario['id'] ?? 0);
 
             // Obtener parametros de filtros

@@ -10,7 +10,7 @@ if (!Session::has('auth_user')) {
 }
 
 $sessionUser = Session::get('auth_user');
-if ($sessionUser['rol_nombre'] !== 'Administrador') {
+if (!\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN)) {
     header('Location: /sigmu');
     exit;
 }
@@ -43,11 +43,12 @@ $sigmuExtraCss = ['/assets/css/gestion-usuarios.css', '/assets/css/formulario-us
 $sigmuExtraScripts = ['/assets/js/formulario-usuario.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-    <div class="back-container">
-        <button type="button" class="back-btn" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'">
+    <div class="back-button">
+        <button type="button" class="back-btn" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_usuarios'" title="Volver a gestión de usuarios">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
+            <span>Volver</span>
         </button>
     </div>
 

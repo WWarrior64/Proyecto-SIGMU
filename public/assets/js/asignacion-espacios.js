@@ -95,9 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Obtener el token CSRF del formulario existente en la página
+        const csrfToken = document.querySelector('#asignar-form [name="_csrf_token"]')?.value;
+
         const formData = new FormData();
         formData.append('usuario_id', usuarioId);
         formData.append('edificio_id', edificioId);
+        if (csrfToken) {
+            formData.append('_csrf_token', csrfToken);
+        }
 
         try {
             const response = await fetch('/sigmu/administracion_usuarios/quitar_espacio', {

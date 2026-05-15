@@ -14,7 +14,7 @@ $sigmuExtraScripts = ['/assets/js/reportes.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 
 $user = \App\Support\Session::get('auth_user');
-$homeUrl = ($user['rol_nombre'] === 'Administrador') ? '/sigmu' : '/sigmu/edificios';
+$homeUrl = (\App\Support\Roles::is($user['rol_id'] ?? 0, \App\Support\Roles::ADMIN)) ? '/sigmu' : '/sigmu/edificios';
 ?>
 
 <div class="report-config-card">

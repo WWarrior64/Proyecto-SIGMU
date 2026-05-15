@@ -44,7 +44,7 @@ final class EdificioController
             $responsables = [];
             
             // Si es administrador, obtener lista de responsables de area
-            if (($user['rol_nombre'] ?? '') === 'Administrador') {
+            if (\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
                 $responsables = $this->sigmuService->obtenerResponsablesArea();
                 
                 // Para cada edificio, obtener quien es el responsable actual
@@ -104,7 +104,7 @@ final class EdificioController
             $edificioId = $this->espacioService->guardarEdificio($data);
 
             // Gestionar responsable de area (solo si el que guarda es administrador)
-            if (($user['rol_nombre'] ?? '') === 'Administrador' && isset($data['responsable_id'])) {
+            if (\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN) && isset($data['responsable_id'])) {
                 $nuevoResponsableId = (int)$data['responsable_id'];
                 
                 // Obtener asignaciones actuales

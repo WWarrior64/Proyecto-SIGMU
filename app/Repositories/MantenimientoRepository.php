@@ -74,11 +74,12 @@ final class MantenimientoRepository
      */
     public function obtenerTecnicosDisponibles(): array
     {
-        $stmt = $this->db->query(
+        $stmt = $this->db->prepare(
             "SELECT id, nombre_completo, username 
              FROM vista_usuarios 
-             WHERE rol_nombre = 'Personal Mantenimiento' AND activo = 1"
+             WHERE rol_id = :rol_id AND activo = 1"
         );
+        $stmt->execute(['rol_id' => \App\Support\Roles::MANTENIMIENTO]);
         return $stmt->fetchAll();
     }
 

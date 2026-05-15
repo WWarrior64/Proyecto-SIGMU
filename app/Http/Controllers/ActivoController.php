@@ -102,7 +102,7 @@ final class ActivoController
 
         // ✅ VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
         $user = Session::get('auth_user');
-        if ($user['rol_nombre'] !== 'Administrador') {
+        if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             // Usamos las salas accesibles para el usuario
             $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
             $idsSalas = array_column($salasAccesibles, 'id');
@@ -315,7 +315,7 @@ final class ActivoController
                 
                 // Verificar acceso del usuario a la nueva sala
                 $user = Session::get('auth_user');
-                if ($user['rol_nombre'] !== 'Administrador') {
+                if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
                     $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
                     $idsSalas = array_column($salasAccesibles, 'id');
                     

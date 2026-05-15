@@ -29,7 +29,7 @@ final class MantenimientoController
         $sessionUser = Session::get('auth_user');
 
         // Redirección si es técnico
-        if ($sessionUser['rol_nombre'] === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::MANTENIMIENTO)) {
             return $this->dashboardTecnico();
         }
 

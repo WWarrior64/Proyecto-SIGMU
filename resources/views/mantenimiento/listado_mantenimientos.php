@@ -3,7 +3,7 @@
 /** @var array $mantenimientos */
 
 $sigmuPageTitle = 'LISTADO MANTENIMIENTOS';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
 $sigmuExtraCss = ['/assets/css/mantenimiento.css'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
