@@ -21,7 +21,6 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
-            <span style="margin-left: 8px; font-weight: 600; font-size: 1rem;">VOLVER AL INICIO</span>
         </button>
     </div>
     <?php endif; ?>

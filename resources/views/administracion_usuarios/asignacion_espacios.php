@@ -12,8 +12,10 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
 <div class="sigmu-back-row">
     <button type="button" class="sigmu-back-btn" onclick="window.location.href='/sigmu'">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        <span>Volver al panel</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
     </button>
 </div>
 
