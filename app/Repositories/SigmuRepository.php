@@ -85,12 +85,12 @@ final class SigmuRepository
     {
         // Usar vista_fotos_edificio en lugar de edificio_foto (acceso restringido)
         $stmt = $this->db->query(
-            'SELECT vme.*, ef.ruta_foto as foto,
-                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = vme.id) as total_activos,
+            "SELECT vme.*, ef.ruta_foto as foto,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = vme.id AND a.estado != 'descartado') as total_activos,
                     (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = vme.id LIMIT 1) as responsable_nombre
              FROM vista_mis_edificios vme
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = vme.id
-             ORDER BY vme.nombre'
+             ORDER BY vme.nombre"
         );
 
         return $stmt === false ? [] : $stmt->fetchAll();
@@ -106,7 +106,7 @@ final class SigmuRepository
     {
         $stmt = $this->db->query(
             'SELECT e.*, ef.ruta_foto as foto,
-                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = e.id) as total_activos,
+                    (SELECT COUNT(*) FROM activo a JOIN sala s ON s.id = a.sala_id WHERE s.edificio_id = e.id AND a.estado != "descartado") as total_activos,
                     (SELECT u.nombre_completo FROM usuario_edificio ue JOIN usuario u ON u.id = ue.usuario_id WHERE ue.edificio_id = e.id LIMIT 1) as responsable_nombre
              FROM edificio e
              LEFT JOIN vista_fotos_edificio ef ON ef.edificio_id = e.id
