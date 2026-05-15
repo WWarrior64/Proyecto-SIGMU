@@ -61,6 +61,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 16px 0 32px 0;">
 
             <form id="formUsuario" method="POST" action="/sigmu/administracion_usuarios/guardar_usuario" enctype="multipart/form-data">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="file" id="fotoUsuario" name="foto" accept="image/*" style="display: none;">
                 
                 <input type="hidden" name="modo" value="<?= ($modo === 'editar' ? 'editar' : 'crear') ?>">

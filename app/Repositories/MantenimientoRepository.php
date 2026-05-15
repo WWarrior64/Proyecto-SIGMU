@@ -346,20 +346,47 @@ final class MantenimientoRepository
 
     /**
      * Marca un mantenimiento como completado con datos detallados
+     * ✅ CORREGIDO (v2): Ahora ACTUALIZA el historial que inserta el SP
+     *    en vez de eliminar+reinsertar, para no romper la transacción.
+     *    Se rellenan estado_anterior, estado_nuevo, sala_anterior_id y
+     *    sala_nueva_id para que el historial general muestre los cambios.
      */
     public function completarMantenimiento(int $id, string $notas = '', string $fechaReal = '', string $resultado = 'resuelto', string $observaciones = ''): bool
     {
         try {
             $this->db->beginTransaction();
 
-            // 1. Concatenar detalles para el SP
+            // 1. Obtener activo_id del mantenimiento
+            $stmtData = $this->db->prepare('SELECT activo_id FROM mantenimiento WHERE id = :id');
+            $stmtData->execute(['id' => $id]);
+            $activoId = (int)$stmtData->fetchColumn();
+            $stmtData->closeCursor();
+
+            if ($activoId <= 0) {
+                throw new \RuntimeException("Mantenimiento #{$id} no encontrado");
+            }
+
+            // 2. Obtener datos actuales del activo ANTES de tocar
+            $stmtActivo = $this->db->prepare('SELECT estado, sala_id FROM activo WHERE id = :id');
+            $stmtActivo->execute(['id' => $activoId]);
+            $activoActual = $stmtActivo->fetch(\PDO::FETCH_ASSOC);
+            $stmtActivo->closeCursor();
+
+            if (!$activoActual) {
+                throw new \RuntimeException("Activo #{$activoId} no encontrado");
+            }
+
+            $estadoAnterior = $activoActual['estado'];
+            $salaActualId = (int)$activoActual['sala_id'];
+
+            // 3. Concatenar detalles completos
             $detalleFinal = "RESULTADO: " . strtoupper($resultado) . "\n";
             $detalleFinal .= "TRABAJO: " . $notas . "\n";
             if (!empty($observaciones)) {
                 $detalleFinal .= "OBS: " . $observaciones;
             }
 
-            // 2. Usar procedimiento almacenado sp_completar_mantenimiento(p_mantenimiento_id, p_notas)
+            // 4. Llamar al SP (funciona como antes - actualiza mantenimiento e inserta historial)
             $stmt = $this->db->prepare("CALL sp_completar_mantenimiento(:id, :notas)");
             $stmt->execute([
                 'id' => $id,
@@ -367,19 +394,40 @@ final class MantenimientoRepository
             ]);
             $stmt->closeCursor();
 
-            // 3. Obtener el activo_id para actualizar su estado si fue resuelto
-            // (sp_completar_mantenimiento no cambia el estado del activo)
-            $stmtData = $this->db->prepare('SELECT activo_id FROM mantenimiento WHERE id = :id');
-            $stmtData->execute(['id' => $id]);
-            $activoId = (int)$stmtData->fetchColumn();
-            $stmtData->closeCursor();
+            // 5. Determinar nuevo estado
+            $nuevoEstado = $resultado === 'resuelto' ? 'disponible' : $estadoAnterior;
+            $huboCambioEstado = ($nuevoEstado !== $estadoAnterior);
 
-            // 4. Si el resultado es 'resuelto', el activo vuelve a estar 'disponible'
-            if ($resultado === 'resuelto') {
-                $stmtActivo = $this->db->prepare("CALL sp_editar_activo(:activo_id, NULL, NULL, NULL, 'disponible', NULL)");
-                $stmtActivo->execute(['activo_id' => $activoId]);
-                $stmtActivo->closeCursor();
+            // 6. Actualizar estado del activo si corresponde
+            if ($huboCambioEstado) {
+                $stmtUpd = $this->db->prepare("UPDATE activo SET estado = :estado, fecha_actualizado = NOW() WHERE id = :id");
+                $stmtUpd->execute(['estado' => $nuevoEstado, 'id' => $activoId]);
+                $stmtUpd->closeCursor();
             }
+
+            // 7. ✅ ACTUALIZAR el historial que insertó el SP (el último 'mantenimiento' de este activo)
+            //    para rellenar los campos NULL con los valores reales.
+            $stmtUpdHist = $this->db->prepare(
+                "UPDATE historial_activo 
+                    SET estado_anterior = :est_ant,
+                        estado_nuevo    = :est_nue,
+                        sala_anterior_id = :sala_ant,
+                        sala_nueva_id    = :sala_nue,
+                        detalle         = :detalle
+                  WHERE activo_id = :activo_id
+                    AND accion = 'mantenimiento'
+                  ORDER BY id DESC
+                  LIMIT 1"
+            );
+            $stmtUpdHist->execute([
+                'activo_id' => $activoId,
+                'detalle' => $detalleFinal,
+                'est_ant' => $estadoAnterior,
+                'est_nue' => $nuevoEstado,
+                'sala_ant' => $salaActualId,
+                'sala_nue' => $salaActualId,
+            ]);
+            $stmtUpdHist->closeCursor();
 
             $this->db->commit();
             return true;

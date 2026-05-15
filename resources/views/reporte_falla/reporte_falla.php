@@ -26,6 +26,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </div>
 
             <form id="formReporteFalla">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="activo_id" value="<?= (int)$activo['id'] ?>">
                 
                 <div class="form-grid">

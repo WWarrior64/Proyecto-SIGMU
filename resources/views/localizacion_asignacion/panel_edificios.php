@@ -110,6 +110,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <button type="button" class="modal-close">&times;</button>
             </div>
             <form action="/sigmu/edificios/guardar" method="POST" enctype="multipart/form-data">
+                <?= \App\Support\Csrf::field() ?>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="edificio_id">
                     <div class="form-group">
@@ -160,6 +161,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <button type="button" class="modal-close">&times;</button>
             </div>
             <form action="/sigmu/edificio/actualizar-foto" method="POST" enctype="multipart/form-data">
+                <?= \App\Support\Csrf::field() ?>
                 <div class="modal-body">
                     <input type="hidden" name="edificio_id" id="foto_edificio_id">
                     <div class="form-group">
@@ -183,6 +185,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <button type="button" class="modal-close">&times;</button>
             </div>
             <form method="POST">
+                <?= \App\Support\Csrf::field() ?>
                 <div class="modal-body">
                     <p style="color: #666; font-size: 0.95rem; margin-bottom: 1.25rem;">
                         Esta acción es permanente. Por seguridad, ingrese su contraseña para confirmar.

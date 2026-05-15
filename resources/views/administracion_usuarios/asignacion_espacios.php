@@ -1,4 +1,5 @@
 <?php
+/** @var array $usuarios */
 declare(strict_types=1);
 
 $sigmuPageTitle = 'Administrar Espacios de Usuario';
@@ -106,6 +107,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <button class="btn-close">&times;</button>
         </div>
         <form id="asignar-form">
+            <?= \App\Support\Csrf::field() ?>
             <div class="modal-body">
                 <input type="hidden" name="usuario_id" id="modal-usuario-id">
                 

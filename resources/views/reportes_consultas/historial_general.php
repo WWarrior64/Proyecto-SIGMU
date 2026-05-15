@@ -30,7 +30,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
         <!-- Search and Filter Bar -->
         <form method="GET" action="" class="search-filter-bar">
-            
+            <?= \App\Support\Csrf::field() ?>
             <div class="search-container">
                 <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>

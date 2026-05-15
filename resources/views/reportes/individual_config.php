@@ -29,6 +29,7 @@ $user = \App\Support\Session::get('auth_user');
     </div>
 
     <form action="/sigmu/reporte/individual/exportar" method="POST" id="reportForm">
+        <?= \App\Support\Csrf::field() ?>
         <input type="hidden" name="activo_id" value="<?= $activo['id'] ?>">
         
         <div class="detail-group">

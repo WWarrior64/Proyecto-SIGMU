@@ -180,6 +180,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 AGENDAR REPARACIÓN
             </div>
             <form id="formProgramar">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="mantenimiento_id" id="mantenimiento_id">
                 <div class="modal-body">
                     <div class="form-group">

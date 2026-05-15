@@ -45,6 +45,7 @@ $error = isset($error) ? (string) $error : '';
         <?php if (!$message): ?>
             <!-- Formulario para solicitar el link de recuperación -->
             <form class="form" method="post" action="/sigmu/recuperar">
+                <?= \App\Support\Csrf::field() ?>
                 <div class="field">
                     <label for="login">Usuario o email</label>
                     <input id="login" name="login" type="text" placeholder="Tu usuario o correo" required>

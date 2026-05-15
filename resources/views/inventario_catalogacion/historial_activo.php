@@ -36,6 +36,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
         <!-- Search and Filter Bar -->
         <form method="GET" action="" class="search-filter-bar">
+            <?= \App\Support\Csrf::field() ?>
             <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
             
             <div class="search-container">

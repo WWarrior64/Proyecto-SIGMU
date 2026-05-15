@@ -240,6 +240,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="btnCancelarBaja">Cancelar</button>
                 <form method="POST" action="/sigmu/activo/dar-baja" style="display: inline;">
+                    <?= \App\Support\Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int)$activo['id'] ?>">
                     <button type="submit" class="btn btn-danger">Confirmar Dar de Baja</button>
                 </form>

@@ -30,7 +30,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <div class="report-card">
             <div class="report-header">FORMULARIO DE REPORTE DE INCIDENCIA</div>
             <form id="formReportarFalla" class="report-body">
-                
+                <?= \App\Support\Csrf::field() ?>
                 <div class="form-section">
                     <div class="form-section-title">Localización del Activo</div>
                     <div class="form-group">

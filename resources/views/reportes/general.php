@@ -29,6 +29,7 @@ $homeUrl = ($user['rol_nombre'] === 'Administrador') ? '/sigmu' : '/sigmu/edific
     </div>
 
     <form action="/sigmu/reporte/general/exportar" method="POST" id="reportForm">
+        <?= \App\Support\Csrf::field() ?>
         <div class="content-grid">
             <!-- Left Column: Filters -->
             <div class="left-column">
