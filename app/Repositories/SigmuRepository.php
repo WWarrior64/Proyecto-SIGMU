@@ -680,9 +680,9 @@ final class SigmuRepository
      */
     public function usuarioIdPorLogin(string $login): ?array
     {
-        // Consulta rápida (solo id/activo) para recuperación de contraseña.
+        // Consulta para recuperación de contraseña (incluye datos para el correo).
         $stmt = $this->db->prepare(
-            'SELECT id, activo
+            'SELECT id, activo, email, nombre_completo
              FROM usuario
              WHERE username = :login OR email = :login
              LIMIT 1'

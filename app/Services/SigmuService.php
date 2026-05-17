@@ -12,15 +12,22 @@ use RuntimeException;
 final class SigmuService
 {
     private readonly SigmuRepository $repository;
+    private readonly MailService $mailService;
 
-    public function __construct(?SigmuRepository $repository = null)
+    public function __construct(?SigmuRepository $repository = null, ?MailService $mailService = null)
     {
         $this->repository = $repository ?? new SigmuRepository();
+        $this->mailService = $mailService ?? new MailService();
     }
 
     public function getRepository(): SigmuRepository
     {
         return $this->repository;
+    }
+
+    public function getMailService(): MailService
+    {
+        return $this->mailService;
     }
 
     public function iniciarSesionBd(int $userId): void
@@ -372,14 +379,24 @@ final class SigmuService
         }
 
         $usuarioId = (int) $user['id'];
-        $expiresMinutes = 60;
+        $email = (string) ($user['email'] ?? '');
+        $nombreUsuario = (string) ($user['nombre_completo'] ?? 'Usuario');
+        $expiresMinutes = 15;
 
         // Guardamos el token (hash) en BD. El token plano solo lo mostramos en local para debug.
         $token = $this->repository->crearTokenPasswordReset($usuarioId, $expiresMinutes);
 
+        // Enviar el correo electrónico
+        $enviado = false;
+        if ($email !== '') {
+            $enviado = $this->mailService->enviarRecuperacionPassword($email, $nombreUsuario, $token);
+        }
+
         return [
             'success' => true,
-            'message' => 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.',
+            'message' => $enviado 
+                ? 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.' 
+                : 'Se generó el token pero hubo un problema al enviar el correo. Contacta al administrador.',
             'debugToken' => $debugLocal ? $token : null,
         ];
     }
