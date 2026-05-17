@@ -171,7 +171,27 @@ final class ReporteRepository
             $params['usuario_creador_id'] = $filtros['usuario_creador_id'];
         }
 
-        $sql .= " ORDER BY e.nombre, s.nombre, a.nombre";
+        // --- ORDENAMIENTO DINÁMICO ---
+        $campoOrden = $filtros['ordenar_por'] ?? 'nombre';
+        $direccion = strtoupper($filtros['orden_dir'] ?? 'ASC');
+        if (!in_array($direccion, ['ASC', 'DESC'])) $direccion = 'ASC';
+
+        $mapaOrden = [
+            'nombre' => 'a.nombre',
+            'fecha_creado' => 'a.fecha_creado',
+            'estado' => 'a.estado',
+            'tipo' => 'ta.nombre',
+            'valor_adquisicion' => 'a.valor_adquisicion',
+            'codigo' => 'a.codigo'
+        ];
+        $columnaReal = $mapaOrden[$campoOrden] ?? 'a.nombre';
+
+        $agruparUbicacion = $filtros['agrupar_ubicacion'] ?? true;
+        if ($agruparUbicacion) {
+            $sql .= " ORDER BY e.nombre, s.nombre, {$columnaReal} {$direccion}";
+        } else {
+            $sql .= " ORDER BY {$columnaReal} {$direccion}";
+        }
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);

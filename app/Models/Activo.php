@@ -48,7 +48,7 @@ class Activo
         $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'id';
         $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
 
-        $sql = "SELECT a.id, a.nombre, a.descripcion, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
+        $sql = "SELECT a.id, a.nombre, a.descripcion, a.valor_adquisicion, COALESCE(ta.nombre, 'Sin tipo') as tipo, a.estado, a.codigo, a.sala_id, a.usuario_creador_id, a.fecha_creado,
                        COALESCE(s.nombre, 'Sin sala') as sala_nombre, COALESCE(e.nombre, 'Sin edificio') as edificio_nombre,
                        af.ruta_foto as foto_principal
                 FROM activo a
@@ -102,6 +102,7 @@ class Activo
             'codigo' => 'a.codigo',
             'nombre' => 'a.nombre',
             'tipo' => 'ta.nombre',
+            'valor_adquisicion' => 'a.valor_adquisicion',
             'estado' => 'a.estado',
             'sala_nombre' => 's.nombre',
             'fecha_creado' => 'a.fecha_creado'
@@ -254,12 +255,13 @@ class Activo
 
             // ✅ Lista de campos a comparar con sus nombres para el historial
             $campos = [
-                'nombre'          => 'Nombre',
-                'descripcion'     => 'Descripción',
-                'tipo_activo_id'  => 'Tipo de activo',
-                'estado'          => 'Estado',
-                'codigo'          => 'Código',
-                'sala_id'         => 'Sala/ubicación'
+                'nombre'            => 'Nombre',
+                'descripcion'       => 'Descripción',
+                'valor_adquisicion' => 'Valor de adquisición',
+                'tipo_activo_id'    => 'Tipo de activo',
+                'estado'            => 'Estado',
+                'codigo'            => 'Código',
+                'sala_id'           => 'Sala/ubicación'
             ];
 
             $cambios = [];
@@ -280,7 +282,7 @@ class Activo
             }
 
             // ✅ Ejecutar actualizacion
-            $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, tipo_activo_id = :tipo_activo_id, 
+            $sql = "UPDATE activo SET nombre = :nombre, descripcion = :descripcion, valor_adquisicion = :valor_adquisicion, tipo_activo_id = :tipo_activo_id, 
                     estado = :estado, codigo = :codigo, sala_id = :sala_id, fecha_actualizado = :fecha_actualizado
                     WHERE id = :id";
             
@@ -289,6 +291,7 @@ class Activo
                 ':id' => $id,
                 ':nombre' => $datos['nombre'],
                 ':descripcion' => $datos['descripcion'] ?? '',
+                ':valor_adquisicion' => $datos['valor_adquisicion'] ?? null,
                 ':tipo_activo_id' => $datos['tipo_activo_id'] ?? $datos['tipo'] ?? 1,
                 ':estado' => $datos['estado'],
                 ':codigo' => $datos['codigo'],

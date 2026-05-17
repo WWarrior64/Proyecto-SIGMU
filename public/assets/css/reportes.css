@@ -1,14 +1,17 @@
 /* Reportes Config Styles - SIGMU Modern UI */
 :root {
-    --primary-color: #9a2018; /* SIGMU Red */
+    --primary-color: #9a2018;
     --secondary-color: #6c757d;
     --success-color: #28a745;
     --bg-light: #f8f9fa;
     --sigmu-red: #9a2018;
+    --sigmu-red-dark: #7a1912;
+    --sigmu-red-light: #fdf2f1;
     --sigmu-ink: #212121;
     --sigmu-border: #e0e0e0;
 }
 
+/* ── Contenedor principal ── */
 .report-config-card {
     background: #fff;
     border-radius: 12px;
@@ -17,69 +20,7 @@
     margin-bottom: 24px;
 }
 
-.section-header {
-    margin-bottom: 24px;
-    border-bottom: 2px solid var(--sigmu-red);
-    padding-bottom: 12px;
-}
-
-.section-title {
-    color: var(--sigmu-red);
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-.detail-group {
-    margin-bottom: 24px;
-}
-
-.detail-label {
-    display: block;
-    font-weight: 700;
-    color: var(--sigmu-ink);
-    margin-bottom: 12px;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.filter-group {
-    margin-bottom: 15px;
-}
-
-.form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 8px;
-    display: block;
-}
-
-/* Form Controls Improvement */
-.form-select, .form-control {
-    border: 1px solid var(--sigmu-border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 14px;
-    transition: all 0.2s;
-    background-color: #fff;
-    width: 100%;
-    color: var(--sigmu-ink);
-}
-
-.form-select:focus, .form-control:focus {
-    border-color: var(--sigmu-red);
-    box-shadow: 0 0 0 3px rgba(154, 32, 24, 0.1);
-    outline: none;
-}
-
-input[type="date"] {
-    cursor: pointer;
-    position: relative;
-}
-
-/* Back Row Alignment */
+/* ── Fila superior ── */
 .sigmu-back-row {
     display: flex;
     justify-content: space-between;
@@ -108,13 +49,96 @@ input[type="date"] {
     border-color: var(--sigmu-red);
 }
 
-/* Scrollable Checkbox List */
+/* ── Encabezado de sección ── */
+.section-header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--sigmu-red);
+    padding-bottom: 12px;
+}
+
+.section-title {
+    color: var(--sigmu-red);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ── Grid principal ── */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Grupos de detalle ── */
+.detail-group {
+    margin-bottom: 24px;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--sigmu-ink);
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.right-column .detail-label {
+    margin-bottom: 24px;
+}
+
+/* ── Grupos de filtro ── */
+.filter-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+}
+
+/* ── Controles de formulario ── */
+.form-select,
+.form-control {
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background-color: #fff;
+    width: 100%;
+    color: var(--sigmu-ink);
+    outline: none;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--sigmu-red);
+    box-shadow: 0 0 0 3px rgba(154, 32, 24, 0.1);
+}
+
+input[type="date"] {
+    cursor: pointer;
+}
+
+/* ── Lista con scroll ── */
 .scroll-checkbox-list {
     max-height: 200px;
     overflow-y: auto;
     border: 1px solid var(--sigmu-border);
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     background: #fff;
 }
 
@@ -135,29 +159,54 @@ input[type="date"] {
     margin-right: 10px;
     width: 16px;
     height: 16px;
+    accent-color: var(--sigmu-red);
 }
 
-/* Custom Section List */
+/* ── Estados operativos ── */
+.estados-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    background: #f8f9fa;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+}
+
+/* ── Secciones del reporte ── */
+.sections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .sections-list .list-group-item {
     border: 1px solid var(--sigmu-border);
-    margin-bottom: 12px;
-    border-radius: 10px !important;
-    padding: 16px;
+    border-radius: 10px;
+    padding: 14px 16px;
     display: flex;
     align-items: flex-start;
-    gap: 15px;
+    gap: 14px;
+    cursor: pointer;
     transition: all 0.2s ease;
+    background: #fff;
 }
 
 .sections-list .list-group-item:hover {
     border-color: var(--sigmu-red);
-    background-color: #fff9f9;
+    background-color: var(--sigmu-red-light);
+}
+
+.sections-list .list-group-item:has(input:checked) {
+    border-color: var(--sigmu-red);
+    background-color: var(--sigmu-red-light);
 }
 
 .sections-list .form-check-input {
     width: 1.4rem;
     height: 1.4rem;
     margin-top: 2px;
+    accent-color: var(--sigmu-red);
 }
 
 .sections-list strong {
@@ -167,6 +216,28 @@ input[type="date"] {
     margin-bottom: 4px;
 }
 
+.sections-list small {
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ── Bloque de ordenamiento ── */
+.sort-box {
+    background: #f8f9fa;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+/* ── Botones de acción ── */
+.actions-bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    margin-top: 4px;
+}
+
 .btn-reporte {
     background-color: var(--sigmu-red);
     color: white;
@@ -174,18 +245,18 @@ input[type="date"] {
     padding: 14px 24px;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 1.1rem;
-    width: 100%;
+    font-size: 1.05rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
 }
 
 .btn-reporte:hover {
-    background-color: #7a1912;
+    background-color: var(--sigmu-red-dark);
     transform: translateY(-1px);
 }
 
@@ -194,24 +265,30 @@ input[type="date"] {
 }
 
 .btn-reporte--preview {
-    background-color: #4a5568;
+    background-color: #fff;
+    color: var(--sigmu-ink);
+    border: 1px solid var(--sigmu-border);
+    font-weight: 600;
 }
 
 .btn-reporte--preview:hover {
-    background-color: #2d3748;
+    background-color: #fff;
+    border-color: var(--sigmu-red);
+    color: var(--sigmu-red);
 }
 
-.d-flex { display: flex; }
-.gap-3 { gap: 1rem; }
-
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-}
-
-@media (max-width: 992px) {
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-}
+/* ── Utilidades ── */
+.d-flex             { display: flex; }
+.flex-grow-1        { flex: 1; }
+.align-self-center  { align-self: center; }
+.flex-wrap          { flex-wrap: wrap; }
+.gap-2              { gap: 0.5rem; }
+.gap-3              { gap: 1rem; }
+.mt-4               { margin-top: 1.5rem; }
+.mb-1               { margin-bottom: 0.25rem; }
+.mb-3               { margin-bottom: 0.75rem; }
+.p-3                { padding: 1rem; }
+.bg-light           { background-color: #f8f9fa; }
+.rounded            { border-radius: 8px; }
+.border             { border: 1px solid var(--sigmu-border); }
+.text-muted         { color: #6c757d; font-size: 12px; }

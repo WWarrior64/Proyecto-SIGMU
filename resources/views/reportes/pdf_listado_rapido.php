@@ -90,8 +90,9 @@
                         <th style="width: 15%;">Código</th>
                         <th style="width: 25%;">Activo</th>
                         <th style="width: 15%;">Categoría</th>
+                        <th style="width: 12%;">Valor</th>
                         <th style="width: 12%;">Estado</th>
-                        <th style="width: 33%;">Descripción</th>
+                        <th style="width: 21%;">Descripción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,6 +103,7 @@
             <td><strong><?= htmlspecialchars($a['codigo']) ?></strong></td>
             <td><?= htmlspecialchars($a['nombre']) ?></td>
             <td><?= htmlspecialchars($a['tipo_nombre'] ?? $a['tipo']) ?></td>
+            <td style="text-align: right;"><?= $a['valor_adquisicion'] !== null ? '$' . number_format((float)$a['valor_adquisicion'], 2) : '-' ?></td>
             <td>
                 <span class="badge"><?= strtoupper($a['estado']) ?></span>
             </td>

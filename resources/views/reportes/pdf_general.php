@@ -88,6 +88,14 @@
         .badge-en_uso { background: #e3f2fd; color: #1565c0; }
         .badge-reparacion { background: #fff3e0; color: #ef6c00; }
         .badge-descartado { background: #ffeeb2; color: #5d4037; }
+
+        .annual-summary { margin-top: 30px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .annual-summary-header { background: #2c3e50; color: white; padding: 10px 15px; font-weight: bold; font-size: 11px; }
+        .annual-row { display: table; width: 100%; border-bottom: 1px solid #eee; }
+        .annual-cell { display: table-cell; padding: 10px 15px; font-size: 10px; }
+        .annual-year { font-weight: bold; color: #9a2018; width: 40%; }
+        .annual-value { text-align: right; font-family: 'Courier', monospace; font-weight: bold; font-size: 11px; }
+        .annual-total { background: #f5f5f5; font-size: 12px; border-top: 2px solid #9a2018; }
     </style>
 </head>
 <body>
@@ -120,7 +128,8 @@
                 <p><strong>Filtros aplicados:</strong></p>
                 <ul style="margin: 5px 0 0 0; padding-left: 20px; font-size: 11px; line-height: 1.6;">
                     <li>Edificios: <?= !empty($filtros['edificios']) ? count($filtros['edificios']) : 'Todos los accesibles' ?></li>
-                    <li>Estados: <?= !empty($filtros['estados']) ? implode(', ', $filtros['estados']) : 'Todos' ?></li>
+                    <li>Salas: <?= !empty($filtros['salas']) ? count($filtros['salas']) : 'Todas' ?></li>
+                    <li>Estados: <?= !empty($filtros['estados']) ? str_replace('_', ' ', implode(', ', $filtros['estados'])) : 'Todos' ?></li>
                     <li>Rango de registro: <?= $filtros['fecha_inicio'] ?: 'Desde el inicio' ?> — <?= $filtros['fecha_fin'] ?: 'Hoy' ?></li>
                 </ul>
             </div>
@@ -129,50 +138,79 @@
 
     <!-- Contenido -->
     <?php if ($secciones['datos_generales']): ?>
-        <div class="section-title">Detalle de Activos por Ubicación</div>
+        <div class="section-title">Detalle de Activos <?= !($filtros['agrupar_ubicacion'] ?? true) ? '(Listado Directo)' : 'por Ubicación' ?></div>
         <?php 
         $edificioActual = '';
         $salaActual = '';
+        $agrupar = $filtros['agrupar_ubicacion'] ?? true;
+
+        if (!$agrupar): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Código</th>
+                        <th style="width: 18%;">Nombre</th>
+                        <th style="width: 12%;">Tipo</th>
+                        <th style="width: 10%;">Valor</th>
+                        <th style="width: 10%;">Estado</th>
+                        <th style="width: 10%;">F. Registro</th>
+                        <th style="width: 15%;">Ubicación</th>
+                        <th style="width: 15%;">Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php endif;
+
         foreach($activos as $a): 
-            if ($edificioActual !== $a['edificio_nombre']):
-                $edificioActual = $a['edificio_nombre'];
-                echo "<div class='group-edificio'>EDIFICIO: " . strtoupper(htmlspecialchars($edificioActual)) . "</div>";
-                $salaActual = ''; 
-            endif;
-            
-            if ($salaActual !== $a['sala_nombre']):
-                $salaActual = $a['sala_nombre'];
-                echo "<div class='group-sala'>SALA: " . htmlspecialchars($salaActual) . "</div>";
-                ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 15%;">Código</th>
-                            <th style="width: 25%;">Nombre del Activo</th>
-                            <th style="width: 15%;">Categoría</th>
-                            <th style="width: 12%;">Estado</th>
-                            <th style="width: 33%;">Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                <?php
+            if ($agrupar):
+                if ($edificioActual !== $a['edificio_nombre']):
+                    $edificioActual = $a['edificio_nombre'];
+                    echo "<div class='group-edificio'>EDIFICIO: " . strtoupper(htmlspecialchars($edificioActual)) . "</div>";
+                    $salaActual = ''; 
+                endif;
+                
+                if ($salaActual !== $a['sala_nombre']):
+                    $salaActual = $a['sala_nombre'];
+                    echo "<div class='group-sala'>SALA: " . htmlspecialchars($salaActual) . "</div>";
+                    ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;">Código</th>
+                                <th style="width: 22%;">Nombre del Activo</th>
+                                <th style="width: 12%;">Tipo</th>
+                                <th style="width: 10%;">Valor</th>
+                                <th style="width: 10%;">Estado</th>
+                                <th style="width: 12%;">F. Registro</th>
+                                <th style="width: 22%;">Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    <?php
+                endif;
             endif;
             ?>
             <tr>
                 <td><strong><?= htmlspecialchars($a['codigo']) ?></strong></td>
                 <td><?= htmlspecialchars($a['nombre']) ?></td>
                 <td><?= htmlspecialchars($a['tipo_nombre'] ?? 'Sin tipo') ?></td>
+                <td style="text-align: right;"><?= $a['valor_adquisicion'] !== null ? '$' . number_format((float)$a['valor_adquisicion'], 2) : '-' ?></td>
                 <td>
                     <span class="badge badge-<?= str_replace(' ', '_', $a['estado']) ?>">
-                        <?= strtoupper($a['estado']) ?>
+                        <?= str_replace('_', ' ', $a['estado']) ?>
                     </span>
                 </td>
+                <td><?= date('d/m/Y', strtotime($a['fecha_creado'])) ?></td>
+                <?php if (!$agrupar): ?>
+                    <td><small><?= htmlspecialchars($a['sala_nombre']) ?><br><?= htmlspecialchars($a['edificio_nombre']) ?></small></td>
+                <?php endif; ?>
                 <td><small><?= htmlspecialchars($a['descripcion'] ?? 'N/D') ?></small></td>
             </tr>
-            
-            <?php if ($secciones['historial'] && isset($historiales[$a['id']]) && !empty($historiales[$a['id']])): ?>
+            <?php 
+            $colTotal = $agrupar ? 7 : 8;
+            if ($secciones['historial'] && isset($historiales[$a['id']]) && !empty($historiales[$a['id']])): ?>
                 <tr>
-                    <td colspan="5" style="padding: 5px 15px 15px 15px; background: #fff;">
+                    <td colspan="<?= $colTotal ?>" style="padding: 5px 15px 15px 15px; background: #fff;">
                         <div class="sub-section">
                             <div class="sub-title"><i class="fas fa-history"></i> Movimientos Recientes</div>
                             <table class="sub-table">
@@ -195,7 +233,7 @@
 
             <?php if ($secciones['mantenimientos'] && isset($mantenimientos[$a['id']]) && !empty($mantenimientos[$a['id']])): ?>
                 <tr>
-                    <td colspan="5" style="padding: 5px 15px 15px 15px; background: #fff;">
+                    <td colspan="<?= $colTotal ?>" style="padding: 5px 15px 15px 15px; background: #fff;">
                         <div class="sub-section">
                             <div class="sub-title"><i class="fas fa-tools"></i> Mantenimientos Realizados</div>
                             <table class="sub-table">
@@ -217,12 +255,17 @@
             <?php endif; ?>
 
             <?php 
-            $currentIdx = array_search($a, $activos);
-            $next = $activos[$currentIdx + 1] ?? null;
-            if (!$next || $next['sala_nombre'] !== $salaActual || $next['edificio_nombre'] !== $edificioActual):
-                echo "</tbody></table>";
+            if ($agrupar):
+                $currentIdx = array_search($a, $activos);
+                $next = $activos[$currentIdx + 1] ?? null;
+                if (!$next || $next['sala_nombre'] !== $salaActual || $next['edificio_nombre'] !== $edificioActual):
+                    echo "</tbody></table>";
+                endif;
             endif;
-        endforeach; ?>
+        endforeach; 
+        
+        if (!$agrupar) echo "</tbody></table>";
+        ?>
     <?php endif; ?>
 
     <!-- Resumen -->
@@ -280,6 +323,51 @@
                 </tbody>
             </table>
         </div>
+    <?php endif; ?>
+
+    <!-- Resumen Financiero por Año -->
+    <?php if ($secciones['resumen']): ?>
+        <div style="page-break-before: always;"></div>
+        <div class="section-title">Resumen Financiero Acumulado por Año</div>
+        
+        <?php
+        // 1. Agrupar sumas por año
+        $sumasPorAño = [];
+        foreach($activos as $a) {
+            $year = date('Y', strtotime($a['fecha_creado']));
+            $valor = (float)($a['valor_adquisicion'] ?? 0);
+            $sumasPorAño[$year] = ($sumasPorAño[$year] ?? 0) + $valor;
+        }
+        ksort($sumasPorAño);
+
+        // 2. Calcular acumulados (Año actual + todos los anteriores)
+        $acumuladoHistorico = [];
+        $corriente = 0;
+        foreach($sumasPorAño as $year => $suma) {
+            $corriente += $suma;
+            $acumuladoHistorico[$year] = $corriente;
+        }
+        ?>
+
+        <div class="annual-summary">
+            <div class="annual-summary-header">
+                Consolidado de Crecimiento Patrimonial (Histórico)
+            </div>
+            <?php foreach($acumuladoHistorico as $year => $total): ?>
+            <div class="annual-row">
+                <div class="annual-cell annual-year">TOTAL ACUMULADO AL FINALIZAR AÑO <?= $year ?></div>
+                <div class="annual-cell annual-value">$ <?= number_format($total, 2) ?></div>
+            </div>
+            <?php endforeach; ?>
+            <div class="annual-row annual-total">
+                <div class="annual-cell annual-year">VALOR ACTUAL TOTAL DEL INVENTARIO</div>
+                <div class="annual-cell annual-value">$ <?= number_format($corriente, 2) ?></div>
+            </div>
+        </div>
+        
+        <p style="font-size: 8px; color: #666; margin-top: 15px; font-style: italic;">
+            * El valor acumulado representa la inversión total de la institución hasta el cierre del año indicado (incluyendo años anteriores).
+        </p>
     <?php endif; ?>
 </body>
 </html>

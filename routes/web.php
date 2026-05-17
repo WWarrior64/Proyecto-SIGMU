@@ -222,6 +222,11 @@ $router->post('/sigmu/reporte/general/exportar', static function (): void {
     $controller->exportarGeneral();
 });
 
+$router->post('/sigmu/buscar-salas', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->buscarSalasAjax();
+});
+
 $router->post('/sigmu/reporte/general/preview', static function (): void {
     $controller = new \App\Http\Controllers\ReporteController();
     $controller->previewGeneral();

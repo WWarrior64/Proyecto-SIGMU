@@ -43,7 +43,7 @@ final class FallaRepository
             $stmt->closeCursor();
 
             // 2. Actualizar el estado del activo a 'reparacion' usando el procedimiento almacenado
-            $stmtActivo = $this->db->prepare("CALL sp_editar_activo(:activo_id, NULL, NULL, NULL, 'reparacion', NULL)");
+            $stmtActivo = $this->db->prepare("CALL sp_editar_activo(:activo_id, NULL, NULL, NULL, NULL, 'reparacion', NULL)");
             $stmtActivo->execute(['activo_id' => $activoId]);
             $stmtActivo->closeCursor();
 

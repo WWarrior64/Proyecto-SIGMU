@@ -158,7 +158,7 @@ final class SigmuRepository
     {
         // Activos de la sala. Usar vistas en lugar de tablas base.
         $stmt = $this->db->prepare(
-            'SELECT a.id, a.codigo, a.nombre, a.estado, a.sala_id, a.foto_principal,
+            'SELECT a.id, a.codigo, a.nombre, a.valor_adquisicion, a.estado, a.sala_id, a.foto_principal,
                     COALESCE(ta.nombre, "Sin tipo") as tipo,
                     COALESCE(s.nombre, "Sin sala") as sala_nombre,
                     COALESCE(e.nombre, "Sin edificio") as edificio_nombre
@@ -342,12 +342,13 @@ final class SigmuRepository
         string $nombre,
         int $tipoActivoId,
         string $descripcion,
+        ?float $valorAdquisicion,
         string $estado,
         int $salaId,
         ?string $fechaCreado = null
     ): int {
         $stmt = $this->db->prepare(
-            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :estado, :sala_id, :fecha_creado)'
+            'CALL sp_registrar_activo(:codigo, :nombre, :tipo_id, :descripcion, :valor_adquisicion, :estado, :sala_id, :fecha_creado)'
         );
         
         $stmt->execute([
@@ -355,6 +356,7 @@ final class SigmuRepository
             'nombre' => $nombre,
             'tipo_id' => $tipoActivoId,
             'descripcion' => $descripcion,
+            'valor_adquisicion' => $valorAdquisicion,
             'estado' => $estado,
             'sala_id' => $salaId,
             'fecha_creado' => $fechaCreado

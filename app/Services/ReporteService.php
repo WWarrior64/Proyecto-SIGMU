@@ -160,6 +160,7 @@ final class ReporteService
                     <Column ss:Width="100"/>
                     <Column ss:Width="200"/>
                     <Column ss:Width="80"/>
+                    <Column ss:Width="100"/>
                     <Column ss:Width="120"/>
                     <Column ss:Width="120"/>
                     <Column ss:Width="100"/>
@@ -168,6 +169,7 @@ final class ReporteService
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Nombre</Data></Cell>
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Tipo</Data></Cell>
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Descripcion</Data></Cell>
+                        <Cell ss:StyleID="Header"><Data ss:Type="String">Valor</Data></Cell>
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Estado</Data></Cell>
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Sala</Data></Cell>
                         <Cell ss:StyleID="Header"><Data ss:Type="String">Edificio</Data></Cell>
@@ -180,7 +182,7 @@ final class ReporteService
             if ($salaActual !== $salaLabel) {
                 $xml .= '
                     <Row>
-                        <Cell ss:StyleID="SalaHeader" ss:MergeAcross="7"><Data ss:Type="String">Sala: ' . htmlspecialchars($salaLabel) . '</Data></Cell>
+                        <Cell ss:StyleID="SalaHeader" ss:MergeAcross="8"><Data ss:Type="String">Sala: ' . htmlspecialchars($salaLabel) . '</Data></Cell>
                     </Row>';
                 $salaActual = $salaLabel;
             }
@@ -191,6 +193,7 @@ final class ReporteService
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['nombre']) . '</Data></Cell>
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['tipo_nombre']) . '</Data></Cell>
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['descripcion'] ?? '') . '</Data></Cell>
+                        <Cell><Data ss:Type="Number">' . ($a['valor_adquisicion'] ?? 0) . '</Data></Cell>
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['estado']) . '</Data></Cell>
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['sala_nombre']) . '</Data></Cell>
                         <Cell><Data ss:Type="String">' . htmlspecialchars($a['edificio_nombre']) . '</Data></Cell>

@@ -198,13 +198,25 @@ final class ActivoController
 
             if ($datos['cantidad'] > 1) {
                 $res = $this->sigmuService->registrarMultiplesActivos(
-                    $datos['cantidad'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
+                    $datos['cantidad'],
+                    $datos['nombre'],
+                    $datos['tipo_activo_id'],
+                    $datos['descripcion'],
+                    $datos['valor_adquisicion'],
+                    $datos['estado'],
+                    $datos['sala_id'],
+                    $fotoPaths
                 );
             } else {
                 $res = $this->sigmuService->registrarActivo(
-                    $datos['codigo'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
+                    $datos['codigo'],
+                    $datos['nombre'],
+                    $datos['tipo_activo_id'],
+                    $datos['descripcion'],
+                    $datos['valor_adquisicion'],
+                    $datos['estado'],
+                    $datos['sala_id'],
+                    $fotoPaths
                 );
             }
 
@@ -276,6 +288,7 @@ final class ActivoController
         $datos = [
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
+            'valor_adquisicion' => isset($_POST['valor_adquisicion']) && $_POST['valor_adquisicion'] !== '' ? (float)$_POST['valor_adquisicion'] : null,
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
             'estado' => $estado,
             'codigo' => trim((string)($_POST['codigo'] ?? '')),

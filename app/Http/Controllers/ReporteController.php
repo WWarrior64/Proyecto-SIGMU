@@ -174,7 +174,10 @@ final class ReporteController
             'fecha_fin' => $_POST['fecha_fin'] ?? '',
             'fecha_act_inicio' => $_POST['fecha_act_inicio'] ?? '',
             'fecha_act_fin' => $_POST['fecha_act_fin'] ?? '',
-            'usuario_creador_id' => $_POST['usuario_creador_id'] ?? null
+            'usuario_creador_id' => $_POST['usuario_creador_id'] ?? null,
+            'ordenar_por' => $_POST['ordenar_por'] ?? 'nombre',
+            'orden_dir' => $_POST['orden_dir'] ?? 'ASC',
+            'agrupar_ubicacion' => isset($_POST['agrupar_ubicacion'])
         ];
 
         $secciones = [
@@ -263,6 +266,40 @@ final class ReporteController
             $html = $this->renderView('reportes/pdf_listado_rapido', $datos);
             $this->reporteService->exportarAPdf($html, $nombreArchivo);
         }
+    }
+
+    /**
+     * Endpoint AJAX para cargar salas dinámicamente según edificios seleccionados
+     */
+    public function buscarSalasAjax(): void
+    {
+        if (!$this->requireAuth()) {
+            http_response_code(403);
+            return;
+        }
+
+        $edificiosRaw = $_POST['edificios'] ?? '[]';
+        $edificioIds = json_decode($edificiosRaw, true);
+
+        if (!is_array($edificioIds) || empty($edificioIds)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Obtener salas filtradas
+        $sql = "SELECT s.id, s.nombre, e.nombre as edificio_nombre 
+                FROM sala s
+                JOIN edificio e ON s.edificio_id = e.id
+                WHERE s.edificio_id IN (" . implode(',', array_fill(0, count($edificioIds), '?')) . ")
+                ORDER BY e.nombre, s.nombre";
+        
+        $db = \App\Support\Database::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->execute($edificioIds);
+        $salas = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        header('Content-Type: application/json');
+        echo json_encode($salas);
     }
 
     private function requireAuth(): bool

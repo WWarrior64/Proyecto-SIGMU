@@ -190,6 +190,7 @@ final class SigmuService
         string $nombre,
         int $tipoActivoId,
         string $descripcion,
+        ?float $valorAdquisicion,
         string $estado,
         int $salaId,
         array $fotoPaths = [],
@@ -210,6 +211,7 @@ final class SigmuService
                 $nombre,
                 $tipoActivoId,
                 $descripcion,
+                $valorAdquisicion,
                 $estado,
                 $salaId,
                 $fechaCreado
@@ -244,7 +246,7 @@ final class SigmuService
      * Registrar multiples activos iguales con codigos automaticos diferentes
      * @param array<string> $fotoPaths
      */
-    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, array $fotoPaths = []): array
+    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, ?float $valorAdquisicion, string $estado, int $salaId, array $fotoPaths = []): array
     {
         try {
             $creados = 0;
@@ -255,7 +257,7 @@ final class SigmuService
                 // Generar codigo unico automatico para CADA activo
                 $codigo = $this->generarCodigoActivo($nombre);
 
-                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPaths);
+                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $valorAdquisicion, $estado, $salaId, $fotoPaths);
 
                 if ($resultado['success']) {
                     $creados++;

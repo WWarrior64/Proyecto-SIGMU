@@ -174,6 +174,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             </div>
                         </div>
 
+                        <!-- Valor de Adquisicion -->
+                        <div class="detail-group">
+                            <label class="detail-label">Valor de Adquisición</label>
+                            <div class="detail-value">
+                                <?= $activo['valor_adquisicion'] !== null ? '$' . number_format((float)$activo['valor_adquisicion'], 2) : '<span class="no-value">No registrado</span>' ?>
+                            </div>
+                        </div>
+
                         <!-- Creado Por -->
                         <div class="detail-group">
                             <label class="detail-label">Creado Por</label>

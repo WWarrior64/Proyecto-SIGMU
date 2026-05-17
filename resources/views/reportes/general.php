@@ -41,12 +41,20 @@ $homeUrl = (\App\Support\Roles::is($user['rol_id'] ?? 0, \App\Support\Roles::ADM
                         <div class="scroll-checkbox-list">
                             <?php foreach($edificios as $e): ?>
                             <label class="checkbox-item">
-                                <input type="checkbox" name="edificios[]" value="<?= $e['id'] ?>">
+                                <input type="checkbox" name="edificios[]" value="<?= $e['id'] ?>" class="edificio-selector" data-id="<?= $e['id'] ?>">
                                 <span><?= htmlspecialchars($e['nombre']) ?></span>
                             </label>
                             <?php endforeach; ?>
                         </div>
                         <small class="text-muted">Si no selecciona ninguno, se incluirán todos los accesibles.</small>
+                    </div>
+
+                    <div class="filter-group" id="groupSalas" style="display: none;">
+                        <label class="form-label">Salas Específicas</label>
+                        <div id="salasContainer" class="scroll-checkbox-list">
+                            <!-- Se cargará dinámicamente vía JS -->
+                        </div>
+                        <small class="text-muted">Filtra activos por salas específicas dentro de los edificios seleccionados.</small>
                     </div>
 
                     <div class="filter-group">
@@ -140,6 +148,38 @@ $homeUrl = (\App\Support\Roles::is($user['rol_id'] ?? 0, \App\Support\Roles::ADM
                                 <small class="text-muted">Conteos y distribución por estado, sala y edificio.</small>
                             </div>
                         </label>
+                    </div>
+
+                    <div class="filter-group mt-4">
+                        <label class="detail-label"><i class="fas fa-sort-amount-down"></i> Ordenamiento del Reporte</label>
+                        <div class="bg-light p-3 rounded border">
+                            <div class="mb-3">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="agrupar_ubicacion" value="1" checked>
+                                    <span>Agrupar por Edificio y Sala (Recomendado)</span>
+                                </label>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="flex-grow-1">
+                                    <label class="form-label mb-1">Criterio Principal</label>
+                                    <select name="ordenar_por" class="form-select">
+                                        <option value="nombre">Nombre del Activo</option>
+                                        <option value="fecha_creado">Fecha de Registro</option>
+                                        <option value="estado">Estado Operativo</option>
+                                        <option value="tipo">Tipo de Activo</option>
+                                        <option value="valor_adquisicion">Valor de Adquisición</option>
+                                        <option value="codigo">Código Institucional</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1">Dirección</label>
+                                    <select name="orden_dir" class="form-select">
+                                        <option value="ASC">Ascendente</option>
+                                        <option value="DESC">Descendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 d-flex gap-3">

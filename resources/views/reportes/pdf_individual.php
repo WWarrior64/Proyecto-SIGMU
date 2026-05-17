@@ -117,8 +117,14 @@
             <tr>
                 <th>Tipo de Activo</th>
                 <td><?= htmlspecialchars($activo['tipo_nombre'] ?? 'Sin tipo') ?></td>
+                <th>Valor Adquisición</th>
+                <td><?= $activo['valor_adquisicion'] !== null ? '$' . number_format((float)$activo['valor_adquisicion'], 2) : 'No registrado' ?></td>
+            </tr>
+            <tr>
                 <th>Estado Operativo</th>
                 <td><span class="badge status-<?= str_replace(' ', '_', $activo['estado']) ?>"><?= strtoupper($activo['estado']) ?></span></td>
+                <th>Fecha de Registro</th>
+                <td><?= $activo['fecha_creado'] ?></td>
             </tr>
             <tr>
                 <th>Ubicación (Sala)</th>
@@ -127,10 +133,8 @@
                 <td><?= htmlspecialchars($activo['edificio_nombre']) ?></td>
             </tr>
             <tr>
-                <th>Fecha de Registro</th>
-                <td><?= $activo['fecha_creado'] ?></td>
                 <th>Registrado por</th>
-                <td><?= htmlspecialchars($activo['usuario_creador_nombre'] ?? 'Sistema Central') ?></td>
+                <td colspan="3"><?= htmlspecialchars($activo['usuario_creador_nombre'] ?? 'Sistema Central') ?></td>
             </tr>
             <tr>
                 <th>Descripción Detallada</th>

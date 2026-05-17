@@ -225,8 +225,8 @@ final class MantenimientoRepository
             $stmt->closeCursor();
 
             // 2. Usar procedimiento almacenado para cambiar estado del activo
-            // sp_editar_activo(p_activo_id, p_nombre, p_tipo_id, p_descripcion, p_estado, p_sala_id)
-            $stmtActivo = $this->db->prepare("CALL sp_editar_activo(:activo_id, NULL, NULL, NULL, 'reparacion', NULL)");
+            // sp_editar_activo(p_activo_id, p_nombre, p_tipo_id, p_descripcion, p_valor_adquisicion, p_estado, p_sala_id)
+            $stmtActivo = $this->db->prepare("CALL sp_editar_activo(:activo_id, NULL, NULL, NULL, NULL, 'reparacion', NULL)");
             $stmtActivo->execute(['activo_id' => $activoId]);
             $stmtActivo->closeCursor();
 

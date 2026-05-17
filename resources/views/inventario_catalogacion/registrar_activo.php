@@ -94,6 +94,13 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     </div>
 
                     <div class="form-group">
+                        <label for="valor_adquisicion">Valor de adquisición ($):</label>
+                        <input type="number" id="valor_adquisicion" name="valor_adquisicion" 
+                               step="0.01" min="0" placeholder="0.00"
+                               value="<?= htmlspecialchars($formData['valor_adquisicion'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                    </div>
+
+                    <div class="form-group">
                         <label for="estado">Estado: <span class="required">*</span></label>
                         <select id="estado" name="estado" required>
                             <option value="">Seleccionar estado...</option>
