@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: new FormData(this)
             }).then(r => r.json()).then(data => {
                 if (data.success) { 
-                    alert('Guardado con éxito'); 
+                    showToast('Guardado con éxito'); 
                     location.reload(); 
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             });
         });

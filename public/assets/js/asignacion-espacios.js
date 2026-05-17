@@ -79,13 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             
             if (result.success) {
-                location.reload(); // Recargar para mostrar nueva asignación
+                window.location.href = '/sigmu/administracion_usuarios/asignacion_espacios?success=Espacio asignado correctamente';
             } else {
-                alert(result.message || 'Error al asignar espacio');
+                showToast(result.message || 'Error al asignar espacio', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error de conexión al servidor');
+            showToast('Error de conexión al servidor', 'error');
         }
     });
 
@@ -114,13 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             
             if (result.success) {
-                location.reload();
+                window.location.href = '/sigmu/administracion_usuarios/asignacion_espacios?success=Asignación removida correctamente';
             } else {
-                alert(result.message || 'Error al quitar asignación');
+                showToast(result.message || 'Error al quitar asignación', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error de conexión al servidor');
+            showToast('Error de conexión al servidor', 'error');
         }
     };
 });

@@ -55,49 +55,100 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- 3. NOMBRE Y GENERACIÓN DE CÓDIGO ---
-    let isManualCode = false; // Flag para detectar edición manual
+    // --- 3. GENERACIÓN DE CÓDIGO COMPLETO (NUEVO FORMATO) ---
+    const codigoCuentaField = document.getElementById('codigo_cuenta');
+    const tipoActivoField = document.getElementById('tipo_activo_id');
+    
+    let isManualCuenta = false; // Flag si el usuario editó manualmente el código prefijo
 
+    /**
+     * Genera el código completo llamando al backend
+     * Formato: [PREFIJO]-[CORRELATIVO(3)]-[AÑO(2)]
+     */
+    function generarCodigoCompleto() {
+        const nombre = nombreField ? nombreField.value.trim() : '';
+        const tipoId = tipoActivoField ? parseInt(tipoActivoField.value || '0') : 0;
+        let codigoCuenta = codigoCuentaField ? codigoCuentaField.value.trim() : '';
+        
+        // Si el prefijo no fue manual, limpiarlo para que el backend lo genere fresco
+        if (!isManualCuenta && codigoCuentaField) {
+            codigoCuentaField.value = '';
+            codigoCuenta = '';
+        }
+        
+        // Si el código de cuenta está vacío y hay nombre/tipo, se autogenerará
+        if (codigoCuenta === '' && nombre.length >= 2 && tipoId > 0) {
+            // Autogenerar: dejamos codigoCuenta vacío para que el backend lo genere
+        } else if (codigoCuenta === '') {
+            // No hay suficiente información, limpiar código
+            if (codigoField) codigoField.value = '';
+            return;
+        }
+
+        const params = new URLSearchParams({
+            nombre: nombre,
+            tipo_id: tipoId.toString(),
+            codigo_cuenta: codigoCuenta
+        });
+
+        fetch('/sigmu/activo/generar-codigo-completo?' + params.toString())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.codigo_completo) {
+                    if (codigoField) codigoField.value = data.codigo_completo;
+                    // Si se autogeneró el prefijo, reflejarlo en el campo
+                    if (codigoCuentaField && data.codigo_cuenta && !isManualCuenta) {
+                        codigoCuentaField.value = data.codigo_cuenta;
+                    }
+                } else {
+                    if (codigoField) codigoField.value = '';
+                }
+            })
+            .catch(err => console.error('Error al generar código completo:', err));
+    }
+
+    let codigoTimeoutId = null;
+
+    // Evento: cambio en nombre del activo
     if (nombreField) {
-        let timeoutId = null;
         nombreField.addEventListener('input', function() {
             if (this.value.length > 100) {
                 this.value = this.value.substring(0, 100);
-                alert('El nombre no puede exceder 100 caracteres');
+                showToast('El nombre no puede exceder 100 caracteres', 'error');
                 return;
             }
             
-            const nombre = this.value.trim();
-            if (timeoutId) clearTimeout(timeoutId);
-            
-            // Solo autogenerar si no es manual y tiene contenido
-            if (nombre.length >= 3 && codigoField && !isManualCode) {
-                timeoutId = setTimeout(function() {
-                    fetch('/sigmu/activo/generar-codigo?nombre=' + encodeURIComponent(nombre))
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success && !isManualCode) {
-                                codigoField.value = data.codigo;
-                                codigoField.classList.remove('error');
-                            }
-                        })
-                        .catch(err => console.error('Error al generar código:', err));
-                }, 500);
-            } else if (codigoField && nombre.length === 0 && !isManualCode) {
-                codigoField.value = '';
-            }
+            if (codigoTimeoutId) clearTimeout(codigoTimeoutId);
+            codigoTimeoutId = setTimeout(generarCodigoCompleto, 500);
         });
     }
 
-    if (codigoField) {
-        codigoField.addEventListener('input', function() {
-            this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '');
+    // Evento: cambio en tipo de activo
+    if (tipoActivoField) {
+        tipoActivoField.addEventListener('change', function() {
+            if (codigoTimeoutId) clearTimeout(codigoTimeoutId);
+            codigoTimeoutId = setTimeout(generarCodigoCompleto, 300);
+        });
+    }
+
+    // Evento: cambio en código de cuenta (manual)
+    if (codigoCuentaField) {
+        codigoCuentaField.addEventListener('input', function() {
+            this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '').toUpperCase();
             
-            // Si el campo está vacío, permitir autogeneración nuevamente
+            // Si está vacío, permitir autogeneración después
             if (this.value.length === 0) {
-                isManualCode = false;
+                isManualCuenta = false;
+                // Regenerar automáticamente si hay nombre y tipo
+                if (nombreField && nombreField.value.trim().length >= 2 && tipoActivoField && tipoActivoField.value) {
+                    if (codigoTimeoutId) clearTimeout(codigoTimeoutId);
+                    codigoTimeoutId = setTimeout(generarCodigoCompleto, 300);
+                }
             } else {
-                isManualCode = true; // Activar flag al editar manualmente
+                isManualCuenta = true;
+                // Si tiene valor manual, generar código completo
+                if (codigoTimeoutId) clearTimeout(codigoTimeoutId);
+                codigoTimeoutId = setTimeout(generarCodigoCompleto, 300);
             }
         });
     }

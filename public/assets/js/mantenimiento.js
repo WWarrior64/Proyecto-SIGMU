@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hoy.setHours(0, 0, 0, 0);
 
             if (fechaSeleccionada < hoy) {
-                alert('No se puede agendar en una fecha pasada');
+                showToast('No se puede agendar en una fecha pasada', 'error');
                 return;
             }
 
@@ -56,16 +56,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Reparación agendada correctamente');
+                    showToast('Reparación agendada correctamente');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                     if (submitBtn) submitBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al procesar la solicitud');
+                showToast('Ocurrió un error al procesar la solicitud', 'error');
                 if (submitBtn) submitBtn.disabled = false;
             });
         });

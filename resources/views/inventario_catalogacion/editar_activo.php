@@ -78,11 +78,11 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <div class="form-group">
                             <label for="codigo">Código: <span class="required">*</span></label>
                             <input type="text" id="codigo" name="codigo" required 
-                                   placeholder="Ej: ACT-001"
+                                   placeholder="*ESCT-MOB-001-25*"
                                    value="<?= htmlspecialchars((string) ($activo['codigo'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                                   pattern="[A-Za-z0-9\-]+"
-                                   title="Solo letras, números y guiones"
-                                   readonly class="input-readonly">
+                                   pattern="[\*A-Za-z0-9\-]+"
+                                   title="Letras, números, guiones y asteriscos"
+                                   readonly class="input-readonly input-codigo-completo">
                         </div>
                     </div>
 

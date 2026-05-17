@@ -62,7 +62,7 @@
             <span style="font-size: 14px; font-weight: bold; color: #9a2018;">SIGMU</span>
         </div>
         <div class="header-info">
-            Universidad Católica de El Salvador — Facultad de Ingeniería y Arquitectura
+            Universidad Católica de El Salvador
         </div>
     </header>
     

@@ -185,6 +185,7 @@ final class ActivoController
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
+            'valor_adquisicion' => isset($_POST['valor_adquisicion']) && $_POST['valor_adquisicion'] !== '' ? (float)$_POST['valor_adquisicion'] : null,
             'estado' => $estado,
             'sala_id' => $salaId,
             'cantidad' => (int)($_POST['cantidad'] ?? 1)
@@ -427,13 +428,66 @@ final class ActivoController
     }
 
     /**
-     * Endpoint AJAX para generar código
+     * Endpoint AJAX para generar código (legacy, solo con nombre)
      */
     public function generarCodigo(): void
     {
         header('Content-Type: application/json');
         $nombre = trim((string)($_GET['nombre'] ?? ''));
         echo json_encode(['success' => true, 'codigo' => $this->sigmuService->generarCodigoActivo($nombre)]);
+    }
+
+    /**
+     * Endpoint AJAX para generar código completo con el nuevo formato
+     * GET /sigmu/activo/generar-codigo-completo?nombre=Escritorio&tipo_id=1&codigo_cuenta=
+     * Si codigo_cuenta está vacío, se autogenera: [NOMBRE_ABREV]-[TIPO_ABREV]
+     * Luego se completa: [CODIGO_CUENTA]-[CORRELATIVO(3)]-[AÑO(2)]
+     */
+    public function generarCodigoCompleto(): void
+    {
+        header('Content-Type: application/json');
+        
+        $nombre = trim((string)($_GET['nombre'] ?? ''));
+        $tipoId = (int)($_GET['tipo_id'] ?? 0);
+        $codigoCuenta = trim((string)($_GET['codigo_cuenta'] ?? ''));
+        
+        try {
+            // Si no hay código de cuenta manual, autogenerarlo
+            if (empty($codigoCuenta)) {
+                if (empty($nombre) || $tipoId <= 0) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Se requiere nombre y tipo de activo para generar el código',
+                        'codigo_completo' => '',
+                        'codigo_cuenta' => '',
+                        'abreviatura_nombre' => '',
+                        'abreviatura_tipo' => ''
+                    ]);
+                    return;
+                }
+                
+                $abrevNombre = $this->sigmuService->generarAbreviaturaNombre($nombre);
+                $tipoNombre = $this->sigmuService->obtenerNombreTipoActivo($tipoId);
+                $abrevTipo = $this->sigmuService->generarAbreviaturaTipo($tipoNombre);
+                $codigoCuenta = $abrevNombre . '-' . $abrevTipo;
+            }
+            
+            // Generar código completo con correlativo
+            $resultado = $this->sigmuService->generarCodigoCompleto($codigoCuenta);
+            
+            echo json_encode([
+                'success' => true,
+                'codigo_completo' => '*' . $resultado['codigo_completo'] . '*',
+                'codigo_cuenta' => $codigoCuenta,
+                'correlativo' => $resultado['correlativo'],
+                'year' => $resultado['year'],
+            ]);
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al generar código: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function setPrincipalPhoto(): void

@@ -28,15 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    alert('Mantenimiento finalizado con éxito');
+                    showToast('Mantenimiento finalizado con éxito');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('Error al procesar la solicitud');
+                showToast('Error al procesar la solicitud', 'error');
             });
         });
     }

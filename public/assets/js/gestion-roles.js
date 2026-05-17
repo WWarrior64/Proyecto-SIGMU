@@ -50,12 +50,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    window.location.href = '/sigmu/administracion_usuarios/gestion_roles?success=Rol guardado correctamente';
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             })
-            .catch(err => alert('Error al procesar: ' + err.message));
+            .catch(err => showToast('Error al procesar: ' + err.message, 'error'));
         });
     }
 });
@@ -79,10 +79,10 @@ function eliminarRol(id) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            window.location.href = '/sigmu/administracion_usuarios/gestion_roles?success=Rol eliminado correctamente';
         } else {
-            alert('Error: ' + data.message);
+            showToast('Error: ' + data.message, 'error');
         }
     })
-    .catch(err => alert('Error al procesar: ' + err.message));
+    .catch(err => showToast('Error al procesar: ' + err.message, 'error'));
 }

@@ -241,24 +241,26 @@ final class SigmuRepository
     /**
      * Genera un código automático para un nuevo activo basado en su nombre
      * Ejemplo: "Pupitre" -> "PPT-001", "Mesa" -> "MSA-001"
+     * @deprecated Usar generarCodigoCompleto() en su lugar
      */
     public function generarCodigoActivo(string $nombreActivo = ''): string
     {
         if (empty($nombreActivo)) {
             // Fallback: código genérico si no hay nombre
             $stmt = $this->db->query(
-                'SELECT MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)) as ultimo_num 
+                'SELECT MAX(CAST(SUBSTRING(codigo, LOCATE("-", codigo) + 1) AS UNSIGNED)) as ultimo_num 
                  FROM activo 
                  WHERE codigo LIKE "ACT-%"'
             );
             $result = $stmt->fetch();
             $ultimoNumero = $result ? (int) $result['ultimo_num'] : 0;
             $siguienteNumero = $ultimoNumero + 1;
-            return 'ACT-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+            $year = date('y');
+            return 'ACTI-TIP-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT) . '-' . $year;
         }
 
         // Generar prefijo basado en el nombre del activo
-        $prefijo = $this->generarPrefijoDesdeNombre($nombreActivo);
+        $prefijo = $this->generarPrefijoDesdeNombre($nombreActivo, 3);
         
         // Buscar el último código con este prefijo
         $stmt = $this->db->prepare(
@@ -276,14 +278,84 @@ final class SigmuRepository
         
         // Generar siguiente código
         $siguienteNumero = $ultimoNumero + 1;
-        return $prefijo . '-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+        $year = date('y');
+        return $prefijo . '-' . str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT) . '-' . $year;
     }
 
     /**
-     * Genera un prefijo de 3 letras basado en el nombre del activo
-     * Ejemplos: "Pupitre" -> "PPT", "Mesa" -> "MSA", "Silla de oficina" -> "SDO"
+     * Genera abreviatura de 4 caracteres desde el nombre del activo
+     * Ejemplos: "Escritorio" -> "ESCT", "Computadora" -> "COMP", "Silla Ejecutiva" -> "SILL", "Estante Dexión" -> "ESTA"
      */
-    private function generarPrefijoDesdeNombre(string $nombre): string
+    public function generarAbreviaturaNombre(string $nombre): string
+    {
+        return $this->generarPrefijoDesdeNombre($nombre, 4);
+    }
+
+    /**
+     * Genera abreviatura de 3 caracteres desde el tipo de activo
+     * Ejemplos: "Mobiliario" -> "MOB", "Tecnología" -> "TEC", "Audio/Video" -> "AUD", "Equipo" -> "EQU"
+     */
+    public function generarAbreviaturaTipo(string $tipoNombre): string
+    {
+        return $this->generarPrefijoDesdeNombre($tipoNombre, 3);
+    }
+
+    /**
+     * Obtiene el siguiente correlativo para un código de cuenta dado y genera el código completo
+     * Formato: [CODIGO_CUENTA]-[CORRELATIVO(3)]-[AÑO(2)]
+     * 
+     * @return array{correlativo: string, year: string, codigo_completo: string}
+     */
+    public function generarCodigoCompleto(string $codigoCuenta): array
+    {
+        $year = date('y');
+        // Buscar códigos que coincidan con el formato *[CUENTA]-[XXX]-[YY]*
+        // Los asteriscos en la BD se escapan con LIKE: [ = escape para literal
+        $patron = '*%' . $codigoCuenta . '-%-' . $year . '*';
+        
+        $stmt = $this->db->prepare(
+            'SELECT codigo FROM activo WHERE codigo LIKE :patron ORDER BY codigo DESC LIMIT 1'
+        );
+        $stmt->execute(['patron' => $patron]);
+        $ultimo = $stmt->fetchColumn();
+        
+        $ultimoNumero = 0;
+        if ($ultimo) {
+            // Extraer el correlativo: formato *[CUENTA]-[XXX]-[YY]*
+            // Quitar asteriscos externos
+            $codigoLimpio = trim($ultimo, '*');
+            $partes = explode('-', $codigoLimpio);
+            if (count($partes) >= 2) {
+                // El penúltimo elemento es el correlativo
+                $ultimoNumero = (int)($partes[count($partes) - 2] ?? 0);
+            }
+        }
+        
+        $siguienteNumero = $ultimoNumero + 1;
+        $correlativo = str_pad((string) $siguienteNumero, 3, '0', STR_PAD_LEFT);
+        $codigoCompleto = $codigoCuenta . '-' . $correlativo . '-' . $year;
+        
+        return [
+            'correlativo' => $correlativo,
+            'year' => $year,
+            'codigo_completo' => $codigoCompleto,
+        ];
+    }
+
+    /**
+     * Genera un prefijo de N letras combinando todas las palabras del nombre.
+     * Distribuye las letras entre las palabras según la cantidad de palabras:
+     * - 1 palabra: 4 letras de esa palabra   (Ej: "Escritorio" -> "ESCR")
+     * - 2 palabras: 2 de 1ra + 2 de 2da     (Ej: "Silla Ejecutiva" -> "SIEJ")
+     * - 3 palabras: 1 + 1 + 2               (Ej: "Laptop HP Core" -> "LHC O") (1+1+2) -> "LHCO"
+     * - 4+ palabras: 1 de cada una           (Ej: "Mesa de Centro" -> "MDCE" si 4 palabras)
+     * Para length=3 (tipo):
+     * - 1 palabra: 3 letras
+     * - 2 palabras: 2 + 1
+     * - 3+ palabras: 1 + 1 + 1
+     * @param int $length Largo del prefijo (3 o 4 normalmente)
+     */
+    private function generarPrefijoDesdeNombre(string $nombre, int $length = 4): string
     {
         // Limpiar y normalizar el nombre
         $nombre = trim($nombre);
@@ -292,19 +364,51 @@ final class SigmuRepository
         // Remover acentos y caracteres especiales
         $nombre = $this->removerAcentos($nombre);
         
-        // Si el nombre tiene una sola palabra, tomar las primeras 3 letras
         $palabras = preg_split('/\s+/', $nombre, -1, PREG_SPLIT_NO_EMPTY);
+        $cantidad = count($palabras);
         
-        if (count($palabras) === 1) {
-            // Una sola palabra: tomar primeras 3 letras
-            return substr($palabras[0], 0, 3);
-        } elseif (count($palabras) === 2) {
-            // Dos palabras: primera letra de cada palabra + segunda letra de la primera
-            return substr($palabras[0], 0, 2) . substr($palabras[1], 0, 1);
-        } else {
-            // Tres o más palabras: primera letra de las primeras 3 palabras
-            return substr($palabras[0], 0, 1) . substr($palabras[1], 0, 1) . substr($palabras[2], 0, 1);
+        if ($cantidad === 0) return '';
+        
+        if ($cantidad === 1) {
+            // 1 palabra: primeras N letras
+            return substr($palabras[0], 0, $length);
         }
+        
+        if ($cantidad === 2) {
+            // 2 palabras: distribuir equitativamente
+            // length=4 → 2+2, length=3 → 2+1
+            $mitad = (int)ceil($length / 2);
+            $resultado = substr($palabras[0], 0, $mitad);
+            $restante = $length - strlen($resultado);
+            $resultado .= substr($palabras[1], 0, $restante);
+            return $resultado;
+        }
+        
+        // 3 o más palabras: 1 letra de cada una, el resto va a la última palabra
+        $resultado = '';
+        for ($i = 0; $i < $cantidad && $i < $length; $i++) {
+            $resultado .= substr($palabras[$i], 0, 1);
+        }
+        
+        // Si faltan letras (porque length > cantPalabras), completar con la última palabra
+        $faltantes = $length - strlen($resultado);
+        if ($faltantes > 0 && $cantidad > 0) {
+            $yaUsadas = 1; // ya usamos 1 letra de cada palabra
+            $resultado .= substr($palabras[$cantidad - 1], $yaUsadas, $faltantes);
+        }
+        
+        return $resultado;
+    }
+
+    /**
+     * Obtiene el nombre de un tipo de activo por su ID
+     */
+    public function obtenerNombreTipoActivo(int $tipoId): string
+    {
+        $stmt = $this->db->prepare('SELECT nombre FROM tipo_activo WHERE id = :id');
+        $stmt->execute(['id' => $tipoId]);
+        $nombre = $stmt->fetchColumn();
+        return $nombre !== false ? (string) $nombre : '';
     }
 
     /**

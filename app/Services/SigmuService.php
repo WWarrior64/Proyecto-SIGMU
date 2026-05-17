@@ -181,6 +181,41 @@ final class SigmuService
     }
 
     /**
+     * Genera abreviatura de 4 caracteres desde el nombre del activo
+     */
+    public function generarAbreviaturaNombre(string $nombre): string
+    {
+        return $this->repository->generarAbreviaturaNombre($nombre);
+    }
+
+    /**
+     * Genera abreviatura de 3 caracteres desde el tipo de activo
+     */
+    public function generarAbreviaturaTipo(string $tipoNombre): string
+    {
+        return $this->repository->generarAbreviaturaTipo($tipoNombre);
+    }
+
+    /**
+     * Obtiene el nombre de un tipo de activo por su ID
+     */
+    public function obtenerNombreTipoActivo(int $tipoId): string
+    {
+        return $this->repository->obtenerNombreTipoActivo($tipoId);
+    }
+
+    /**
+     * Genera el código completo con el nuevo formato
+     * Formato: [CODIGO_CUENTA]-[CORRELATIVO(3)]-[AÑO(2)]
+     * 
+     * @return array{correlativo: string, year: string, codigo_completo: string}
+     */
+    public function generarCodigoCompleto(string $codigoCuenta): array
+    {
+        return $this->repository->generarCodigoCompleto($codigoCuenta);
+    }
+
+    /**
      * Registra un nuevo activo en el sistema
      * @param array<string> $fotoPaths
      * @return array{success: bool, message: string, activo_id?: int}
@@ -253,9 +288,16 @@ final class SigmuService
             $errores = 0;
             $ultimoError = '';
 
+            // Obtener nombre del tipo para generar el prefijo
+            $tipoNombre = $this->obtenerNombreTipoActivo($tipoActivoId);
+            $abrevNombre = $this->generarAbreviaturaNombre($nombre);
+            $abrevTipo = $this->generarAbreviaturaTipo($tipoNombre ?: 'General');
+            $codigoCuenta = $abrevNombre . '-' . $abrevTipo;
+
             for ($i = 0; $i < $cantidad; $i++) {
-                // Generar codigo unico automatico para CADA activo
-                $codigo = $this->generarCodigoActivo($nombre);
+                // Generar codigo completo con el nuevo formato para CADA activo
+                $resultadoCodigo = $this->generarCodigoCompleto($codigoCuenta);
+                $codigo = '*' . $resultadoCodigo['codigo_completo'] . '*';
 
                 $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $valorAdquisicion, $estado, $salaId, $fotoPaths);
 

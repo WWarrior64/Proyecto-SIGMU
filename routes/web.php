@@ -243,6 +243,11 @@ $router->get('/sigmu/activo/generar-codigo', static function (): void {
     $controller->generarCodigo();
 });
 
+$router->get('/sigmu/activo/generar-codigo-completo', static function (): void {
+    $controller = new ActivoController();
+    $controller->generarCodigoCompleto();
+});
+
 $router->get('/sigmu/activo/tipos', static function (): void {
     $controller = new TipoActivoController();
     $controller->index();

@@ -94,17 +94,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    alert('Falla reportada correctamente. El activo ha cambiado a estado "En Reparación".');
+                    showToast('Falla reportada correctamente. El activo ha cambiado a estado "En Reparación".');
                     window.location.href = '/sigmu/mantenimiento';
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                     btnSubmit.disabled = false;
                     btnSubmit.textContent = 'REGISTRAR REPORTE';
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('Error al procesar el reporte');
+                showToast('Error al procesar el reporte', 'error');
                 btnSubmit.disabled = false;
                 btnSubmit.textContent = 'REGISTRAR REPORTE';
             });
