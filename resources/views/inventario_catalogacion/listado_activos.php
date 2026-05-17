@@ -197,6 +197,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                 <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;" class="delete-form">
                                     <?= \App\Support\Csrf::field() ?>
                                     <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
+                                    <input type="hidden" name="sala_id" value="<?= (int) ($salaId ?? 0) ?>">
                                     <button type="submit" class="action-btn action-delete" title="Eliminar">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="3 6 5 6 21 6"></polyline>

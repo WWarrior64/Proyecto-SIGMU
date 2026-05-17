@@ -250,6 +250,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <form method="POST" action="/sigmu/activo/dar-baja" style="display: inline;">
                     <?= \App\Support\Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int)$activo['id'] ?>">
+                    <input type="hidden" name="sala_id" value="<?= (int)($activo['sala_id'] ?? 0) ?>">
                     <button type="submit" class="btn btn-danger">Confirmar Dar de Baja</button>
                 </form>
             </div>
