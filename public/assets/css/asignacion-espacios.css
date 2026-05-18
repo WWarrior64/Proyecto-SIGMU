@@ -291,4 +291,42 @@
     .search-box {
         max-width: 100%;
     }
+    .asignacion-table {
+        font-size: 0.85rem;
+    }
+    .asignacion-table th,
+    .asignacion-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .asignacion-container {
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    .asignacion-header h1 {
+        font-size: 1.25rem;
+    }
+    .asignacion-table {
+        font-size: 0.8rem;
+    }
+    .asignacion-table th,
+    .asignacion-table td {
+        padding: 0.5rem 0.4rem;
+    }
+    .user-name {
+        font-size: 0.85rem;
+    }
+    .building-badge {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.7rem;
+    }
+    .modal-content {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+    .modal-body {
+        padding: 1rem;
+    }
 }

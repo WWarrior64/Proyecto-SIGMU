@@ -62,7 +62,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                        name="busqueda" id="searchInputHistorial" value="<?= htmlspecialchars($busqueda ?? '', ENT_QUOTES, 'UTF-8') ?>">
             </div>
 
-            <select name="accion" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 160px;">
+            <select name="accion" class="filter-select">
                 <option value="">Todas las acciones</option>
                 <option value="registro" <?= ($filtroAccion ?? '') === 'registro' ? 'selected' : '' ?>>Registro</option>
                 <option value="modificacion" <?= ($filtroAccion ?? '') === 'modificacion' ? 'selected' : '' ?>>Modificación</option>
@@ -73,7 +73,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <option value="eliminacion" <?= ($filtroAccion ?? '') === 'eliminacion' ? 'selected' : '' ?>>Eliminación</option>
             </select>
 
-            <select name="estado" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 160px;">
+            <select name="estado" class="filter-select">
                 <option value="">Todos los estados</option>
                 <option value="disponible" <?= ($filtroEstado ?? '') === 'disponible' ? 'selected' : '' ?>>Disponible</option>
                 <option value="en_uso" <?= ($filtroEstado ?? '') === 'en_uso' ? 'selected' : '' ?>>En Uso</option>
@@ -82,7 +82,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </select>
 
             <?php if ($esAdministrador): ?>
-            <select name="usuario" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 180px;">
+            <select name="usuario" class="filter-select">
                 <option value="">Todos los usuarios</option>
                 <?php foreach ($usuarios as $usuario): ?>
                 <option value="<?= (int) $usuario['id'] ?>" <?= ($filtroUsuario ?? '') == $usuario['id'] ? 'selected' : '' ?>>
@@ -92,7 +92,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </select>
             <?php endif; ?>
 
-            <button type="button" class="filter-btn" id="limpiarFiltrosBtn" style="background: #ffffff; border: 2px solid #212529; color: #212529;">
+            <button type="button" class="filter-btn btn-clean" id="limpiarFiltrosBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -107,7 +107,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-user sortable" data-sort="usuario_nombre" style="width: 140px;">
+                    <div class="table-cell cell-user sortable" data-sort="usuario_nombre">
                         Usuario
                         <span class="sort-icon <?= $ordenarPor === 'usuario_nombre' ? 'active' : '' ?>">
                             <?= $ordenarPor === 'usuario_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
@@ -172,7 +172,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <div class="table-row historial-row">
 
                             <!-- USUARIO -->
-                            <div class="table-cell cell-user" data-label="Usuario" style="width: 140px;">
+                            <div class="table-cell cell-user" data-label="Usuario">
                                 <div class="user-inline">
                                     <div class="user-avatar-small">
                                         <?= strtoupper(substr($registro['usuario_nombre'] ?? 'U', 0, 1)) ?>

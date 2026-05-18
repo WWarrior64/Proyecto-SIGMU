@@ -490,25 +490,36 @@ body {
     .right-column {
         order: 2;
     }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .btn-historial, .btn-reporte {
+        font-size: 13px;
+        padding: 0 12px;
+        height: 40px;
+    }
 }
 
 @media (max-width: 768px) {
     .main-content {
-        padding: 20px 16px;
+        padding: 16px 12px;
     }
     
     .section-header {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         align-items: stretch;
     }
     
     .section-title {
-        font-size: 24px;
+        font-size: 22px;
     }
     
     .details-container {
-        padding: 24px 20px;
+        padding: 20px 16px;
     }
     
     .metadata-cards {
@@ -521,24 +532,161 @@ body {
         flex: 1;
         min-width: calc(50% - 4px);
     }
+    
+    .action-buttons {
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .edit-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-historial, .btn-reporte {
+        height: 40px;
+        font-size: 13px;
+        padding: 0 12px;
+    }
+    
+    .detail-group {
+        padding: 16px 0;
+    }
+    
+    .image-container {
+        aspect-ratio: 16/9;
+        max-height: 300px;
+    }
 }
 
 @media (max-width: 480px) {
     .header {
-        padding: 0 16px;
+        padding: 0 12px;
+        height: 56px;
+    }
+    
+    .logo-img {
+        width: 120px;
+        height: 32px;
+    }
+    
+    .main-content {
+        padding: 12px 8px;
     }
     
     .section-title {
-        font-size: 20px;
+        font-size: 18px;
+    }
+    
+    .section-header {
+        gap: 10px;
+    }
+    
+    .action-buttons {
+        gap: 6px;
+    }
+    
+    .edit-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .btn-historial, .btn-reporte {
+        height: 36px;
+        font-size: 12px;
+        padding: 0 10px;
+    }
+    
+    .btn-reporte svg,
+    .btn-historial svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .edit-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .details-container {
+        padding: 16px 12px;
     }
     
     .metadata-card {
         min-width: 100%;
+        padding: 12px 16px;
+    }
+    
+    .metadata-label {
+        font-size: 11px;
+    }
+    
+    .metadata-value {
+        font-size: 13px;
     }
     
     .detail-value.description {
         padding: 12px;
-        min-height: 100px;
+        min-height: 80px;
+        font-size: 14px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+    }
+    
+    .detail-value {
+        font-size: 14px;
+    }
+    
+    .back-button {
+        margin-bottom: 16px;
+    }
+    
+    .back-btn {
+        padding: 6px;
+    }
+    
+    /* Modal responsive */
+    .modal-container {
+        width: calc(100% - 24px);
+        max-width: 100%;
+        margin: 0 12px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        padding: 14px 16px;
+    }
+    
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-footer {
+        padding: 14px 16px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-danger {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .content-grid {
+        gap: 16px;
+    }
+    
+    .left-column {
+        gap: 16px;
     }
 }
 

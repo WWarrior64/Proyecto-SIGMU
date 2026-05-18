@@ -66,3 +66,26 @@
     font-weight: 600;
     cursor: pointer;
 }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .delete-modal-espacios {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    
+    .delete-modal-body-espacios {
+        padding: 20px;
+    }
+    
+    .delete-modal-actions-espacios {
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 20px 20px;
+    }
+    
+    .btn-delete-espacios,
+    .btn-cancel-espacios {
+        width: 100%;
+    }
+}

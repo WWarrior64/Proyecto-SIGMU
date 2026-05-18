@@ -32,3 +32,36 @@
     margin-top: 10px;
     font-size: 0.9em;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .import-info {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .import-info ul {
+        margin-left: 16px;
+    }
+    
+    .results-container {
+        padding: 16px;
+        margin-top: 20px;
+    }
+    
+    .error-list {
+        max-height: 150px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .import-info {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .results-container {
+        padding: 12px;
+    }
+}

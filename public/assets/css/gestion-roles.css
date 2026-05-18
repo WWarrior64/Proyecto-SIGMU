@@ -212,3 +212,56 @@
     box-shadow: 0 0 0 3px rgba(154, 32, 24, 0.1) !important;
     outline: none;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .content-card {
+        padding: 1rem;
+    }
+    
+    .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 0.75rem;
+    }
+    
+    .content-card {
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}

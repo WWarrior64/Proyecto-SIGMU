@@ -18,6 +18,54 @@
     }
 }
 
+@media (max-width: 480px) {
+    .espacios-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .card-media {
+        height: 110px;
+    }
+    
+    .card-body {
+        padding: 10px 12px;
+    }
+    
+    .card-title {
+        font-size: 0.95rem;
+    }
+    
+    .card-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sigmu-btn {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+    
+    .modal-content {
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 0 8px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-footer {
+        padding: 12px 16px;
+        flex-direction: column;
+    }
+    
+    .modal-footer .sigmu-btn {
+        width: 100%;
+    }
+}
+
 .edificio-card, .sala-card {
     border: 3px solid var(--sigmu-red);
     border-radius: 12px;

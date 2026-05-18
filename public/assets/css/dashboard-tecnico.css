@@ -17,3 +17,20 @@
 .status-en_proceso { background: #dcfce7; color: #166534; }
 .btn-finish { background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 @media (max-width: 900px) { .grid-tech { grid-template-columns: 1fr; } }
+
+@media (max-width: 768px) {
+    .tech-dashboard { padding: 16px; }
+    .welcome-section { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .report-btn { padding: 10px 16px; font-size: 14px; }
+    .maint-header { flex-direction: column; gap: 8px; }
+    .maint-item { padding: 10px; }
+}
+
+@media (max-width: 480px) {
+    .tech-dashboard { padding: 12px; }
+    .welcome-section h2 { font-size: 18px; }
+    .report-btn { width: 100%; justify-content: center; }
+    .maint-tech-actions { align-items: stretch; }
+    .btn-finish { width: 100%; text-align: center; }
+    .maint-header { font-size: 13px; padding: 12px; }
+}

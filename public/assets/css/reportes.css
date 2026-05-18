@@ -76,6 +76,38 @@
     }
 }
 
+@media (max-width: 768px) {
+    .report-config-card {
+        padding: 16px;
+    }
+    
+    .sigmu-back-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .actions-bar {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-reporte {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 12px;
+    }
+    
+    .estados-wrap {
+        padding: 10px;
+    }
+}
+
 /* ── Grupos de detalle ── */
 .detail-group {
     margin-bottom: 24px;
@@ -292,3 +324,251 @@ input[type="date"] {
 .rounded            { border-radius: 8px; }
 .border             { border: 1px solid var(--sigmu-border); }
 .text-muted         { color: #6c757d; font-size: 12px; }
+
+/* ── Responsive para elementos internos ── */
+@media (max-width: 992px) {
+    .detail-label {
+        font-size: 1rem;
+    }
+    
+    .right-column .detail-label {
+        margin-bottom: 16px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 160px;
+    }
+    
+    .estados-wrap {
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .sort-box {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .detail-group {
+        margin-bottom: 18px;
+    }
+    
+    .detail-label {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+    }
+    
+    .filter-group {
+        margin-bottom: 14px;
+    }
+    
+    .form-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .form-select,
+    .form-control {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 140px;
+        padding: 6px;
+    }
+    
+    .checkbox-item {
+        padding: 5px 8px;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+    
+    .estados-wrap {
+        gap: 6px;
+        padding: 10px;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 12px;
+        gap: 10px;
+    }
+    
+    .sections-list .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .sections-list strong {
+        font-size: 0.95rem;
+    }
+    
+    .sections-list small {
+        font-size: 12px;
+    }
+    
+    .sort-box {
+        padding: 12px;
+    }
+    
+    .sort-box .d-flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .sort-box select.form-select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-group {
+        margin-bottom: 14px;
+    }
+    
+    .detail-label {
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    
+    .right-column .detail-label {
+        margin-bottom: 12px;
+    }
+    
+    .filter-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-label {
+        font-size: 12px;
+    }
+    
+    .form-select,
+    .form-control {
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 120px;
+        padding: 4px;
+    }
+    
+    .checkbox-item {
+        padding: 4px 6px;
+        font-size: 13px;
+    }
+    
+    .btn-reporte {
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .btn-reporte svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+    
+    .estados-wrap {
+        padding: 8px;
+        gap: 4px;
+    }
+    
+    .estados-wrap .form-check {
+        flex: 1;
+        min-width: calc(50% - 4px);
+    }
+    
+    .sections-list {
+        gap: 8px;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .sections-list strong {
+        font-size: 0.85rem;
+    }
+    
+    .sections-list small {
+        font-size: 11px;
+    }
+    
+    .sections-list .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+    
+    .sort-box {
+        padding: 10px;
+    }
+    
+    .sort-box .d-flex {
+        gap: 6px;
+    }
+    
+    .actions-bar {
+        gap: 8px;
+        margin-top: 2px;
+    }
+    
+    /* Fila de botones al final */
+    .mt-4.d-flex.gap-3 {
+        flex-direction: column;
+        gap: 10px !important;
+    }
+    
+    .mt-4.d-flex.gap-3 .btn-reporte {
+        width: 100%;
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+        white-space: normal;
+    }
+    
+    /* Fila de rango de fechas */
+    .filter-group .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .filter-group .d-flex.gap-2 .form-control {
+        width: 100%;
+    }
+    
+    .filter-group .d-flex.gap-2 .align-self-center {
+        align-self: center !important;
+        font-size: 13px;
+    }
+    
+    /* Ordenamiento - fila de criterio + dirección */
+    .detail-group .bg-light.p-3.rounded.border .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .detail-group .bg-light.p-3.rounded.border .d-flex.gap-3 > div {
+        width: 100%;
+    }
+    
+    /* Estados - evitar que los checkbox se salgan */
+    .d-flex.flex-wrap.gap-3.p-3.bg-light.rounded.border {
+        gap: 6px !important;
+        padding: 10px !important;
+    }
+    
+    .d-flex.flex-wrap.gap-3.p-3.bg-light.rounded.border .checkbox-item {
+        flex: 1;
+        min-width: calc(50% - 6px);
+        padding: 4px;
+        font-size: 13px;
+    }
+}

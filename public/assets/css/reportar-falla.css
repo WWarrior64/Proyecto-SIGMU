@@ -9,3 +9,38 @@
 .form-section { margin-bottom: 25px; }
 .form-section-title { font-size: 14px; font-weight: 700; color: #8b0000; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; }
 .loader { display: none; margin-left: 10px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .report-container {
+        padding: 20px 16px;
+    }
+    
+    .report-body {
+        padding: 20px;
+    }
+    
+    .report-header {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-container {
+        padding: 12px 10px;
+    }
+    
+    .report-body {
+        padding: 16px;
+    }
+    
+    .report-header {
+        padding: 14px;
+        font-size: 15px;
+    }
+    
+    .form-section-title {
+        font-size: 13px;
+    }
+}

@@ -80,3 +80,50 @@
     text-align: center;
     color: #718096;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .list-container {
+        padding: 12px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .maint-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .maint-table th,
+    .maint-table td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .list-container {
+        padding: 8px;
+    }
+    
+    .maint-table th,
+    .maint-table td {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    
+    .status-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .btn-complete {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}

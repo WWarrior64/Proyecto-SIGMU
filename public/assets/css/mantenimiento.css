@@ -463,3 +463,122 @@ body {
     font-size: 12px;
     cursor: pointer;
 }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .layout-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-title {
+        font-size: 20px;
+    }
+    
+    .main-container {
+        padding: 10px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pending-item {
+        grid-template-columns: 60px 1fr;
+        gap: 12px;
+    }
+    
+    .action-container {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+    
+    .asset-img-container {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .calendar-day {
+        min-height: 60px;
+        padding: 4px;
+    }
+    
+    .header-title {
+        font-size: 18px;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .back-btn-container {
+        padding: 8px 12px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 8px 10px;
+    }
+    
+    .pending-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .asset-img-container {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-day {
+        min-height: 45px;
+        padding: 3px;
+    }
+    
+    .day-number {
+        font-size: 10px;
+    }
+    
+    .day-header {
+        font-size: 9px;
+    }
+    
+    .header-bar {
+        padding: 0 12px;
+        height: 56px;
+    }
+    
+    .logo {
+        height: 32px;
+    }
+    
+    .header-title {
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+    
+    .header-right {
+        gap: 6px;
+    }
+    
+    .card-header-red {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .pending-list {
+        padding: 8px;
+        max-height: 400px;
+    }
+    
+    .program-btn, .view-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
