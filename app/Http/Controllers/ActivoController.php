@@ -408,9 +408,6 @@ final class ActivoController
         }
     }
 
-    /**
-     * Historial de un activo
-     */
     public function historial(int $id): string
     {
         if (!$this->requireAuth()) return '';
@@ -418,16 +415,30 @@ final class ActivoController
         $activo = $this->modelo->obtenerPorId($id);
         if (!$activo) return 'Activo no encontrado';
 
-        $historial = $this->modelo->obtenerHistorial(
-            $id, 
-            trim((string)($_GET['busqueda'] ?? '')),
-            trim((string)($_GET['accion'] ?? '')),
-            trim((string)($_GET['estado'] ?? ''))
-        );
+        $pagina = (int) ($_GET['pagina'] ?? 1);
+        $porPagina = 50;
+        $busqueda = trim((string)($_GET['busqueda'] ?? ''));
+        $accion = trim((string)($_GET['accion'] ?? ''));
+        $estado = trim((string)($_GET['estado'] ?? ''));
+        
+        $ordenarPor = trim((string) ($_GET['ordenar_por'] ?? 'fecha'));
+        $ordenDireccion = strtoupper((string) ($_GET['orden_direccion'] ?? 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+
+        $historial = $this->modelo->obtenerHistorial($id, $busqueda, $accion, $estado, $pagina, $porPagina, $ordenarPor, $ordenDireccion);
+        $total = $this->modelo->contarHistorial($id, $busqueda, $accion, $estado);
+        $totalPaginas = (int) ceil($total / $porPagina);
 
         return view('inventario_catalogacion.historial_activo', [
             'activo' => $activo,
-            'historial' => $historial
+            'historial' => $historial,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'total' => $total,
+            'busqueda' => $busqueda,
+            'filtroAccion' => $accion,
+            'filtroEstado' => $estado,
+            'ordenarPor' => $ordenarPor,
+            'ordenDireccion' => $ordenDireccion
         ]);
     }
 

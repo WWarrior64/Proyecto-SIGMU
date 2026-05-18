@@ -518,11 +518,67 @@ class Activo
     }
 
     /**
-     * Obtener historial de cambios de un activo con todos los campos + BUSQUEDA Y FILTROS
+     * Contar registros de historial de un activo para paginación
      */
-    public function obtenerHistorial(int $activoId, string $busqueda = '', string $filtroAccion = '', string $filtroEstado = ''): array
+    public function contarHistorial(int $activoId, string $busqueda = '', string $filtroAccion = '', string $filtroEstado = ''): int
     {
         try {
+            $sql = "SELECT COUNT(*) FROM historial_activo h
+                    LEFT JOIN usuario u ON h.usuario_id = u.id
+                    LEFT JOIN sala sa ON h.sala_anterior_id = sa.id
+                    LEFT JOIN sala sn ON h.sala_nueva_id = sn.id
+                    WHERE h.activo_id = :activo_id";
+
+            $params = [':activo_id' => $activoId];
+
+            if (!empty($busqueda)) {
+                $sql .= " AND (h.detalle LIKE :busqueda OR h.accion LIKE :busqueda OR h.estado_anterior LIKE :busqueda OR h.estado_nuevo LIKE :busqueda OR u.nombre_completo LIKE :busqueda OR u.username LIKE :busqueda OR sa.nombre LIKE :busqueda OR sn.nombre LIKE :busqueda)";
+                $params[':busqueda'] = '%' . $busqueda . '%';
+            }
+
+            if (!empty($filtroAccion)) {
+                $sql .= " AND h.accion = :accion";
+                $params[':accion'] = $filtroAccion;
+            }
+
+            if (!empty($filtroEstado)) {
+                $sql .= " AND (h.estado_anterior = :estado OR h.estado_nuevo = :estado)";
+                $params[':estado'] = $filtroEstado;
+            }
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return (int) $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Obtener historial de cambios de un activo con todos los campos + BUSQUEDA, FILTROS Y PAGINACIÓN + ORDENAMIENTO
+     */
+    public function obtenerHistorial(int $activoId, string $busqueda = '', string $filtroAccion = '', string $filtroEstado = '', int $pagina = 1, int $porPagina = 50, string $ordenarPor = 'fecha', string $ordenDireccion = 'DESC'): array
+    {
+        try {
+            $offset = ($pagina - 1) * $porPagina;
+            
+            // Validar campos de ordenamiento permitidos
+            $camposPermitidos = ['id', 'fecha', 'accion', 'usuario_nombre', 'sala_anterior_nombre', 'sala_nueva_nombre', 'estado_nuevo'];
+            $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'fecha';
+            $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
+
+            // Mapeo de campos a columnas SQL reales
+            $camposMap = [
+                'id' => 'h.id',
+                'fecha' => 'h.fecha',
+                'accion' => 'h.accion',
+                'usuario_nombre' => 'u.nombre_completo',
+                'sala_anterior_nombre' => 'sa.nombre',
+                'sala_nueva_nombre' => 'sn.nombre',
+                'estado_nuevo' => 'h.estado_nuevo'
+            ];
+            $campoOrden = $camposMap[$ordenarPor] ?? 'h.fecha';
+
             $sql = "
                 SELECT 
                     h.id, 
@@ -573,10 +629,17 @@ class Activo
                 $params[':estado'] = $filtroEstado;
             }
 
-            $sql .= " ORDER BY h.fecha DESC, h.id DESC";
+            $sql .= " ORDER BY $campoOrden $ordenDireccion, h.id DESC LIMIT :limit OFFSET :offset";
 
             $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
+            $stmt->bindValue(':activo_id', $activoId, PDO::PARAM_INT);
+            if (isset($params[':busqueda'])) $stmt->bindValue(':busqueda', $params[':busqueda'], PDO::PARAM_STR);
+            if (isset($params[':accion'])) $stmt->bindValue(':accion', $params[':accion'], PDO::PARAM_STR);
+            if (isset($params[':estado'])) $stmt->bindValue(':estado', $params[':estado'], PDO::PARAM_STR);
+            $stmt->bindValue(':limit', (int) $porPagina, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
             $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // ✅ Compatibilidad con registros antiguos: reemplazar IDs por nombres

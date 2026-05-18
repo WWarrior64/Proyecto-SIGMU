@@ -85,14 +85,54 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-user" style="width: 140px;">Usuario</div>
-                    <div class="table-cell cell-id">ID</div>
-                    <div class="table-cell">Activo</div>
-                    <div class="table-cell cell-name">Acción / Detalle</div>
-                    <div class="table-cell cell-status">Estado</div>
-                    <div class="table-cell">Sala Anterior</div>
-                    <div class="table-cell">Sala Actual</div>
-                    <div class="table-cell cell-date">Fecha</div>
+                    <div class="table-cell cell-user sortable" data-sort="usuario_nombre" style="width: 140px;">
+                        Usuario
+                        <span class="sort-icon <?= $ordenarPor === 'usuario_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'usuario_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-id sortable" data-sort="id">
+                        ID
+                        <span class="sort-icon <?= $ordenarPor === 'id' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'id' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="activo_codigo">
+                        Activo
+                        <span class="sort-icon <?= $ordenarPor === 'activo_codigo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'activo_codigo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-name sortable" data-sort="accion">
+                        Acción / Detalle
+                        <span class="sort-icon <?= $ordenarPor === 'accion' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'accion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-status sortable" data-sort="estado_nuevo">
+                        Estado
+                        <span class="sort-icon <?= $ordenarPor === 'estado_nuevo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'estado_nuevo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_anterior_nombre">
+                        Sala Anterior
+                        <span class="sort-icon <?= $ordenarPor === 'sala_anterior_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_anterior_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_nueva_nombre">
+                        Sala Actual
+                        <span class="sort-icon <?= $ordenarPor === 'sala_nueva_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_nueva_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-date sortable" data-sort="fecha">
+                        Fecha
+                        <span class="sort-icon <?= $ordenarPor === 'fecha' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'fecha' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -192,6 +232,52 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <?php
+            // Generar la cadena de consulta base manteniendo los filtros y ordenamiento
+            $currentParams = $_GET;
+            unset($currentParams['pagina']);
+            $queryString = http_build_query($currentParams);
+            $baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
+            ?>
+
+            <!-- Pagination -->
+            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando <?= count($historial) ?> de <?= $total ?> registros
+                </div>
+                <div class="pagination">
+                    <?php if ($pagina > 1): ?>
+                        <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Anterior
+                        </a>
+                    <?php endif; ?>
+
+                    <div class="pagination-pages">
+                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                            <?php if ($i == $pagina): ?>
+                                <span class="pagination-btn active"><?= $i ?></span>
+                            <?php else: ?>
+                                <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </div>
+
+                    <?php if ($pagina < $totalPaginas): ?>
+                        <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
+                            Siguiente
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';
