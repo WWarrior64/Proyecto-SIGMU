@@ -39,18 +39,6 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <?php endif; ?>
     </div>
 
-    <?php if (!empty($_GET['success'])): ?>
-        <div class="sigmu-alert sigmu-alert--success" style="background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #c8e6c9;">
-            <?= htmlspecialchars((string) $_GET['success'], ENT_QUOTES, 'UTF-8') ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (!empty($_GET['error']) || $error): ?>
-        <div class="sigmu-alert sigmu-alert--error" style="margin-bottom: 1.5rem;">
-            <?= htmlspecialchars((string) ($_GET['error'] ?? $error), ENT_QUOTES, 'UTF-8') ?>
-        </div>
-    <?php endif; ?>
-
     <div class="espacios-grid">
         <?php foreach ($edificios as $edificio): ?>
             <article class="edificio-card" onclick="if(!event.target.closest('.card-actions')) window.location.href='/sigmu/edificio?edificio_id=<?= (int) $edificio['id'] ?>'">

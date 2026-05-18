@@ -32,8 +32,10 @@ final class ReporteController
         $activo = $activoModel->obtenerPorId($activoId);
         
         if (!$activo) {
-            header('Location: /sigmu/edificios?error=activo_no_encontrado');
-            return '';
+            $salaId = Session::get('ultima_sala_id');
+            $url = $salaId ? "/sigmu/sala?sala_id={$salaId}" : "/sigmu/edificios";
+            header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo para el reporte no existe o ha sido eliminado.'));
+            exit;
         }
 
         // VALIDACIÓN DE PERMISOS

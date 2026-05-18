@@ -212,7 +212,14 @@ final class EdificioController
             $this->espacioService->eliminarEdificio($id, (int)$user['id'], $password);
             header('Location: /sigmu/edificios?success=Edificio eliminado correctamente');
         } catch (Throwable $e) {
-            header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
+            $mensaje = $e->getMessage();
+            
+            // Detectar error de integridad (edificio con salas o activos)
+            if (str_contains($mensaje, '1451') || str_contains($mensaje, 'Integrity constraint violation')) {
+                $mensaje = 'No se puede eliminar el edificio porque aún contiene salas con activos asignados. Por favor, vacíe el edificio antes de intentar borrarlo.';
+            }
+
+            header('Location: /sigmu/edificios?error=' . urlencode($mensaje));
         }
         return '';
     }
@@ -231,7 +238,14 @@ final class EdificioController
             $this->espacioService->eliminarSala($id, (int)$user['id'], $password);
             header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&success=Sala eliminada correctamente');
         } catch (Throwable $e) {
-            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($e->getMessage()));
+            $mensaje = $e->getMessage();
+            
+            // Detectar error de integridad (sala con activos)
+            if (str_contains($mensaje, '1451') || str_contains($mensaje, 'Integrity constraint violation')) {
+                $mensaje = 'No se puede eliminar la sala porque aún tiene activos asignados. Por favor, mueva o elimine los activos antes de intentar borrarla.';
+            }
+
+            header('Location: /sigmu/edificio?edificio_id=' . $edificioId . '&error=' . urlencode($mensaje));
         }
         return '';
     }

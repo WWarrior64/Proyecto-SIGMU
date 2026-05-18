@@ -96,8 +96,10 @@ final class ActivoController
         $activo = $this->modelo->obtenerPorId($id);
         
         if (!$activo) {
-            header('Location: /sigmu/edificios?error=activo_no_encontrado');
-            return '';
+            $salaId = Session::get('ultima_sala_id');
+            $url = $salaId ? "/sigmu/sala?sala_id={$salaId}" : "/sigmu/edificios";
+            header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo solicitado no existe o ha sido eliminado del sistema.'));
+            exit;
         }
 
         // ✅ VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
@@ -244,10 +246,12 @@ final class ActivoController
         $habitaciones = $this->modelo->obtenerSalas();
         $tiposActivo = $this->modelo->obtenerTiposActivo();
         $edificios = $this->modelo->obtenerEdificios();
-        
+
         if (!$activo) {
-            header('Location: /sigmu/edificios?error=activo_no_encontrado');
-            return '';
+            $salaId = Session::get('ultima_sala_id');
+            $url = $salaId ? "/sigmu/sala?sala_id={$salaId}" : "/sigmu/edificios";
+            header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo que intenta editar no existe o ha sido eliminado.'));
+            exit;
         }
 
         // Obtener el edificio_id de la sala actual para pre-seleccionarlo
