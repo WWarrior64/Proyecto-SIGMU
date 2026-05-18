@@ -10,7 +10,8 @@ $error = isset($error) ? (string) $error : null;
 
 $sigmuPageTitle = 'EDIFICIOS';
 $sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
-$sigmuExtraCss = ['/assets/css/gestion-espacios.css'];
+$sigmuExtraCss = ['/assets/css/gestion-espacios.css', '/assets/css/delete-modal-espacios.css'];
+$sigmuExtraScripts = ['/assets/js/delete-modal-espacios.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
 
@@ -164,29 +165,25 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <!-- Modal Eliminar Seguro -->
-    <div id="modalEliminar" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3 class="modal-title">ELIMINAR</h3>
-                <button type="button" class="modal-close">&times;</button>
+    <!-- Modal Eliminar Seguro (Componente) -->
+    <div id="deleteOverlayEspacios" class="delete-overlay-espacios">
+        <div class="delete-modal-espacios">
+            <div class="delete-modal-header-espacios">
+                <span id="deleteModalTitle">ELIMINAR</span>
             </div>
-            <form method="POST">
+            <form method="POST" action="" id="formEliminarEspacio">
                 <?= \App\Support\Csrf::field() ?>
-                <div class="modal-body">
-                    <p style="color: #666; font-size: 0.95rem; margin-bottom: 1.25rem;">
-                        Esta acción es permanente. Por seguridad, ingrese su contraseña para confirmar.
-                    </p>
+                <div class="delete-modal-body-espacios">
+                    <p>Esta acción es permanente. Por seguridad, ingrese su contraseña.</p>
                     <input type="hidden" name="id" id="eliminar_id">
                     <input type="hidden" name="edificio_id" id="eliminar_edificio_id">
-                    <div class="form-group">
-                        <label>Contraseña de Usuario</label>
-                        <input type="password" name="password" class="form-control" required placeholder="Su contraseña actual">
+                    <div class="form-group" style="margin-top: 15px;">
+                        <input type="password" name="password" class="form-control" required placeholder="Contraseña actual" autocomplete="new-password">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="sigmu-btn sigmu-btn--secondary btn-cancel">CANCELAR</button>
-                    <button type="submit" class="sigmu-btn sigmu-btn--primary" style="background: #dc3545;">CONFIRMAR ELIMINACIÓN</button>
+                <div class="delete-modal-actions-espacios">
+                    <button type="submit" class="btn-delete-espacios">ELIMINAR</button>
+                    <button type="button" class="btn-cancel-espacios" onclick="closeDeleteModalEspacios()">CANCELAR</button>
                 </div>
             </form>
         </div>
