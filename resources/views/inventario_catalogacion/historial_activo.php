@@ -1,8 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/** @var array|null $activo */
+/** @var array $historial */
+/** @var int $pagina */
+/** @var int $totalPaginas */
+/** @var int $total */
+/** @var string $busqueda */
+/** @var string $filtroAccion */
+/** @var string $filtroEstado */
+/** @var string $ordenarPor */
+/** @var string $ordenDireccion */
+
 $activo = $activo ?? null;
 $historial = $historial ?? [];
+$pagina = $pagina ?? 1;
+$totalPaginas = $totalPaginas ?? 1;
+$total = $total ?? 0;
+$busqueda = $busqueda ?? '';
+$filtroAccion = $filtroAccion ?? '';
+$filtroEstado = $filtroEstado ?? '';
+$ordenarPor = $ordenarPor ?? 'fecha';
+$ordenDireccion = $ordenDireccion ?? 'DESC';
 
 $sigmuPageTitle = 'HISTORIAL DEL ACTIVO';
 $sigmuLayoutAdmin = false;
