@@ -28,6 +28,8 @@ final class UserController
         }
 
         $userId = Session::get('auth_user')['id'];
+        $this->service->iniciarSesionBd($userId);
+        
         $usuario = $this->service->obtenerUsuarioPorId($userId);
         
         // Obtener foto de perfil
@@ -58,6 +60,8 @@ final class UserController
         }
 
         $userId = Session::get('auth_user')['id'];
+        $this->service->iniciarSesionBd($userId);
+        
         $nombreCompleto = trim((string)($_POST['nombre_completo'] ?? ''));
         $email = trim((string)($_POST['email'] ?? ''));
 
