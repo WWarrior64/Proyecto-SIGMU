@@ -185,6 +185,45 @@ final class MantenimientoController
         }
     }
 
+    /**
+     * Muestra el detalle de un activo para el personal de mantenimiento
+     */
+    public function verActivo(int $id): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $sessionUser = Session::get('auth_user');
+        
+        // El personal de mantenimiento puede ver si tiene un mantenimiento asignado
+        // O si es administrador.
+        $esAdmin = \App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN);
+        $esMantenimiento = \App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::MANTENIMIENTO);
+
+        if (!$esAdmin && !$esMantenimiento) {
+            header('Location: /sigmu?error=acceso_denegado');
+            return '';
+        }
+
+        $activo = (new \App\Models\Activo())->obtenerPorId($id);
+        
+        if (!$activo) {
+            header('Location: /sigmu/mantenimiento?error=activo_no_encontrado');
+            return '';
+        }
+
+        // Obtener todas las fotos
+        $fotos = $this->sigmuService->obtenerFotosActivo($id);
+        $activo['fotos'] = $fotos;
+        $activo['imagen'] = !empty($fotos) ? $fotos[0]['ruta_foto'] : null;
+
+        return view('mantenimiento.ver_activo', [
+            'activo' => $activo,
+            'sessionUser' => $sessionUser
+        ]);
+    }
+
     private function requireAuth(): bool
     {
         $user = Session::get('auth_user');

@@ -176,12 +176,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <div class="table-cell cell-status" data-label="Estado">
                                 <?php if (!empty($registro['estado_anterior']) && !empty($registro['estado_nuevo'])): ?>
                                     <div class="status-changes">
-                                        <span class="status-old"><?= htmlspecialchars($registro['estado_anterior'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-old"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_anterior'], ENT_QUOTES, 'UTF-8')) ?></span>
                                         <span class="status-arrow">→</span>
-                                        <span class="status-new"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-new"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                     </div>
                                 <?php elseif (!empty($registro['estado_nuevo'])): ?>
-                                    <span class="status-only"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="status-only"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                 <?php else: ?>
                                     <span class="empty-value">-</span>
                                 <?php endif; ?>

@@ -127,7 +127,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     </p>
                                 </div>
                                 <div class="maint-tech-actions">
-                                    <a href="/sigmu/activo/ver?id=<?= (int) ($m['activo_id'] ?? 0) ?>" class="view-btn" title="Ver activo">
+                                    <a href="/sigmu/mantenimiento/activo/ver?id=<?= (int) ($m['activo_id'] ?? 0) ?>" class="view-btn" title="Ver detalle del activo">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>

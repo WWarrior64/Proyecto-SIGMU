@@ -67,7 +67,19 @@
     </header>
     
     <footer>
-        Listado generado por: <?= htmlspecialchars($_SESSION['auth_user']['nombre_completo'] ?? 'Sistema') ?> | Fecha: <?= $fecha_generacion ?> | Página {PAGENO} de {nb}
+        <script type="text/php">
+            if (isset($pdf)) {
+                $font = $fontMetrics->get_font("Helvetica", "normal");
+                $size = 8;
+                $pageText = "Listado generado por: <?= htmlspecialchars($_SESSION['auth_user']['nombre_completo'] ?? 'Sistema') ?> | Fecha: <?= $fecha_generacion ?> | Página " . $PAGE_NUM;
+                $width = $pdf->get_width();
+                $height = $pdf->get_height();
+                $textWidth = $fontMetrics->get_text_width($pageText, $font, $size);
+                $x = ($width / 2) - ($textWidth / 2);
+                $y = $height - 30;
+                $pdf->text($x, $y, $pageText, $font, $size, array(0.6, 0.6, 0.6));
+            }
+        </script>
     </footer>
 
     <div class="institutional-header">

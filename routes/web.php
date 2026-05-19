@@ -464,3 +464,10 @@ $router->post('/sigmu/mantenimiento/completar', static function (): string {
     $controller = new \App\Http\Controllers\MantenimientoController();
     return $controller->completar();
 });
+
+// NUEVA RUTA: Ver detalle de activo para personal de mantenimiento
+$router->get('/sigmu/mantenimiento/activo/ver', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->verActivo($id);
+});

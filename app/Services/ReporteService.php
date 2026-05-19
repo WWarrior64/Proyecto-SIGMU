@@ -70,6 +70,7 @@ final class ReporteService
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
+        $options->set('isPhpEnabled', true);
         
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);

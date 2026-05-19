@@ -96,7 +96,19 @@
     </header>
 
     <footer>
-        SIGMU — Documento Oficial de Control Patrimonial Institucional | Emisión: <?= $fecha_generacion ?>
+        <script type="text/php">
+            if (isset($pdf)) {
+                $font = $fontMetrics->get_font("Helvetica", "normal");
+                $size = 8;
+                $pageText = "SIGMU — Documento Oficial de Control Patrimonial Institucional | Emisión: <?= $fecha_generacion ?> | Página " . $PAGE_NUM;
+                $width = $pdf->get_width();
+                $height = $pdf->get_height();
+                $textWidth = $fontMetrics->get_text_width($pageText, $font, $size);
+                $x = ($width / 2) - ($textWidth / 2);
+                $y = $height - 30;
+                $pdf->text($x, $y, $pageText, $font, $size, array(0.6, 0.6, 0.6));
+            }
+        </script>
     </footer>
 
     <div class="title-box">
@@ -122,7 +134,7 @@
             </tr>
             <tr>
                 <th>Estado Operativo</th>
-                <td><span class="badge status-<?= str_replace(' ', '_', $activo['estado']) ?>"><?= strtoupper($activo['estado']) ?></span></td>
+                <td><span class="badge status-<?= str_replace(' ', '_', $activo['estado']) ?>"><?= str_replace('_', ' ', strtoupper($activo['estado'])) ?></span></td>
                 <th>Fecha de Registro</th>
                 <td><?= $activo['fecha_creado'] ?></td>
             </tr>
@@ -160,15 +172,15 @@
                 <?php foreach($historial as $h): ?>
                 <tr>
                     <td><?= $h['fecha'] ?></td>
-                    <td><strong><?= strtoupper($h['accion']) ?></strong></td>
-                    <td><?= htmlspecialchars($h['usuario_nombre'] ?? 'N/A') ?></td>
+                    <td><strong><?= str_replace('_', ' ', strtoupper((string)$h['accion'])) ?></strong></td>
+                    <td><?= htmlspecialchars((string)($h['usuario_nombre'] ?? 'N/A')) ?></td>
                     <td>
-                        <?= htmlspecialchars($h['detalle']) ?>
+                        <?= str_replace(['→', '->'], ' -> ', htmlspecialchars((string)$h['detalle'])) ?>
                         <?php if ($h['accion'] === 'traslado' || $h['sala_anterior_id']): ?>
                             <div style="font-size: 9px; color: #666; margin-top: 3px;">
-                                <em>Origen:</em> <?= htmlspecialchars($h['sala_anterior_nombre'] ?? 'N/D') ?> 
-                                <span style="color: #9a2018;">&rarr;</span> 
-                                <em>Destino:</em> <?= htmlspecialchars($h['sala_nueva_nombre'] ?? 'N/D') ?>
+                                <em>Origen:</em> <?= htmlspecialchars((string)($h['sala_anterior_nombre'] ?? 'N/D')) ?> 
+                                <span style="color: #9a2018;"> -> </span> 
+                                <em>Destino:</em> <?= htmlspecialchars((string)($h['sala_nueva_nombre'] ?? 'N/D')) ?>
                             </div>
                         <?php endif; ?>
                     </td>
@@ -186,7 +198,7 @@
         <div class="maint-card">
             <div class="maint-header">
                 <span>Falla: <?= $m['fecha_reporte'] ?></span>
-                <span style="text-transform: uppercase;">Estado: <?= $m['estado'] ?></span>
+                <span style="text-transform: uppercase;">Estado: <?= str_replace('_', ' ', $m['estado']) ?></span>
             </div>
             
             <div class="maint-row">
