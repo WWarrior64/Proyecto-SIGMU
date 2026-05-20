@@ -7,6 +7,7 @@
 !/public/uploads/.gitkeep
 /storage/logs/*.log
 /storage/cache/*
+/storage/backups/*
 !/storage/cache/.gitkeep
 /storage/uploads/*
 !/storage/uploads/.gitkeep

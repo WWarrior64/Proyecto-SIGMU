@@ -50,7 +50,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <h2 class="page-title">USUARIOS</h2>
                 <div class="header-actions">
                     <button class="btn btn-secondary" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_roles'">ADMINISTRAR ROLES</button>
-                    <button class="btn btn-secondary" onclick="window.location.href='/sigmu/edificios'">ADMINISTRAR ESPACIOS</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/sigmu/administracion_usuarios/asignacion_espacios'">ADMINISTRAR ESPACIOS</button>
                     <button class="btn btn-primary" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=crear'">+</button>
                 </div>
             </div>
