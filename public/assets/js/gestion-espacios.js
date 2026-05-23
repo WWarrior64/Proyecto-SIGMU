@@ -17,6 +17,63 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.style.display = 'none';
         }
     });
+
+    // Validación de nombre único para edificios
+    const formEdificio = document.querySelector('#modalEdificio form');
+    if (formEdificio) {
+        formEdificio.addEventListener('submit', function(e) {
+            const nombre = document.getElementById('edificio_nombre').value.trim();
+            const id = document.getElementById('edificio_id').value;
+            // Enviar petición asíncrona para verificar duplicado
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            if (id) formData.append('excluir_id', id);
+
+            // Hacemos la petición síncrona para no romper el flujo normal del formulario
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/sigmu/edificios/verificar-nombre', false);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(new URLSearchParams(formData).toString());
+
+            if (xhr.status === 200) {
+                const res = JSON.parse(xhr.responseText);
+                if (res.existe) {
+                    e.preventDefault();
+                    showToast('Ya existe un edificio con ese nombre', 'error');
+                    return false;
+                }
+            }
+        });
+    }
+
+    // Validación de nombre único para salas (dentro del mismo edificio)
+    const formSala = document.querySelector('#modalSala form');
+    if (formSala) {
+        formSala.addEventListener('submit', function(e) {
+            const nombre = document.getElementById('sala_nombre').value.trim();
+            const edificioId = document.getElementById('sala_edificio_id').value;
+            const id = document.getElementById('sala_id').value;
+
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('edificio_id', edificioId);
+            if (id) formData.append('excluir_id', id);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/sigmu/salas/verificar-nombre', false);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(new URLSearchParams(formData).toString());
+
+            if (xhr.status === 200) {
+                const res = JSON.parse(xhr.responseText);
+                if (res.existe) {
+                    e.preventDefault();
+                    showToast('Ya existe una sala con ese nombre en este edificio', 'error');
+                    return false;
+                }
+            }
+        });
+    }
 });
 
 /**

@@ -106,6 +106,16 @@ $router->post('/sigmu/edificios/guardar-sala', static function (): string {
     return $controller->guardarSala();
 });
 
+$router->post('/sigmu/edificios/verificar-nombre', static function (): string {
+    $controller = new EdificioController();
+    return $controller->verificarNombreEdificio();
+});
+
+$router->post('/sigmu/salas/verificar-nombre', static function (): string {
+    $controller = new EdificioController();
+    return $controller->verificarNombreSala();
+});
+
 $router->post('/sigmu/edificio/eliminar', static function (): string {
     $controller = new EdificioController();
     return $controller->eliminar();

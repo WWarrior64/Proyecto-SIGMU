@@ -153,6 +153,30 @@ final class EspacioRepository
         return true; 
     }
 
+    public function existeEdificioConNombre(string $nombre, ?int $excluirId = null): bool
+    {
+        if ($excluirId) {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM edificio WHERE nombre = :nombre AND id != :excluir_id");
+            $stmt->execute(['nombre' => $nombre, 'excluir_id' => $excluirId]);
+        } else {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM edificio WHERE nombre = :nombre");
+            $stmt->execute(['nombre' => $nombre]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
+    public function existeSalaConNombreEnEdificio(string $nombre, int $edificioId, ?int $excluirId = null): bool
+    {
+        if ($excluirId) {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM sala WHERE nombre = :nombre AND edificio_id = :edificio_id AND id != :excluir_id");
+            $stmt->execute(['nombre' => $nombre, 'edificio_id' => $edificioId, 'excluir_id' => $excluirId]);
+        } else {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM sala WHERE nombre = :nombre AND edificio_id = :edificio_id");
+            $stmt->execute(['nombre' => $nombre, 'edificio_id' => $edificioId]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function agregarFotoEdificio(int $edificioId, string $ruta): bool
     {
         // Eliminar foto anterior

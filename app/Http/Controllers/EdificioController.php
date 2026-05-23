@@ -176,6 +176,33 @@ final class EdificioController
         return '';
     }
 
+    /**
+     * Verifica si ya existe un edificio con el nombre dado (AJAX)
+     */
+    public function verificarNombreEdificio(): string
+    {
+        $this->requireAuth();
+        $nombre = trim($_POST['nombre'] ?? '');
+        $excluirId = isset($_POST['excluir_id']) ? (int)$_POST['excluir_id'] : null;
+        
+        $existe = $this->espacioService->verificarNombreEdificio($nombre, $excluirId);
+        return json_encode(['existe' => $existe]);
+    }
+
+    /**
+     * Verifica si ya existe una sala con el nombre dado en un edificio (AJAX)
+     */
+    public function verificarNombreSala(): string
+    {
+        $this->requireAuth();
+        $nombre = trim($_POST['nombre'] ?? '');
+        $edificioId = (int)($_POST['edificio_id'] ?? 0);
+        $excluirId = isset($_POST['excluir_id']) ? (int)$_POST['excluir_id'] : null;
+        
+        $existe = $this->espacioService->verificarNombreSala($nombre, $edificioId, $excluirId);
+        return json_encode(['existe' => $existe]);
+    }
+
     private function procesarFotoEdificio(array $file): string
     {
         $uploadDir = __DIR__ . '/../../../public/uploads/edificios/';

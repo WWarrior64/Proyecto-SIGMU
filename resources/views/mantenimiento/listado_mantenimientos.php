@@ -98,7 +98,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fecha_real">Fecha intervención:</label>
-                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>">
+                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label for="resultado">Resultado del mantenimiento:</label>

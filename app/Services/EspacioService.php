@@ -47,12 +47,17 @@ final class EspacioService
     public function guardarEdificio(array $data): int
     {
         $id = isset($data['id']) ? (int)$data['id'] : 0;
-        $nombre = $data['nombre'] ?? '';
+        $nombre = trim($data['nombre'] ?? '');
         $descripcion = $data['descripcion'] ?? '';
         $pisos = (int)($data['cantidad_pisos'] ?? 1);
 
         if (empty($nombre)) {
             throw new RuntimeException("El nombre es obligatorio");
+        }
+
+        // Validar que no exista otro edificio con el mismo nombre
+        if ($this->repository->existeEdificioConNombre($nombre, $id > 0 ? $id : null)) {
+            throw new RuntimeException("Ya existe un edificio con el nombre '$nombre'");
         }
 
         if ($id > 0) {
@@ -67,12 +72,21 @@ final class EspacioService
     {
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $edificioId = (int)($data['edificio_id'] ?? 0);
-        $nombre = $data['nombre'] ?? '';
+        $nombre = trim($data['nombre'] ?? '');
         $descripcion = $data['descripcion'] ?? '';
         $piso = (int)($data['numero_piso'] ?? 1);
 
         if (empty($nombre)) {
             throw new RuntimeException("El nombre es obligatorio");
+        }
+
+        if ($edificioId <= 0) {
+            throw new RuntimeException("Edificio no válido");
+        }
+
+        // Validar que no exista otra sala con el mismo nombre en el mismo edificio
+        if ($this->repository->existeSalaConNombreEnEdificio($nombre, $edificioId, $id > 0 ? $id : null)) {
+            throw new RuntimeException("Ya existe una sala con el nombre '$nombre' en este edificio");
         }
 
         if ($id > 0) {
@@ -81,6 +95,16 @@ final class EspacioService
         } else {
             return $this->repository->crearSala($edificioId, $nombre, $descripcion, $piso);
         }
+    }
+
+    public function verificarNombreEdificio(string $nombre, ?int $excluirId = null): bool
+    {
+        return $this->repository->existeEdificioConNombre($nombre, $excluirId);
+    }
+
+    public function verificarNombreSala(string $nombre, int $edificioId, ?int $excluirId = null): bool
+    {
+        return $this->repository->existeSalaConNombreEnEdificio($nombre, $edificioId, $excluirId);
     }
 
     public function eliminarEdificio(int $id, int $userId, string $password): array
