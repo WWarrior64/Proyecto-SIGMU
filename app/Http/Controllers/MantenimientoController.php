@@ -34,7 +34,9 @@ final class MantenimientoController
         }
 
         try {
-            $data = $this->mantenimientoService->obtenerDatosDashboard();
+            $mes = (int) ($_GET['mes'] ?? 0);
+            $anio = (int) ($_GET['anio'] ?? 0);
+            $data = $this->mantenimientoService->obtenerDatosDashboard($mes, $anio);
 
             return view('mantenimiento.mantenimiento', [
                 'sessionUser' => $sessionUser,
@@ -58,7 +60,9 @@ final class MantenimientoController
 
         try {
             $sessionUser = Session::get('auth_user');
-            $data = $this->mantenimientoService->obtenerDatosDashboardTecnico((int) $sessionUser['id']);
+            $mes = (int) ($_GET['mes'] ?? 0);
+            $anio = (int) ($_GET['anio'] ?? 0);
+            $data = $this->mantenimientoService->obtenerDatosDashboardTecnico((int) $sessionUser['id'], $mes, $anio);
 
             return view('mantenimiento.dashboard_tecnico', [
                 'sessionUser' => $sessionUser,

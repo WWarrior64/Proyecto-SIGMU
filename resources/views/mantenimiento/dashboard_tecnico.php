@@ -13,6 +13,14 @@ $nombresMeses = [
 
 $diasSemana = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
 
+// Calcular mes anterior y siguiente para navegacion
+$mesAnt = $mes - 1;
+$anioAnt = $anio;
+if ($mesAnt < 1) { $mesAnt = 12; $anioAnt--; }
+$mesSig = $mes + 1;
+$anioSig = $anio;
+if ($mesSig > 12) { $mesSig = 1; $anioSig++; }
+
 $primerDiaMesTimestamp = mktime(0, 0, 0, $mes, 1, $anio);
 $numeroDias = (int) date('t', $primerDiaMesTimestamp);
 $diaInicio = (int) date('w', $primerDiaMesTimestamp);
@@ -58,7 +66,13 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <div class="grid-tech">
             <!-- CALENDARIO -->
             <section class="card">
-                <div class="card-header-red">MI CALENDARIO - <?= $nombresMeses[$mes] ?></div>
+                <div class="card-header-red" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>MI CALENDARIO - <?= $nombresMeses[$mes] ?></span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesAnt ?>&anio=<?= $anioAnt ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes anterior">&lsaquo;</a>
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesSig ?>&anio=<?= $anioSig ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes siguiente">&rsaquo;</a>
+                    </div>
+                </div>
                 <div class="calendar-container">
                     <div class="calendar-grid">
                         <?php foreach ($diasSemana as $dia): ?>
@@ -153,7 +167,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <!-- MODAL FINALIZAR (Reusado de listado_mantenimientos) -->
+    <!-- MODAL FINALIZAR -->
     <div class="modal-overlay" id="modalCompletar">
         <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
