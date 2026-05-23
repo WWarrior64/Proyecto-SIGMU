@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\EspacioRepository;
+use App\Support\Cache;
 use RuntimeException;
 
 final class EspacioService
@@ -18,12 +19,16 @@ final class EspacioService
 
     public function listarEdificios(): array
     {
-        return $this->repository->obtenerEdificiosConConteo();
+        return Cache::remember('edificios.todos', function () {
+            return $this->repository->obtenerEdificiosConConteo();
+        }, 300); // 5 minutos de caché
     }
 
     public function listarSalas(int $edificioId): array
     {
-        return $this->repository->obtenerSalasConConteo($edificioId);
+        return Cache::remember("salas.edificio.{$edificioId}", function () use ($edificioId) {
+            return $this->repository->obtenerSalasConConteo($edificioId);
+        }, 300); // 5 minutos de caché
     }
 
     public function obtenerEdificio(int $id): array
@@ -46,6 +51,8 @@ final class EspacioService
 
     public function guardarEdificio(array $data): int
     {
+        // Invalidar caché de edificios al modificar
+        Cache::forget('edificios.todos');
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $nombre = trim($data['nombre'] ?? '');
         $descripcion = $data['descripcion'] ?? '';
@@ -72,6 +79,8 @@ final class EspacioService
     {
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $edificioId = (int)($data['edificio_id'] ?? 0);
+        // Invalidar caché de salas al modificar
+        Cache::forget("salas.edificio.{$edificioId}");
         $nombre = trim($data['nombre'] ?? '');
         $descripcion = $data['descripcion'] ?? '';
         $piso = (int)($data['numero_piso'] ?? 1);

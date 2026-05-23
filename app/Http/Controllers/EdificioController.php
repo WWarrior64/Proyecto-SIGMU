@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Services\EspacioService;
 use App\Services\SigmuService;
+use App\Support\Logger;
 use App\Support\Session;
 use Throwable;
 
@@ -61,6 +62,7 @@ final class EdificioController
                 'responsables' => $responsables
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error al cargar dashboard edificios', ['error' => $e->getMessage()]);
             return view('localizacion_asignacion.panel_edificios', [
                 'sessionUser' => $user,
                 'error' => $e->getMessage()
@@ -87,6 +89,7 @@ final class EdificioController
                 'edificioId' => $edificioId
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error al cargar salas del edificio', ['edificio_id' => $edificioId, 'error' => $e->getMessage()]);
             header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
             return '';
         }
@@ -130,6 +133,7 @@ final class EdificioController
 
             header('Location: /sigmu/edificios?success=Edificio guardado correctamente');
         } catch (Throwable $e) {
+            Logger::error('Error saving building', ['error' => $e->getMessage()]);
             header('Location: /sigmu/edificios?error=' . urlencode($e->getMessage()));
         }
         return '';

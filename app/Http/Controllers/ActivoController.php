@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Activo;
 use App\Services\SigmuService;
 use App\Services\AssetImportService;
+use App\Support\Logger;
 use App\Support\Session;
 use App\Support\Csrf;
 use Throwable;
@@ -60,7 +61,8 @@ final class ActivoController
         $salaId = (int)($_POST['sala_id'] ?? 0);
         
         if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
-            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode("Debes seleccionar un archivo válido"));
+            Logger::warning('Intento de importación sin archivo válido');
+            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode("Debe seleccionar un archivo válido"));
             return;
         }
 

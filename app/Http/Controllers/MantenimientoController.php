@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Services\MantenimientoService;
 use App\Services\SigmuService;
+use App\Support\Logger;
 use App\Support\Session;
 use Throwable;
 
@@ -48,6 +49,7 @@ final class MantenimientoController
                 'anio' => $data['anio']
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error en index mantenimiento', ['error' => $e->getMessage()]);
             return "Error: " . $e->getMessage();
         }
     }
@@ -72,6 +74,7 @@ final class MantenimientoController
                 'anio' => $data['anio']
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error en dashboard técnico', ['error' => $e->getMessage()]);
             return "Error: " . $e->getMessage();
         }
     }
