@@ -22,7 +22,7 @@ function abrirModalCompletar(id, codigo) {
     document.getElementById('modalActivoCodigo').textContent = codigo;
     // Resetear la fecha al día actual (hora local)
     const fechaInput = document.getElementById('fecha_real');
-    fechaInput.value = obtenerFechaLocal();
+    fechaInput.value = getLocalDate();
     document.getElementById('modalCompletar').style.display = 'flex';
 }
 
@@ -33,7 +33,7 @@ function cerrarModalCompletar() {
 document.addEventListener('DOMContentLoaded', () => {
     const formCompletar = document.getElementById('formCompletar');
     const fechaInput = document.getElementById('fecha_real');
-    const hoy = obtenerFechaLocal();
+    const hoy = getLocalDate();
     
     // Bloquear fechas anteriores a hoy al cambiar el input
     if (fechaInput) {
@@ -61,8 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: new FormData(this)
             }).then(r => r.json()).then(data => {
                 if (data.success) { 
-                    showToast('Guardado con éxito'); 
-                    location.reload(); 
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('success', 'Mantenimiento finalizado con éxito');
+                    window.location.href = url.toString();
                 } else {
                     showToast('Error: ' + data.message, 'error');
                 }

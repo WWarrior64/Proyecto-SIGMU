@@ -10,6 +10,7 @@ use App\Services\AssetImportService;
 use App\Support\Logger;
 use App\Support\Session;
 use App\Support\Csrf;
+use App\Support\Validator;
 use Throwable;
 
 final class ActivoController
@@ -345,6 +346,18 @@ final class ActivoController
         ];
 
         try {
+            // Validar nombre y descripcion
+            $errorNombre = Validator::nombre($datos['nombre'], 'Nombre del activo', Validator::MAX_NOMBRE_ACTIVO);
+            if ($errorNombre !== null) {
+                header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($errorNombre));
+                return;
+            }
+            $errorDesc = Validator::descripcion($datos['descripcion'], 'Descripcion');
+            if ($errorDesc !== null) {
+                header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($errorDesc));
+                return;
+            }
+
             // Verificar si el activo ya tiene fotos antes de procesar las nuevas
             $fotosExistentes = $this->sigmuService->obtenerFotosActivo($id);
             $tieneFotosPrevias = !empty($fotosExistentes);

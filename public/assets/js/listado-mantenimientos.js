@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modalCompletar');
     const formCompletar = document.getElementById('formCompletar');
     const fechaInput = document.getElementById('fecha_real');
-    const hoy = obtenerFechaLocal();
+    const hoy = getLocalDate();
     
     window.abrirModalCompletar = function(id, codigo) {
         document.getElementById('mantenimiento_id_completar').value = id;
@@ -58,8 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showToast('Mantenimiento finalizado con éxito');
-                    location.reload();
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('success', 'Mantenimiento finalizado con éxito');
+                    window.location.href = url.toString();
                 } else {
                     showToast('Error: ' + data.message, 'error');
                 }

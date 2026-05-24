@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Support\Session;
 use App\Support\Roles;
+use App\Support\Validator;
 use App\Services\SigmuService;
 use App\Support\Database;
 use Throwable;
@@ -38,7 +39,10 @@ final class RolController
         $verTodo = isset($_POST['ver_todo']) && $_POST['ver_todo'] === '1';
 
         try {
-            if ($nombre === '') throw new \RuntimeException("El nombre del rol es obligatorio.");
+            $error = Validator::nombre($nombre, 'Nombre del rol');
+            if ($error !== null) {
+                throw new \RuntimeException($error);
+            }
 
             // Protecciones mínimas de integridad
             if (Roles::is($id, Roles::ADMIN)) {

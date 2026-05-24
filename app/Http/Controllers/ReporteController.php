@@ -156,22 +156,30 @@ final class ReporteController
         if (!$this->requireAuth()) return;
 
         $user = Session::get('auth_user');
-        $misEdificios = array_column($this->sigmuService->obtenerMisEdificios(), 'id');
-        $edificiosSolicitados = $_POST['edificios'] ?? [];
+        $misEdificios = array_map('intval', array_column($this->sigmuService->obtenerMisEdificios(), 'id'));
+        $edificiosSolicitadosRaw = $_POST['edificios'] ?? [];
+
+        // Normalizar tipos: convertir valores POST a enteros
+        $edificiosSolicitados = array_map('intval', (array)$edificiosSolicitadosRaw);
 
         // Si no seleccionó ninguno, por defecto todos los accesibles
         // Si seleccionó alguno, filtrar para que solo sean los que tiene acceso
         if (empty($edificiosSolicitados)) {
             $edificiosAFiltrar = $misEdificios;
         } else {
-            $edificiosAFiltrar = array_intersect($edificiosSolicitados, $misEdificios);
+            $edificiosAFiltrar = array_values(array_intersect($edificiosSolicitados, $misEdificios));
         }
+
+        // Normalizar tipos de los demás filtros
+        $salasSolicitadas = array_map('intval', (array)($_POST['salas'] ?? []));
+        $tiposSolicitados = array_map('intval', (array)($_POST['tipos'] ?? []));
+        $estadosSolicitados = array_map('strval', (array)($_POST['estados'] ?? []));
 
         $filtros = [
             'edificios' => $edificiosAFiltrar,
-            'salas' => $_POST['salas'] ?? [],
-            'tipos' => $_POST['tipos'] ?? [],
-            'estados' => $_POST['estados'] ?? [],
+            'salas' => $salasSolicitadas,
+            'tipos' => $tiposSolicitados,
+            'estados' => $estadosSolicitados,
             'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
             'fecha_fin' => $_POST['fecha_fin'] ?? '',
             'fecha_act_inicio' => $_POST['fecha_act_inicio'] ?? '',

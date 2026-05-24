@@ -71,7 +71,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
                     <div class="form-group">
                         <label for="fecha_deteccion">Fecha de detección:</label>
-                        <input type="date" id="fecha_deteccion" name="fecha_deteccion" class="form-control" required value="<?= date('Y-m-d') ?>" max="&lt;?= date('Y-m-d') ?&gt;"&gt;
+                        <input type="date" id="fecha_deteccion" name="fecha_deteccion" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                     </div>
                 </div>
 

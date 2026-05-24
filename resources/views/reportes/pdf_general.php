@@ -87,7 +87,7 @@
         .badge-disponible { background: #e8f5e9; color: #2e7d32; }
         .badge-en_uso { background: #e3f2fd; color: #1565c0; }
         .badge-reparacion { background: #fff3e0; color: #ef6c00; }
-        .badge-descartado { background: #ffeeb2; color: #5d4037; }
+        .badge-des cartado { background: #ffeeb2; color: #5d4037; }
 
         .annual-summary { margin-top: 30px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
         .annual-summary-header { background: #2c3e50; color: white; padding: 10px 15px; font-weight: bold; font-size: 11px; }
@@ -148,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Contenido -->
+    <!-- SECCION: Datos Generales -->
     <?php if ($secciones['datos_generales']): ?>
         <div class="section-title">Detalle de Activos <?= !($filtros['agrupar_ubicacion'] ?? true) ? '(Listado Directo)' : 'por Ubicación' ?></div>
         <?php 
@@ -161,13 +161,13 @@
                 <thead>
                     <tr>
                         <th style="width: 10%;">Código</th>
-                        <th style="width: 18%;">Nombre</th>
+                        <th style="width: 15%;">Nombre</th>
                         <th style="width: 12%;">Tipo</th>
                         <th style="width: 10%;">Valor</th>
-                        <th style="width: 10%;">Estado</th>
-                        <th style="width: 10%;">F. Registro</th>
+                        <th style="width: 14%;">Estado</th>
+                        <th style="width: 12%;">F. Registro</th>
                         <th style="width: 15%;">Ubicación</th>
-                        <th style="width: 15%;">Descripción</th>
+                        <th style="width: 12%;">Descripción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,12 +189,12 @@
                         <thead>
                             <tr>
                                 <th style="width: 12%;">Código</th>
-                                <th style="width: 22%;">Nombre del Activo</th>
+                                <th style="width: 20%;">Nombre del Activo</th>
                                 <th style="width: 12%;">Tipo</th>
                                 <th style="width: 10%;">Valor</th>
-                                <th style="width: 10%;">Estado</th>
+                                <th style="width: 14%;">Estado</th>
                                 <th style="width: 12%;">F. Registro</th>
-                                <th style="width: 22%;">Descripción</th>
+                                <th style="width: 20%;">Descripción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -207,7 +207,7 @@
                 <td><?= htmlspecialchars($a['nombre']) ?></td>
                 <td><?= htmlspecialchars($a['tipo_nombre'] ?? 'Sin tipo') ?></td>
                 <td style="text-align: right;"><?= $a['valor_adquisicion'] !== null ? '$' . number_format((float)$a['valor_adquisicion'], 2) : '-' ?></td>
-                <td>
+                <td style="white-space: nowrap;">
                     <span class="badge badge-<?= str_replace(' ', '_', $a['estado']) ?>">
                         <?= str_replace('_', ' ', $a['estado']) ?>
                     </span>
@@ -219,19 +219,19 @@
                 <td><small><?= htmlspecialchars($a['descripcion'] ?? 'N/D') ?></small></td>
             </tr>
             <?php 
-            $colTotal = $agrupar ? 7 : 8;
+        $colTotal = $agrupar ? 7 : 8;
             if ($secciones['historial'] && isset($historiales[$a['id']]) && !empty($historiales[$a['id']])): ?>
                 <tr>
                     <td colspan="<?= $colTotal ?>" style="padding: 5px 15px 15px 15px; background: #fff;">
                         <div class="sub-section">
-                            <div class="sub-title"><i class="fas fa-history"></i> Movimientos Recientes</div>
+                            <div class="sub-title"> Movimientos Recientes</div>
                             <table class="sub-table">
                                 <thead><tr><th style="width: 20%;">Fecha</th><th style="width: 20%;">Acción</th><th style="width: 25%;">Responsable</th><th>Detalles</th></tr></thead>
                                 <tbody>
                                     <?php foreach($historiales[$a['id']] as $h): ?>
                                     <tr>
                                         <td><?= $h['fecha'] ?></td>
-                                        <td><strong><?= strtoupper($h['accion']) ?></strong></td>
+                                        <td><strong><?= str_replace('_', ' ', strtoupper($h['accion'])) ?></strong></td>
                                         <td><?= htmlspecialchars($h['usuario_nombre'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars(str_replace('→', ' -> ', $h['detalle'])) ?></td>
                                     </tr>
@@ -247,15 +247,15 @@
                 <tr>
                     <td colspan="<?= $colTotal ?>" style="padding: 5px 15px 15px 15px; background: #fff;">
                         <div class="sub-section">
-                            <div class="sub-title"><i class="fas fa-tools"></i> Mantenimientos Realizados</div>
+                            <div class="sub-title"> Mantenimientos Realizados</div>
                             <table class="sub-table">
                                 <thead><tr><th style="width: 20%;">Fecha</th><th style="width: 40%;">Descripción del Problema</th><th style="width: 15%;">Estado</th><th>Técnico</th></tr></thead>
                                 <tbody>
                                     <?php foreach($mantenimientos[$a['id']] as $m): ?>
                                     <tr>
                                         <td><?= $m['fecha_reporte'] ?></td>
-                                        <td><?= htmlspecialchars(substr($m['descripcion_problema'], 0, 80)) ?>...</td>
-                                        <td><?= strtoupper($m['estado']) ?></td>
+                                        <td><?= htmlspecialchars($m['descripcion_problema']) ?></td>
+                                        <td><?= str_replace('_', ' ', strtoupper($m['estado'])) ?></td>
                                         <td><?= htmlspecialchars($m['usuario_mantenimiento_nombre'] ?? 'No asignado') ?></td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -278,6 +278,52 @@
         
         if (!$agrupar) echo "</tbody></table>";
         ?>
+    <?php endif; ?>
+
+    <!-- SECCION: Solo Historial (sin datos generales) -->
+    <?php if (!$secciones['datos_generales'] && $secciones['historial']): ?>
+        <div class="section-title">Historial de Movimientos por Activo</div>
+        <?php foreach($activos as $a): 
+            if (isset($historiales[$a['id']]) && !empty($historiales[$a['id']])): ?>
+                <div class="group-sala">Activo: <?= htmlspecialchars($a['codigo']) ?> - <?= htmlspecialchars($a['nombre']) ?></div>
+                <table class="sub-table" style="font-size: 9px;">
+                    <thead><tr><th style="width: 20%;">Fecha</th><th style="width: 20%;">Acción</th><th style="width: 25%;">Responsable</th><th>Detalles</th></tr></thead>
+                    <tbody>
+                        <?php foreach($historiales[$a['id']] as $h): ?>
+                        <tr>
+                            <td><?= $h['fecha'] ?></td>
+                            <td><strong><?= str_replace('_', ' ', strtoupper($h['accion'])) ?></strong></td>
+                            <td><?= htmlspecialchars($h['usuario_nombre'] ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars(str_replace('→', ' -> ', $h['detalle'])) ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- SECCION: Solo Mantenimientos (sin datos generales) -->
+    <?php if (!$secciones['datos_generales'] && $secciones['mantenimientos']): ?>
+        <div class="section-title">Mantenimientos por Activo</div>
+        <?php foreach($activos as $a): 
+            if (isset($mantenimientos[$a['id']]) && !empty($mantenimientos[$a['id']])): ?>
+                <div class="group-sala">Activo: <?= htmlspecialchars($a['codigo']) ?> - <?= htmlspecialchars($a['nombre']) ?></div>
+                <table class="sub-table" style="font-size: 9px;">
+                    <thead><tr><th style="width: 20%;">Fecha</th><th style="width: 40%;">Descripción del Problema</th><th style="width: 15%;">Estado</th><th>Técnico</th></tr></thead>
+                    <tbody>
+                        <?php foreach($mantenimientos[$a['id']] as $m): ?>
+                        <tr>
+                            <td><?= $m['fecha_reporte'] ?></td>
+                            <td><?= htmlspecialchars($m['descripcion_problema']) ?></td>
+                            <td><?= str_replace('_', ' ', strtoupper($m['estado'])) ?></td>
+                            <td><?= htmlspecialchars($m['usuario_mantenimiento_nombre'] ?? 'No asignado') ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        <?php endforeach; ?>
     <?php endif; ?>
 
     <!-- Resumen -->
@@ -343,7 +389,6 @@
         <div class="section-title">Resumen Financiero Acumulado por Año</div>
         
         <?php
-        // 1. Agrupar sumas por año
         $sumasPorAño = [];
         foreach($activos as $a) {
             $year = date('Y', strtotime($a['fecha_creado']));
@@ -352,7 +397,6 @@
         }
         ksort($sumasPorAño);
 
-        // 2. Calcular acumulados (Año actual + todos los anteriores)
         $acumuladoHistorico = [];
         $corriente = 0;
         foreach($sumasPorAño as $year => $suma) {

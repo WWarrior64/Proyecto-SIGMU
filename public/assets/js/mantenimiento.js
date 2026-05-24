@@ -56,8 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('Reparación agendada correctamente');
-                    location.reload();
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('success', 'Reparación agendada correctamente');
+                    window.location.href = url.toString();
                 } else {
                     showToast('Error: ' + data.message, 'error');
                     if (submitBtn) submitBtn.disabled = false;

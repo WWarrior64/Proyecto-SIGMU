@@ -389,8 +389,9 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
             
             $service->editarUsuario(
                 $usuarioId,
-                $_POST['email'],
-                $_POST['nombre_completo'],
+                trim((string)($_POST['username'] ?? '')),
+                trim((string)($_POST['email'] ?? '')),
+                trim((string)($_POST['nombre_completo'] ?? '')),
                 (int)$_POST['rol_id'],
                 (bool)$_POST['activo']
             );

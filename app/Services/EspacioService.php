@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Repositories\EspacioRepository;
 use App\Support\Cache;
+use App\Support\Validator;
 use RuntimeException;
 
 final class EspacioService
@@ -58,8 +59,13 @@ final class EspacioService
         $descripcion = $data['descripcion'] ?? '';
         $pisos = (int)($data['cantidad_pisos'] ?? 1);
 
-        if (empty($nombre)) {
-            throw new RuntimeException("El nombre es obligatorio");
+        $error = Validator::nombre($nombre, 'Nombre');
+        if ($error !== null) {
+            throw new RuntimeException($error);
+        }
+        $errorDesc = Validator::descripcion($descripcion, 'Descripcion');
+        if ($errorDesc !== null) {
+            throw new RuntimeException($errorDesc);
         }
 
         // Validar que no exista otro edificio con el mismo nombre
@@ -85,8 +91,13 @@ final class EspacioService
         $descripcion = $data['descripcion'] ?? '';
         $piso = (int)($data['numero_piso'] ?? 1);
 
-        if (empty($nombre)) {
-            throw new RuntimeException("El nombre es obligatorio");
+        $error = Validator::nombre($nombre, 'Nombre');
+        if ($error !== null) {
+            throw new RuntimeException($error);
+        }
+        $errorDesc = Validator::descripcion($descripcion, 'Descripcion');
+        if ($errorDesc !== null) {
+            throw new RuntimeException($errorDesc);
         }
 
         if ($edificioId <= 0) {

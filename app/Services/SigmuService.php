@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\SigmuRepository;
+use App\Support\Validator;
 use RuntimeException;
 
 // In the service we put simple business logic and validations.
@@ -239,6 +240,14 @@ final class SigmuService
         ?string $fechaCreado = null
     ): array {
         try {
+            $errorNombre = Validator::nombre($nombre, 'Nombre del activo', Validator::MAX_NOMBRE_ACTIVO);
+            if ($errorNombre !== null) {
+                return ['success' => false, 'message' => $errorNombre];
+            }
+            $errorDesc = Validator::descripcion($descripcion, 'Descripcion', Validator::MAX_DESCRIPCION);
+            if ($errorDesc !== null) {
+                return ['success' => false, 'message' => $errorDesc];
+            }
             // Verificar que el código no exista
             if ($this->repository->existeCodigoActivo($codigo)) {
                 return [
@@ -451,13 +460,37 @@ final class SigmuService
 
     public function registrarUsuario(string $username, string $email, string $password, string $nombreCompleto, int $rolId): int
     {
+        $errorUser = Validator::username($username);
+        if ($errorUser !== null) {
+            throw new RuntimeException($errorUser);
+        }
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
         return $this->repository->registrarUsuario($username, $email, $passwordHash, $nombreCompleto, $rolId);
     }
 
-    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    public function editarUsuario(int $usuarioId, string $username, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
     {
-        return $this->repository->editarUsuario($usuarioId, $email, $nombreCompleto, $rolId, $activo);
+        $errorUser = Validator::username($username);
+        if ($errorUser !== null) {
+            throw new RuntimeException($errorUser);
+        }
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
+        return $this->repository->editarUsuario($usuarioId, $username, $email, $nombreCompleto, $rolId, $activo);
     }
 
     public function desactivarUsuario(int $usuarioId): bool
@@ -499,6 +532,14 @@ final class SigmuService
 
     public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
     {
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
         return $this->repository->editarPerfil($usuarioId, $email, $nombreCompleto);
     }
 

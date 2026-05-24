@@ -117,7 +117,7 @@
             <td><?= htmlspecialchars($a['tipo_nombre'] ?? $a['tipo']) ?></td>
             <td style="text-align: right;"><?= $a['valor_adquisicion'] !== null ? '$' . number_format((float)$a['valor_adquisicion'], 2) : '-' ?></td>
             <td>
-                <span class="badge"><?= strtoupper($a['estado']) ?></span>
+                <span class="badge"><?= str_replace('_', ' ', strtoupper($a['estado'])) ?></span>
             </td>
             <td><small><?= nl2br(htmlspecialchars($a['descripcion'] ?? 'Sin descripción.')) ?></small></td>
         </tr>

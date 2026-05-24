@@ -800,21 +800,21 @@ final class SigmuRepository
         return (int) $result['nuevo_usuario_id'] ?? 0;
     }
 
-    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    public function editarUsuario(int $usuarioId, string $username, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
     {
-        $stmt = $this->db->prepare("CALL sp_editar_usuario(:id, :email, :nombre, :rol_id, :activo)");
-        $stmt->execute([
+        $stmt = $this->db->prepare(
+            "UPDATE usuario SET username = :username, email = :email, nombre_completo = :nombre, rol_id = :rol_id, activo = :activo
+             WHERE id = :id"
+        );
+        
+        return $stmt->execute([
             'id' => $usuarioId,
+            'username' => $username,
             'email' => $email,
             'nombre' => $nombreCompleto,
             'rol_id' => $rolId,
-            'activo' => $activo
+            'activo' => $activo ? 1 : 0
         ]);
-        
-        $result = $stmt->fetch();
-        $stmt->closeCursor();
-        
-        return isset($result['filas_afectadas']) && $result['filas_afectadas'] > 0;
     }
 
     public function cambiarEstadoUsuario(int $usuarioId, bool $activo): bool

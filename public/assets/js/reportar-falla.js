@@ -83,6 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formReportarFalla) {
         formReportarFalla.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Validación de fecha
+            const fechaInput = document.getElementById('fecha_deteccion');
+            const fechaSeleccionada = new Date(fechaInput.value + 'T00:00:00');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            if (fechaSeleccionada < hoy) {
+                showToast('La fecha de detección no puede ser anterior a la actual', 'error');
+                return;
+            }
+
             const btnSubmit = this.querySelector('button[type="submit"]');
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'REGISTRANDO...';
@@ -94,8 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showToast('Falla reportada correctamente. El activo ha cambiado a estado "En Reparación".');
-                    window.location.href = '/sigmu/mantenimiento';
+                    window.location.href = '/sigmu/mantenimiento?success=' + encodeURIComponent('Falla reportada correctamente. El activo ha cambiado a estado "En Reparación".');
                 } else {
                     showToast('Error: ' + data.message, 'error');
                     btnSubmit.disabled = false;
