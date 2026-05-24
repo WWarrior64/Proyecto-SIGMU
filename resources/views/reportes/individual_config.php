@@ -15,7 +15,7 @@ $user = \App\Support\Session::get('auth_user');
 
 <div class="report-config-card" style="max-width: 900px; margin: 0 auto;">
     <div class="sigmu-back-row">
-        <button class="sigmu-back-btn" onclick="window.location.href='/sigmu/activo/ver?id=<?= (int) ($activo['id'] ?? 0) ?>'">
+        <button class="btn-home" onclick="window.location.href='/sigmu/activo/ver?id=<?= (int) ($activo['id'] ?? 0) ?>'">
             <i class="fas fa-arrow-left"></i> Volver al Activo
         </button>
     </div>
