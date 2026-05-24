@@ -347,7 +347,7 @@ final class MantenimientoRepository
 
     /**
      * Marca un mantenimiento como completado con datos detallados
-     * ✅ CORREGIDO (v2): Ahora ACTUALIZA el historial que inserta el SP
+     * CORREGIDO (v2): Ahora ACTUALIZA el historial que inserta el SP
      *    en vez de eliminar+reinsertar, para no romper la transacción.
      *    Se rellenan estado_anterior, estado_nuevo, sala_anterior_id y
      *    sala_nueva_id para que el historial general muestre los cambios.
@@ -406,7 +406,7 @@ final class MantenimientoRepository
                 $stmtUpd->closeCursor();
             }
 
-            // 7. ✅ ACTUALIZAR el historial que insertó el SP (el último 'mantenimiento' de este activo)
+            // 7. ACTUALIZAR el historial que insertó el SP (el último 'mantenimiento' de este activo)
             //    para rellenar los campos NULL con los valores reales.
             $stmtUpdHist = $this->db->prepare(
                 "UPDATE historial_activo 

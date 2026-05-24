@@ -178,7 +178,7 @@ class HistorialController
             $stmt->execute();
             $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ✅ Compatibilidad con registros antiguos
+            // Compatibilidad con registros antiguos
             foreach ($historial as &$registro) {
                 if (!empty($registro['detalle'])) {
                     if (!empty($registro['sala_anterior_id']) && !empty($registro['sala_anterior_nombre'])) {

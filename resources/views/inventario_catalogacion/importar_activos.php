@@ -51,10 +51,15 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <?php if ($results): ?>
                 <div class="results-container">
                     <h3>Resultados de la última importación:</h3>
-                    <p style="color: #059669; font-weight: bold;">✅ Éxito: <?= $results['success'] ?> activos importados.</p>
-                    
+                    <div style="display: flex; align-items: center; gap: 8px; color: #059669; font-weight: bold; margin-bottom: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <p style="margin: 0;">Éxito: <?= $results['success'] ?> activos importados.</p>
+                    </div>
                     <?php if (!empty($results['errors'])): ?>
-                        <p style="color: #dc2626; font-weight: bold; margin-top: 10px;">❌ Errores (<?= count($results['errors']) ?>):</p>
+                        <div style="display: flex; align-items: center; gap: 8px; color: #dc2626; font-weight: bold; margin-top: 10px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            <p style="margin: 0;">Errores (<?= count($results['errors']) ?>):</p>
+                        </div>
                         <div class="error-list">
                             <ul>
                                 <?php foreach ($results['errors'] as $err): ?>

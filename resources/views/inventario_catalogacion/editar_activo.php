@@ -27,20 +27,6 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <div class="form-card">
             <h1 class="form-title">EDITAR ACTIVO</h1>
 
-            <?php if ($error): ?>
-                <div class="alert alert-error">
-                    <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            <?php endif; ?>
-
-            <?php 
-            $successMessage = $success ?: ($_GET['success'] ?? '');
-            if ($successMessage): ?>
-                <div class="alert alert-success">
-                    <?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            <?php endif; ?>
-
             <?php if ($activo): ?>
                 <form id="activoForm" method="post" action="/sigmu/activo/actualizar" enctype="multipart/form-data">
                     <!-- Token CSRF -->
@@ -175,8 +161,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                         
                                         <div class="photo-actions-container">
                                             <?php if (!$f['es_principal']): ?>
-                                                <button type="button" class="btn-photo-action btn-star" onclick="submitFotoAction('/sigmu/activo/foto/principal', <?= (int)$f['id'] ?>)" title="Hacer principal">⭐</button>
-                                                <button type="button" class="btn-photo-action btn-delete" onclick="if(confirm('¿Eliminar esta foto permanentemente?')) submitFotoAction('/sigmu/activo/foto/eliminar', <?= (int)$f['id'] ?>)" title="Eliminar">🗑️</button>
+                                                <button type="button" class="btn-photo-action btn-star" onclick="submitFotoAction('/sigmu/activo/foto/principal', <?= (int)$f['id'] ?>)" title="Hacer principal">
+                                                    <svg xmlns="http://w3.org" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="btn-photo-action btn-delete" onclick="if(confirm('¿Eliminar esta foto permanentemente?')) submitFotoAction('/sigmu/activo/foto/eliminar', <?= (int)$f['id'] ?>)" title="Eliminar">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                                </button>
                                             <?php else: ?>
                                                 <span class="label-is-principal">Principal</span>
                                             <?php endif; ?>

@@ -42,7 +42,7 @@ final class SigmuController
             ]);
         }
 
-        // ✅ REDIRECCION SEGUN ROL DE USUARIO
+        // REDIRECCION SEGUN ROL DE USUARIO
         // Si es ADMINISTRADOR mostrar panel exclusivo
         if ((int)$sessionUser['rol_id'] === Roles::ADMIN) {
             return view('administracion_usuarios.inicio', [

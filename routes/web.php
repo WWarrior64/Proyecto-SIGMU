@@ -368,7 +368,7 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
                     if ((int)$_POST['usuario_id'] === (int)$sessionUser['id']) {
                         return json_encode([
                             'success' => false,
-                            'message' => '⚠️  NO SE PUEDE INACTIVAR: No puedes desactivar tu propia cuenta de administrador.',
+                            'message' => 'NO SE PUEDE INACTIVAR: No puedes desactivar tu propia cuenta de administrador.',
                             'tipo_error' => 'auto_inactivacion'
                         ]);
                     }

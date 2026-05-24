@@ -95,6 +95,24 @@ final class ActivoController
             return '';
         }
 
+        // 1. Intentar obtener de parámetro (URL)
+        if ($id > 0) {
+            // Si viene en URL, lo guardamos en sesión como "memoria"
+            Session::set('ultimo_activo_id', $id);
+        } else {
+            // 2. Si no viene (id=0), intentar recuperar de la "memoria" de sesión
+            $id = (int)Session::get('ultimo_activo_id', 0);
+            
+            // 3. Si lo recuperamos de sesión, redirigimos a la URL correcta 
+            // para que el navegador "se arregle" y el F5 funcione siempre.
+            if ($id > 0) {
+                $params = $_GET;
+                $params['id'] = $id;
+                header("Location: /sigmu/activo/ver?" . http_build_query($params));
+                exit;
+            }
+        }
+
         $activo = $this->modelo->obtenerPorId($id);
         
         if (!$activo) {
@@ -104,7 +122,10 @@ final class ActivoController
             exit;
         }
 
-        // ✅ VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
+        // Guardar la sala también para asegurar consistencia
+        Session::set('ultima_sala_id', (int)$activo['sala_id']);
+
+        // VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
         $user = Session::get('auth_user');
         if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             // Usamos las salas accesibles para el usuario
@@ -178,7 +199,7 @@ final class ActivoController
             return;
         }
 
-        // ✅ VALIDACIÓN DE ESTADO
+        // VALIDACIÓN DE ESTADO
         if (!array_key_exists($estado, Activo::ESTADOS)) {
             header("Location: /sigmu/activo/registrar?sala_id={$salaId}&error=" . urlencode("Estado no válido seleccionado"));
             return;
@@ -244,6 +265,23 @@ final class ActivoController
             return '';
         }
 
+        // 1. Intentar obtener de parámetro (URL)
+        if ($id > 0) {
+            // Si viene en URL, lo guardamos en sesión como "memoria"
+            Session::set('ultimo_activo_id', $id);
+        } else {
+            // 2. Si no viene (id=0), intentar recuperar de la "memoria" de sesión
+            $id = (int)Session::get('ultimo_activo_id', 0);
+            
+            // 3. Si lo recuperamos de sesión, redirigimos a la URL correcta 
+            if ($id > 0) {
+                $params = $_GET;
+                $params['id'] = $id;
+                header("Location: /sigmu/activo/editar?" . http_build_query($params));
+                exit;
+            }
+        }
+
         $activo = $this->modelo->obtenerPorId($id);
         $habitaciones = $this->modelo->obtenerSalas();
         $tiposActivo = $this->modelo->obtenerTiposActivo();
@@ -255,6 +293,9 @@ final class ActivoController
             header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo que intenta editar no existe o ha sido eliminado.'));
             exit;
         }
+
+        // Guardar contexto
+        Session::set('ultima_sala_id', (int)$activo['sala_id']);
 
         // Obtener el edificio_id de la sala actual para pre-seleccionarlo
         $edificioActualId = 0;
@@ -286,7 +327,7 @@ final class ActivoController
 
         $estado = trim((string)($_POST['estado'] ?? ''));
 
-        // ✅ VALIDACIÓN DE ESTADO
+        // VALIDACIÓN DE ESTADO
         if (!array_key_exists($estado, Activo::ESTADOS)) {
             header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode("Estado no válido seleccionado"));
             return;
@@ -533,9 +574,9 @@ final class ActivoController
         $activoId = (int)($_POST['activo_id'] ?? 0);
 
         if ($this->sigmuService->eliminarFotoActivo($fotoId)) {
-            header("Location: /sigmu/activo/editar?id={$activoId}&success=foto_eliminada");
+            header("Location: /sigmu/activo/editar?id={$activoId}&success=La foto se ha eliminado con exito");
         } else {
-            header("Location: /sigmu/activo/editar?id={$activoId}&error=error_al_eliminar_foto");
+            header("Location: /sigmu/activo/editar?id={$activoId}&error=Hubo un error al eliminar la foto");
         }
     }
 

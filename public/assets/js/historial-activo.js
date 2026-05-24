@@ -1,5 +1,5 @@
 /**
- * ✅ HISTORIAL ACTIVO - BUSQUEDA EN TIEMPO REAL
+ * HISTORIAL ACTIVO - BUSQUEDA EN TIEMPO REAL
  * 
  * @author SIGMU UNICAES
  */
@@ -15,33 +15,99 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ✅ BUSQUEDA EN TIEMPO REAL - SIN PERDER FOCO
+    // BUSQUEDA - CLIENT-SIDE FILTERING (IDENTICO A LISTADO_ACTIVOS)
     const searchInput = document.getElementById('searchInputHistorial');
-    let searchTimeout;
+    // Capture the original rows when loading (as in active-listing)
+    const tableRows = document.querySelectorAll('.table-body .table-row');
     
-    // Restaurar foco y posicion del cursor despues de recargar
     if (searchInput) {
-        // Obtener ultima posicion guardada
-        const ultimaPosicion = sessionStorage.getItem('searchCursorPos');
-        if (ultimaPosicion !== null) {
-            searchInput.focus();
-            searchInput.setSelectionRange(+ultimaPosicion, +ultimaPosicion);
-            sessionStorage.removeItem('searchCursorPos');
-        }
-        
         searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
+            const searchTerm = this.value.toLowerCase().trim();
             
-            // Guardar posicion actual del cursor antes de recargar
-            sessionStorage.setItem('searchCursorPos', searchInput.selectionStart);
+            tableRows.forEach(row => {
+                // No procesar el estado vacío original de la BD si existiera
+                if (row.classList.contains('empty-state') && !row.classList.contains('search-empty-state')) return;
+
+                const cells = row.querySelectorAll('.table-cell');
+                let found = false;
+                
+                cells.forEach(cell => {
+                    const text = cell.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        found = true;
+                    }
+                });
+                
+                if (found || searchTerm === '') {
+                    // Usar setProperty con important para sobreescribir el CSS del historial
+                    row.style.setProperty('display', 'grid', 'important');
+                    row.style.opacity = '1';
+                } else {
+                    // Forzar ocultamiento absoluto para que la tabla se redimensione
+                    row.style.setProperty('display', 'none', 'important');
+                    row.style.opacity = '0';
+                }
+            });
             
-            searchTimeout = setTimeout(() => {
-                aplicarFiltros();
-            }, 450);
+            // Mostrar estado vacío si no hay resultados (como en listado-activos)
+            updateEmptyStateHistorial(searchTerm);
+        });
+
+        // Limpiar al presionar Escape
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+
+        // Evitar recarga al presionar Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
         });
     }
 
-    // ✅ APLICAR FILTROS AUTOMATICAMENTE AL CAMBIAR SELECTS
+    /**
+     * Actualiza el estado vacío (Copiado de listado-activos.js)
+     */
+    function updateEmptyStateHistorial(searchTerm) {
+        const tableBody = document.querySelector('.table-body');
+        if (!tableBody) return;
+
+        const allRows = tableBody.querySelectorAll('.table-row');
+        
+        // Contar realmente filas visibles
+        let visibleCount = 0;
+        allRows.forEach(row => {
+            const computedStyle = window.getComputedStyle(row);
+            if (computedStyle.display !== 'none' && !row.classList.contains('search-empty-state')) {
+                visibleCount++;
+            }
+        });
+        
+        const existingEmpty = tableBody.querySelector('.search-empty-state');
+        
+        if (visibleCount === 0 && searchTerm !== '') {
+            if (!existingEmpty) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state search-empty-state';
+                emptyState.innerHTML = `
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <p>No se encontraron registros con "${searchTerm}"</p>
+                `;
+                tableBody.appendChild(emptyState);
+            }
+        } else if (existingEmpty) {
+            existingEmpty.remove();
+        }
+    }
+
+    // APLICAR FILTROS AUTOMATICAMENTE AL CAMBIAR SELECTS
     const selectAccion = document.querySelector('select[name="accion"]');
     const selectEstado = document.querySelector('select[name="estado"]');
     const selectUsuario = document.querySelector('select[name="usuario"]');
@@ -50,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selectEstado) selectEstado.addEventListener('change', aplicarFiltros);
     if (selectUsuario) selectUsuario.addEventListener('change', aplicarFiltros);
 
-    // ✅ BOTON LIMPIAR FILTROS
+    // BOTON LIMPIAR FILTROS
     const botonLimpiar = document.getElementById('limpiarFiltrosBtn');
     if (botonLimpiar) {
         botonLimpiar.addEventListener('click', function(e) {
