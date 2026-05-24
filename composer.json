@@ -1,6 +1,28 @@
 {
   "name": "sigmu/app",
   "description": "Base project structure for PHP + MySQL",
+  "authors": [
+    {
+      "name": "Walter Alexander González Martínez",
+      "email": "walter.gonzalez3@catolica.edu.sv"
+    },
+    {
+      "name": "Jorge René Castro Gómez",
+      "email": "jorge.castro1@catolica.edu.sv"
+    },
+    {
+      "name": "Fabiola María Centeno Chacón",
+      "email": "fabiola.centeno@catolica.edu.sv"
+    },
+    {
+      "name": "Elvis Alberto Chávez García",
+      "email": "elvis.chavez@catolica.edu.sv"
+    },
+    {
+      "name": "Rodrigo Alexander Valiente Ibarra",
+      "email": "rodrigo.valiente@catolica.edu.sv"
+    }
+  ],
   "type": "project",
   "require": {
     "php": ">=8.1",
