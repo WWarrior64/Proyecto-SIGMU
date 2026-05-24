@@ -16,6 +16,14 @@ final class Router
     private array $putRoutes = [];
     /** @var array<string, callable> */
     private array $deleteRoutes = [];
+    /** @var array<callable> */
+    private array $middlewares = [];
+
+    public function middleware(callable $middleware): self
+    {
+        $this->middlewares[] = $middleware;
+        return $this;
+    }
 
     public function get(string $path, callable $handler): void
     {
@@ -43,9 +51,27 @@ final class Router
     {
         // Normalizamos el path (/sigmu, /sigmu/reset, etc).
         $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $method = strtoupper($method);
+
+        // 1. Ejecutar Middlewares (incluyendo Autorización)
+        foreach ($this->middlewares as $middleware) {
+            if ($middleware($method, $path) === false) {
+                return; // El middleware ya manejó la respuesta/redirección
+            }
+        }
+
+        // 2. Validación CSRF Automática para métodos de escritura
+        if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+            // Excluir login del CSRF si es necesario o manejarlo dentro de AuthController
+            // Pero por seguridad, mejor que todas las rutas lo tengan.
+            if (!\App\Support\Csrf::validate()) {
+                http_response_code(403);
+                echo "Error de seguridad: Token CSRF inválido. Por favor recargue la página.";
+                return;
+            }
+        }
 
         // Elegimos el listado de rutas según el método HTTP.
-        $method = strtoupper($method);
         $handler = null;
         if ($method === 'GET') {
             $handler = $this->getRoutes[$path] ?? null;

@@ -30,9 +30,29 @@ final class SalaController
             return '';
         }
 
-        $salaId = filter_input(INPUT_GET, 'sala_id', FILTER_VALIDATE_INT);
+        // 1. Intentar obtener de URL
+        $urlSalaId = filter_input(INPUT_GET, 'sala_id', FILTER_VALIDATE_INT);
+        
+        if ($urlSalaId) {
+            // Si viene en URL, lo guardamos en sesión como "memoria"
+            Session::set('ultima_sala_id', (int)$urlSalaId);
+            $salaId = (int)$urlSalaId;
+        } else {
+            // 2. Si no viene en URL, intentar recuperar de la "memoria" de sesión
+            $salaId = (int)Session::get('ultima_sala_id', 0);
+            
+            // 3. Si lo recuperamos de sesión, redirigimos a la URL correcta 
+            // para que el navegador "se arregle" y el F5 funcione siempre.
+            if ($salaId > 0) {
+                $params = $_GET;
+                $params['sala_id'] = $salaId;
+                header("Location: /sigmu/sala?" . http_build_query($params));
+                exit;
+            }
+        }
+
         if (!$salaId) {
-            return '<h2>sala_id invalido</h2><p><a href="/sigmu">Volver</a></p>';
+            return '<h2>sala_id invalido</h2><p>No se encontró la sala en la URL ni en la memoria de sesión.</p><p><a href="/sigmu/edificios">Volver a edificios</a></p>';
         }
 
         try {
@@ -44,7 +64,7 @@ final class SalaController
             $ordenDireccion = trim((string) ($_GET['orden_direccion'] ?? 'DESC'));
             
             // Validar campos permitidos
-            $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado'];
+            $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado', 'valor_adquisicion', 'sala_nombre'];
             $ordenarPor = in_array($ordenarPor, $camposPermitidos) ? $ordenarPor : 'id';
             $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
             

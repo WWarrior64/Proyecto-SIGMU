@@ -82,13 +82,27 @@ body {
     padding: 12px 24px 4px 24px;
 }
 
+/* BACK BUTTON */
+.back-button {
+    margin-bottom: 16px;
+}
+
 .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
     background: none;
     border: none;
+    color: var(--text-secondary);
     cursor: pointer;
-    color: #666;
-    padding: 6px;
-    font-size: 20px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background-color: var(--bg-white);
+    color: var(--text-primary);
 }
 
 .main-container {
@@ -102,6 +116,7 @@ body {
     max-width: 100%;
     margin: 0;
     box-shadow: none;
+    overflow-x: auto; /* Asegura que la tabla no rompa el diseño */
 }
 
 /* ENCABEZADO CON TITULO Y BOTONES */
@@ -112,6 +127,8 @@ body {
     padding-bottom: 16px;
     margin-bottom: 24px;
     border-bottom: 1px solid #cccccc;
+    flex-wrap: wrap; /* Permitir que los botones se ajusten en móvil */
+    gap: 16px;
 }
 
 .page-title {
@@ -151,6 +168,7 @@ body {
     justify-content: center;
     font-size: 24px;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .btn-secondary {
@@ -166,10 +184,13 @@ body {
     gap: 16px;
     align-items: center;
     margin-bottom: 28px;
+    flex-wrap: wrap;
 }
 
 .search-box {
     position: relative;
+    flex-grow: 1;
+    min-width: 200px;
 }
 
 .search-box input {
@@ -177,7 +198,7 @@ body {
     padding-right: 40px;
     border: 2px solid var(--border-color);
     border-radius: var(--radius-sm);
-    width: 240px;
+    width: 100%;
     font-size: 0.95rem;
 }
 
@@ -202,6 +223,7 @@ body {
     color: var(--text-primary);
     cursor: pointer;
     padding: 12px;
+    white-space: nowrap;
 }
 
 .filter-btn svg {
@@ -214,33 +236,34 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    width: 100%;
 }
 
 .user-item {
     display: grid;
-    grid-template-columns: 60px 2fr 1fr 1fr 60px;
+    grid-template-columns: 50px 2fr 1fr 1fr 60px;
     align-items: center;
-    padding: 12px 16px;
+    padding: 12px;
     background: var(--bg-item);
     border-radius: var(--radius-md);
-    gap: 8px;
+    gap: 12px;
     border: 2px solid var(--border-color);
-    min-height: 52px;
 }
 
-.user-item.header {
+.user-item.list-header {
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    background: #e0e0e0;
 }
 
-.user-item.header .user-avatar {
+.user-item.list-header .user-avatar {
     display: none;
 }
 
-.user-item.header .user-username {
+.user-item.list-header .user-username {
     grid-column-start: 1;
     grid-column-end: 3;
-    padding-left: 60px;
+    padding-left: 10px;
 }
 
 .user-avatar {
@@ -252,6 +275,7 @@ body {
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
+    flex-shrink: 0;
 }
 
 .user-avatar svg {
@@ -263,18 +287,27 @@ body {
     font-weight: 500;
     font-size: 1.05rem;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-role {
     font-size: 1rem;
     color: var(--text-primary);
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-status {
     font-size: 1rem;
     color: var(--text-primary);
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-actions {
@@ -292,6 +325,7 @@ body {
     justify-content: center;
     cursor: pointer;
     background: white;
+    flex-shrink: 0;
 }
 
 .edit-btn svg {
@@ -304,6 +338,7 @@ body {
 @media (max-width: 992px) {
     .user-item {
         grid-template-columns: 60px 1fr 1fr 60px;
+        gap: 12px;
     }
     .user-status {
         display: none;
@@ -312,65 +347,77 @@ body {
 
 @media (max-width: 768px) {
     .header-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-    
-    .main-container {
-        padding: 0 16px 16px 16px;
-    }
-    
-    .back-container {
-        padding: 12px 16px 4px 16px;
-    }
-    
-    .page-title {
-        font-size: 28px;
+        flex-direction: row; /* Mantener fila pero ajustar wrapping */
+        justify-content: space-between;
     }
     
     .user-item {
         grid-template-columns: 50px 1fr 50px;
+        gap: 8px;
     }
     .user-role {
         display: none;
     }
     
     .filters-bar {
-        flex-direction: column;
-        align-items: flex-start;
+        gap: 8px;
     }
+    
+    .filter-btn span {
+        display: none; /* Ocultar texto en móvil */
     }
+}
 
-    /* Panel de Filtros */
-    .filter-panel {
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .user-item {
+        grid-template-columns: 40px 1fr 40px;
+        padding: 10px 8px;
+    }
+    
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .edit-btn {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Panel de Filtros */
+.filter-panel {
     margin-bottom: 24px;
     padding: 16px;
     background: #f8f8f8;
     border-radius: 8px;
     border: 1px solid #ddd;
-    }
+}
 
-    .filter-grid {
+.filter-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
-    }
+}
 
-    .filter-label {
+.filter-label {
     font-weight: 600;
     margin-bottom: 8px;
     display: block;
-    }
+}
 
-    .filter-select {
+.filter-select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #9E9E9E;
     border-radius: 6px;
-    }
+}
 
-    .btn-reset {
+.btn-reset {
     width: 100%;
     padding: 8px 12px;
     background: #9E9E9E;
@@ -378,8 +425,33 @@ body {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    }
+}
 
-    .btn-reset:hover {
+.btn-reset:hover {
     background: #757575;
-    }
+}
+
+/* Badge de Estado */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.status-active {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #C8E6C9;
+}
+
+.status-inactive {
+    background-color: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #FFCDD2;
+}

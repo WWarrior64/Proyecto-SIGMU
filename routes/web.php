@@ -16,7 +16,8 @@ use App\Http\Controllers\TipoActivoController;
 // Rutas públicas / navegación base.
 $router->get('/', static function (): string {
     $controller = new HomeController();
-    return $controller->index();
+    $controller->index();
+    return '';
 });
 
 // Rutas de autenticación
@@ -90,9 +91,39 @@ $router->get('/sigmu/edificio', static function (): string {
     return $controller->salasPorEdificio();
 });
 
-$router->post('/sigmu/edificio/actualizar-foto', static function (): void {
+$router->post('/sigmu/edificios/guardar', static function (): string {
     $controller = new EdificioController();
-    $controller->updatePhoto();
+    return $controller->guardar();
+});
+
+$router->post('/sigmu/edificio/actualizar-foto', static function (): string {
+    $controller = new EdificioController();
+    return $controller->updatePhoto();
+});
+
+$router->post('/sigmu/edificios/guardar-sala', static function (): string {
+    $controller = new EdificioController();
+    return $controller->guardarSala();
+});
+
+$router->post('/sigmu/edificios/verificar-nombre', static function (): string {
+    $controller = new EdificioController();
+    return $controller->verificarNombreEdificio();
+});
+
+$router->post('/sigmu/salas/verificar-nombre', static function (): string {
+    $controller = new EdificioController();
+    return $controller->verificarNombreSala();
+});
+
+$router->post('/sigmu/edificio/eliminar', static function (): string {
+    $controller = new EdificioController();
+    return $controller->eliminar();
+});
+
+$router->post('/sigmu/sala/eliminar', static function (): string {
+    $controller = new EdificioController();
+    return $controller->eliminarSala();
 });
 
 // Rutas de salas (NUEVO)
@@ -167,16 +198,64 @@ $router->post('/sigmu/activo/eliminar', static function (): string {
     return '';
 });
 
+// Historial de cambios del activo
 $router->get('/sigmu/activo/historial', static function (): string {
     $id = (int) ($_GET['id'] ?? 0);
     $controller = new ActivoController();
     return $controller->historial($id);
 });
 
+// RUTAS DE REPORTES
+$router->get('/sigmu/reporte/individual', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new \App\Http\Controllers\ReporteController();
+    return $controller->individualConfig($id);
+});
+
+$router->post('/sigmu/reporte/individual/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarIndividual();
+});
+
+$router->post('/sigmu/reporte/individual/preview', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->previewIndividual();
+});
+
+$router->get('/sigmu/reportes', static function (): string {
+    $controller = new \App\Http\Controllers\ReporteController();
+    return $controller->general();
+});
+
+$router->post('/sigmu/reporte/general/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarGeneral();
+});
+
+$router->post('/sigmu/buscar-salas', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->buscarSalasAjax();
+});
+
+$router->post('/sigmu/reporte/general/preview', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->previewGeneral();
+});
+
+$router->get('/sigmu/reporte/inventario/exportar', static function (): void {
+    $controller = new \App\Http\Controllers\ReporteController();
+    $controller->exportarInventario();
+});
+
 // Endpoints AJAX
 $router->get('/sigmu/activo/generar-codigo', static function (): void {
     $controller = new ActivoController();
     $controller->generarCodigo();
+});
+
+$router->get('/sigmu/activo/generar-codigo-completo', static function (): void {
+    $controller = new ActivoController();
+    $controller->generarCodigoCompleto();
 });
 
 $router->get('/sigmu/activo/tipos', static function (): void {
@@ -198,8 +277,43 @@ $router->get('/sigmu/ajax/activos', static function (): void {
 });
 
 // RUTAS ADMINISTRACION USUARIOS
+$router->get('/sigmu/administracion_usuarios/gestion_roles', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/administracion_usuarios/rol/guardar', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->guardar();
+});
+
+$router->post('/sigmu/administracion_usuarios/rol/eliminar', static function (): string {
+    $controller = new \App\Http\Controllers\RolController();
+    return $controller->eliminar();
+});
+
 $router->get('/sigmu/administracion_usuarios/gestion_usuarios', static function (): string {
     return view('administracion_usuarios.gestion_usuarios');
+});
+
+$router->get('/sigmu/administracion_usuarios/asignacion_espacios', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->index();
+});
+
+$router->post('/sigmu/administracion_usuarios/asignar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->asignar();
+});
+
+$router->post('/sigmu/administracion_usuarios/quitar_espacio', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->quitar();
+});
+
+$router->get('/sigmu/administracion_usuarios/edificios_disponibles', static function (): string {
+    $controller = new \App\Http\Controllers\UserAssignmentController();
+    return $controller->edificiosDisponibles();
 });
 
 $router->get('/sigmu/administracion_usuarios/formulario_usuario', static function (): string {
@@ -214,7 +328,7 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
     }
 
     $sessionUser = Session::get('auth_user');
-    if ($sessionUser['rol_nombre'] !== 'Administrador') {
+    if (!\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN)) {
         http_response_code(403);
         return json_encode(['success' => false, 'message' => 'Acceso denegado']);
     }
@@ -230,13 +344,13 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
                 $usuarioAEditar = $service->obtenerUsuarioPorId((int)$_POST['usuario_id']);
                 
                 // Si el usuario es Administrador
-                if ($usuarioAEditar && $usuarioAEditar['rol_nombre'] === 'Administrador') {
+                if ($usuarioAEditar && \App\Support\Roles::is($usuarioAEditar['rol_id'] ?? 0, \App\Support\Roles::ADMIN)) {
                     // Contar cuantos administradores activos quedarian
                     $todosUsuarios = $service->obtenerTodosUsuarios();
                     $contadorAdminsActivos = 0;
                     
-                    foreach ($todosUsuarios as $user) {
-                        if ($user['rol_nombre'] === 'Administrador' && $user['activo'] && $user['id'] != (int)$_POST['usuario_id']) {
+                    foreach ($todosUsuarios as $u) {
+                        if (\App\Support\Roles::is($u['rol_id'] ?? 0, \App\Support\Roles::ADMIN) && $u['activo'] && $u['id'] != (int)$_POST['usuario_id']) {
                             $contadorAdminsActivos++;
                         }
                     }
@@ -254,7 +368,7 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
                     if ((int)$_POST['usuario_id'] === (int)$sessionUser['id']) {
                         return json_encode([
                             'success' => false,
-                            'message' => '⚠️  NO SE PUEDE INACTIVAR: No puedes desactivar tu propia cuenta de administrador.',
+                            'message' => 'NO SE PUEDE INACTIVAR: No puedes desactivar tu propia cuenta de administrador.',
                             'tipo_error' => 'auto_inactivacion'
                         ]);
                     }
@@ -275,8 +389,9 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
             
             $service->editarUsuario(
                 $usuarioId,
-                $_POST['email'],
-                $_POST['nombre_completo'],
+                trim((string)($_POST['username'] ?? '')),
+                trim((string)($_POST['email'] ?? '')),
+                trim((string)($_POST['nombre_completo'] ?? '')),
                 (int)$_POST['rol_id'],
                 (bool)$_POST['activo']
             );
@@ -311,13 +426,6 @@ $router->post('/sigmu/administracion_usuarios/guardar_usuario', static function 
         http_response_code(500);
         return json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-});
-
-// Historial de cambios del activo
-$router->get('/sigmu/activo/historial', static function (): string {
-    $id = (int) ($_GET['id'] ?? 0);
-    $controller = new ActivoController();
-    return $controller->historial($id);
 });
 
 // Historial General de Cambios
@@ -366,4 +474,11 @@ $router->get('/sigmu/mantenimiento/listado', static function (): string {
 $router->post('/sigmu/mantenimiento/completar', static function (): string {
     $controller = new \App\Http\Controllers\MantenimientoController();
     return $controller->completar();
+});
+
+// NUEVA RUTA: Ver detalle de activo para personal de mantenimiento
+$router->get('/sigmu/mantenimiento/activo/ver', static function (): string {
+    $id = (int) ($_GET['id'] ?? 0);
+    $controller = new \App\Http\Controllers\MantenimientoController();
+    return $controller->verActivo($id);
 });

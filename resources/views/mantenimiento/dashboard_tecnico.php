@@ -13,6 +13,14 @@ $nombresMeses = [
 
 $diasSemana = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
 
+// Calcular mes anterior y siguiente para navegacion
+$mesAnt = $mes - 1;
+$anioAnt = $anio;
+if ($mesAnt < 1) { $mesAnt = 12; $anioAnt--; }
+$mesSig = $mes + 1;
+$anioSig = $anio;
+if ($mesSig > 12) { $mesSig = 1; $anioSig++; }
+
 $primerDiaMesTimestamp = mktime(0, 0, 0, $mes, 1, $anio);
 $numeroDias = (int) date('t', $primerDiaMesTimestamp);
 $diaInicio = (int) date('w', $primerDiaMesTimestamp);
@@ -28,26 +36,10 @@ foreach ($calendario as $evento) {
 
 $sigmuPageTitle = 'PANEL TÉCNICO';
 $sigmuLayoutAdmin = false;
-$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+$sigmuExtraCss = ['/assets/css/mantenimiento.css', '/assets/css/dashboard-tecnico.css'];
+$sigmuExtraScripts = ['/assets/js/dashboard-tecnico.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<style>
-        .tech-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .welcome-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .report-btn { background: #8b0000; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
-        .report-btn:hover { transform: translateY(-2px); background: #a50000; }
-        .grid-tech { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .maint-list-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
-        .maint-header { background: #8b0000; color: white; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; }
-        .maint-body { padding: 10px; max-height: 500px; overflow-y: auto; }
-        .maint-item { padding: 12px; border-bottom: 1px solid #edf2f7; }
-        .maint-tech-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; text-transform: uppercase; }
-        .status-pendiente { background: #fef3c7; color: #92400e; }
-        .status-en_proceso { background: #dcfce7; color: #166534; }
-        .btn-finish { background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        @media (max-width: 900px) { .grid-tech { grid-template-columns: 1fr; } }
-    </style>
 
     <div class="tech-dashboard">
         <div class="welcome-section">
@@ -74,7 +66,13 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <div class="grid-tech">
             <!-- CALENDARIO -->
             <section class="card">
-                <div class="card-header-red">MI CALENDARIO - <?= $nombresMeses[$mes] ?></div>
+                <div class="card-header-red" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>MI CALENDARIO - <?= $nombresMeses[$mes] ?></span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesAnt ?>&anio=<?= $anioAnt ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes anterior">&lsaquo;</a>
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesSig ?>&anio=<?= $anioSig ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes siguiente">&rsaquo;</a>
+                    </div>
+                </div>
                 <div class="calendar-container">
                     <div class="calendar-grid">
                         <?php foreach ($diasSemana as $dia): ?>
@@ -136,14 +134,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     </p>
                                     <p class="problem-desc" title="<?= htmlspecialchars($desc) ?>"><?= htmlspecialchars($descSnippet) ?></p>
                                     <p style="margin: 6px 0 0;">
-                                        <span class="status-badge status-<?= htmlspecialchars((string) ($m['estado'] ?? '')) ?>"><?= str_replace('_', ' ', (string) ($m['estado'] ?? '')) ?></span>
+                                        <span class="status-badge status-<?= htmlspecialchars((string) ($m['estado'] ?? '')) ?>"><?= str_replace(['_', '-'], ' ', (string) ($m['estado'] ?? '')) ?></span>
                                         <?php if (!empty($m['fecha_agendada'])): ?>
                                             <span style="margin-left: 10px; font-weight: 600;"><?= date('d/m/Y', strtotime((string) $m['fecha_agendada'])) ?></span>
                                         <?php endif; ?>
                                     </p>
                                 </div>
                                 <div class="maint-tech-actions">
-                                    <a href="/sigmu/activo/ver?id=<?= (int) ($m['activo_id'] ?? 0) ?>" class="view-btn" title="Ver activo">
+                                    <a href="/sigmu/mantenimiento/activo/ver?id=<?= (int) ($m['activo_id'] ?? 0) ?>" class="view-btn" title="Ver detalle del activo">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>
@@ -169,13 +167,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <!-- MODAL FINALIZAR (Reusado de listado_mantenimientos) -->
+    <!-- MODAL FINALIZAR -->
     <div class="modal-overlay" id="modalCompletar">
         <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
                 FINALIZAR REPARACIÓN - <span id="modalActivoCodigo"></span>
             </div>
             <form id="formCompletar">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="mantenimiento_id" id="mantenimiento_id_completar">
                 <div class="modal-body">
                     <div class="form-group">
@@ -185,7 +184,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fecha_real">Fecha intervención:</label>
-                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>">
+                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label for="resultado">Resultado:</label>
@@ -209,32 +208,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        function abrirModalCompletarDesdeBoton(btn) {
-            if (!btn) return;
-            const id = parseInt(btn.dataset.mantenimientoId || '0', 10);
-            const codigo = btn.dataset.activoCodigo || '';
-            if (!id) return;
-            abrirModalCompletar(id, codigo);
-        }
-
-        function abrirModalCompletar(id, codigo) {
-            document.getElementById('mantenimiento_id_completar').value = id;
-            document.getElementById('modalActivoCodigo').textContent = codigo;
-            document.getElementById('modalCompletar').style.display = 'flex';
-        }
-        function cerrarModalCompletar() {
-            document.getElementById('modalCompletar').style.display = 'none';
-        }
-        document.getElementById('formCompletar').addEventListener('submit', function(e) {
-            e.preventDefault();
-            fetch('/sigmu/mantenimiento/completar', {
-                method: 'POST',
-                body: new FormData(this)
-            }).then(r => r.json()).then(data => {
-                if (data.success) { alert('Guardado con éxito'); location.reload(); }
-                else alert('Error: ' + data.message);
-            });
-        });
-    </script>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

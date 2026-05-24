@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const estadoSeleccionado = filterEstado ? filterEstado.value.toLowerCase().trim() : '';
         const busquedaTexto = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-        allUsers.forEach(userRow => {
+        // Seleccionar todas las filas EXCEPTO la de encabezado (que tiene la clase .list-header)
+        const userRows = document.querySelectorAll('.user-item:not(.list-header)');
+
+        userRows.forEach(userRow => {
             const usernameEl = userRow.querySelector('.user-username');
             const userRoleEl = userRow.querySelector('.user-role');
             const userStatusEl = userRow.querySelector('.user-status');
@@ -46,7 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (estadoSeleccionado !== '') {
-                coincide = coincide && userStatus.includes(estadoSeleccionado);
+                // “inactive” includes the word “active”, so we need to be more specific.
+                if (estadoSeleccionado === 'activo') {
+                    // Si buscamos Activo, debemos asegurar que NO diga Inactivo
+                    coincide = coincide && userStatus.includes('activo') && !userStatus.includes('inactivo');
+                } else {
+                    // Si buscamos Inactivo, simplemente buscamos la palabra
+                    coincide = coincide && userStatus.includes(estadoSeleccionado);
+                }
             }
 
             userRow.style.display = coincide ? '' : 'none';

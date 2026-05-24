@@ -13,7 +13,9 @@ $sigmuLayoutAdmin = !empty($sigmuLayoutAdmin);
                 <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
         </button>
-        <img src="/assets/img/unicaes_logo.png" alt="Universidad Católica de El Salvador" class="sigmu-logo" height="40">
+        <a href="/">
+            <img src="/assets/img/unicaes_logo.png" alt="Universidad Católica de El Salvador" class="sigmu-logo" height="40">
+        </a>
         <h1 class="sigmu-topbar__title"><?= htmlspecialchars((string) $sigmuPageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
     </div>
     <div class="sigmu-topbar__right">

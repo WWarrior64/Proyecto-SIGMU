@@ -28,6 +28,8 @@ final class UserController
         }
 
         $userId = Session::get('auth_user')['id'];
+        $this->service->iniciarSesionBd($userId);
+        
         $usuario = $this->service->obtenerUsuarioPorId($userId);
         
         // Obtener foto de perfil
@@ -53,11 +55,13 @@ final class UserController
         }
 
         if (!Csrf::validate()) {
-            header('Location: /sigmu/perfil?error=' . urlencode('Token CSRF inválido'));
+            header('Location: /sigmu/perfil?error=' . urlencode('Token de seguridad inválido'));
             return;
         }
 
         $userId = Session::get('auth_user')['id'];
+        $this->service->iniciarSesionBd($userId);
+        
         $nombreCompleto = trim((string)($_POST['nombre_completo'] ?? ''));
         $email = trim((string)($_POST['email'] ?? ''));
 
@@ -80,7 +84,7 @@ final class UserController
                 $this->procesarFotoPerfil($userId);
             }
 
-            header('Location: /sigmu/perfil?success=perfil_actualizado');
+            header('Location: /sigmu/perfil?success=Perfil actualizado correctamente');
         } catch (Throwable $e) {
             header('Location: /sigmu/perfil?error=' . urlencode($e->getMessage()));
         }

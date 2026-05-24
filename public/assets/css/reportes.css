@@ -1,0 +1,574 @@
+/* Reportes Config Styles - SIGMU Modern UI */
+:root {
+    --primary-color: #9a2018;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --bg-light: #f8f9fa;
+    --sigmu-red: #9a2018;
+    --sigmu-red-dark: #7a1912;
+    --sigmu-red-light: #fdf2f1;
+    --sigmu-ink: #212121;
+    --sigmu-border: #e0e0e0;
+}
+
+/* ── Contenedor principal ── */
+.report-config-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+/* ── Fila superior ── */
+.sigmu-back-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-home {
+    background: #f0f0f0;
+    border: 1px solid var(--sigmu-border);
+    color: var(--sigmu-ink);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-home:hover {
+    background: #e5e5e5;
+    color: var(--sigmu-red);
+    border-color: var(--sigmu-red);
+}
+
+/* ── Encabezado de sección ── */
+.section-header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--sigmu-red);
+    padding-bottom: 12px;
+}
+
+.section-title {
+    color: var(--sigmu-red);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ── Grid principal ── */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .report-config-card {
+        padding: 16px;
+    }
+    
+    .sigmu-back-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .actions-bar {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-reporte {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 12px;
+    }
+    
+    .estados-wrap {
+        padding: 10px;
+    }
+}
+
+/* ── Grupos de detalle ── */
+.detail-group {
+    margin-bottom: 24px;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--sigmu-ink);
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.right-column .detail-label {
+    margin-bottom: 24px;
+}
+
+/* ── Grupos de filtro ── */
+.filter-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+}
+
+/* ── Controles de formulario ── */
+.form-select,
+.form-control {
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background-color: #fff;
+    width: 100%;
+    color: var(--sigmu-ink);
+    outline: none;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--sigmu-red);
+    box-shadow: 0 0 0 3px rgba(154, 32, 24, 0.1);
+}
+
+input[type="date"] {
+    cursor: pointer;
+}
+
+/* ── Lista con scroll ── */
+.scroll-checkbox-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 8px;
+    background: #fff;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.checkbox-item:hover {
+    background: #f5f5f5;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--sigmu-red);
+}
+
+/* ── Estados operativos ── */
+.estados-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    background: #f8f9fa;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+}
+
+/* ── Secciones del reporte ── */
+.sections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sections-list .list-group-item {
+    border: 1px solid var(--sigmu-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.sections-list .list-group-item:hover {
+    border-color: var(--sigmu-red);
+    background-color: var(--sigmu-red-light);
+}
+
+.sections-list .list-group-item:has(input:checked) {
+    border-color: var(--sigmu-red);
+    background-color: var(--sigmu-red-light);
+}
+
+.sections-list .form-check-input {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: 2px;
+    accent-color: var(--sigmu-red);
+}
+
+.sections-list strong {
+    color: var(--sigmu-red);
+    font-size: 1.05rem;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.sections-list small {
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ── Bloque de ordenamiento ── */
+.sort-box {
+    background: #f8f9fa;
+    border: 1px solid var(--sigmu-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+/* ── Botones de acción ── */
+.actions-bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.btn-reporte {
+    background-color: var(--sigmu-red);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.btn-reporte:hover {
+    background-color: var(--sigmu-red-dark);
+    transform: translateY(-1px);
+}
+
+.btn-reporte:active {
+    transform: translateY(0);
+}
+
+.btn-reporte--preview {
+    background-color: #fff;
+    color: var(--sigmu-ink);
+    border: 1px solid var(--sigmu-border);
+    font-weight: 600;
+}
+
+.btn-reporte--preview:hover {
+    background-color: #fff;
+    border-color: var(--sigmu-red);
+    color: var(--sigmu-red);
+}
+
+/* ── Utilidades ── */
+.d-flex             { display: flex; }
+.flex-grow-1        { flex: 1; }
+.align-self-center  { align-self: center; }
+.flex-wrap          { flex-wrap: wrap; }
+.gap-2              { gap: 0.5rem; }
+.gap-3              { gap: 1rem; }
+.mt-4               { margin-top: 1.5rem; }
+.mb-1               { margin-bottom: 0.25rem; }
+.mb-3               { margin-bottom: 0.75rem; }
+.p-3                { padding: 1rem; }
+.bg-light           { background-color: #f8f9fa; }
+.rounded            { border-radius: 8px; }
+.border             { border: 1px solid var(--sigmu-border); }
+.text-muted         { color: #6c757d; font-size: 12px; }
+
+/* ── Responsive para elementos internos ── */
+@media (max-width: 992px) {
+    .detail-label {
+        font-size: 1rem;
+    }
+    
+    .right-column .detail-label {
+        margin-bottom: 16px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 160px;
+    }
+    
+    .estados-wrap {
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .sort-box {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .detail-group {
+        margin-bottom: 18px;
+    }
+    
+    .detail-label {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+    }
+    
+    .filter-group {
+        margin-bottom: 14px;
+    }
+    
+    .form-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .form-select,
+    .form-control {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 140px;
+        padding: 6px;
+    }
+    
+    .checkbox-item {
+        padding: 5px 8px;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+    
+    .estados-wrap {
+        gap: 6px;
+        padding: 10px;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 12px;
+        gap: 10px;
+    }
+    
+    .sections-list .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .sections-list strong {
+        font-size: 0.95rem;
+    }
+    
+    .sections-list small {
+        font-size: 12px;
+    }
+    
+    .sort-box {
+        padding: 12px;
+    }
+    
+    .sort-box .d-flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .sort-box select.form-select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-group {
+        margin-bottom: 14px;
+    }
+    
+    .detail-label {
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    
+    .right-column .detail-label {
+        margin-bottom: 12px;
+    }
+    
+    .filter-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-label {
+        font-size: 12px;
+    }
+    
+    .form-select,
+    .form-control {
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+    
+    .scroll-checkbox-list {
+        max-height: 120px;
+        padding: 4px;
+    }
+    
+    .checkbox-item {
+        padding: 4px 6px;
+        font-size: 13px;
+    }
+    
+    .btn-reporte {
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .btn-reporte svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+    
+    .estados-wrap {
+        padding: 8px;
+        gap: 4px;
+    }
+    
+    .estados-wrap .form-check {
+        flex: 1;
+        min-width: calc(50% - 4px);
+    }
+    
+    .sections-list {
+        gap: 8px;
+    }
+    
+    .sections-list .list-group-item {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .sections-list strong {
+        font-size: 0.85rem;
+    }
+    
+    .sections-list small {
+        font-size: 11px;
+    }
+    
+    .sections-list .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+    
+    .sort-box {
+        padding: 10px;
+    }
+    
+    .sort-box .d-flex {
+        gap: 6px;
+    }
+    
+    .actions-bar {
+        gap: 8px;
+        margin-top: 2px;
+    }
+    
+    /* Fila de botones al final */
+    .mt-4.d-flex.gap-3 {
+        flex-direction: column;
+        gap: 10px !important;
+    }
+    
+    .mt-4.d-flex.gap-3 .btn-reporte {
+        width: 100%;
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+        white-space: normal;
+    }
+    
+    /* Fila de rango de fechas */
+    .filter-group .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .filter-group .d-flex.gap-2 .form-control {
+        width: 100%;
+    }
+    
+    .filter-group .d-flex.gap-2 .align-self-center {
+        align-self: center !important;
+        font-size: 13px;
+    }
+    
+    /* Ordenamiento - fila de criterio + dirección */
+    .detail-group .bg-light.p-3.rounded.border .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .detail-group .bg-light.p-3.rounded.border .d-flex.gap-3 > div {
+        width: 100%;
+    }
+    
+    /* Estados - evitar que los checkbox se salgan */
+    .d-flex.flex-wrap.gap-3.p-3.bg-light.rounded.border {
+        gap: 6px !important;
+        padding: 10px !important;
+    }
+    
+    .d-flex.flex-wrap.gap-3.p-3.bg-light.rounded.border .checkbox-item {
+        flex: 1;
+        min-width: calc(50% - 6px);
+        padding: 4px;
+        font-size: 13px;
+    }
+}

@@ -36,6 +36,7 @@ $tokenProvided = isset($token) ? (string) $token : '';
 
         <!-- Formulario para guardar la nueva contraseña -->
         <form class="form" method="post" action="/sigmu/reset">
+            <?= \App\Support\Csrf::field() ?>
             <input type="hidden" name="token" value="<?= htmlspecialchars($tokenProvided, ENT_QUOTES, 'UTF-8') ?>">
 
             <div class="field">

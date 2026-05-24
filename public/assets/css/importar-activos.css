@@ -1,0 +1,67 @@
+/**
+ * CSS para la vista de Importar Activos
+ */
+
+.import-info {
+    background-color: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4b5563;
+}
+
+.import-info ul {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.results-container {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.error-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff5f5;
+    padding: 10px;
+    border: 1px solid #feb2b2;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .import-info {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .import-info ul {
+        margin-left: 16px;
+    }
+    
+    .results-container {
+        padding: 16px;
+        margin-top: 20px;
+    }
+    
+    .error-list {
+        max-height: 150px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .import-info {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .results-container {
+        padding: 12px;
+    }
+}

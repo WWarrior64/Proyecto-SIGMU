@@ -25,9 +25,33 @@ class HistorialController
         }
 
         try {
+            // Paginación y Ordenamiento
+            $pagina = (int) ($_GET['pagina'] ?? 1);
+            $porPagina = 50;
+            $offset = ($pagina - 1) * $porPagina;
+
+            $ordenarPor = trim((string) ($_GET['ordenar_por'] ?? 'fecha'));
+            $ordenDireccion = strtoupper((string) ($_GET['orden_direccion'] ?? 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+
+            // Validar campos de ordenamiento
+            $camposPermitidos = ['id', 'fecha', 'accion', 'activo_codigo', 'usuario_nombre', 'sala_anterior_nombre', 'sala_nueva_nombre', 'estado_nuevo'];
+            $ordenarPor = in_array($ordenarPor, $camposPermitidos) ? $ordenarPor : 'fecha';
+
+            $camposMap = [
+                'id' => 'h.id',
+                'fecha' => 'h.fecha',
+                'accion' => 'h.accion',
+                'activo_codigo' => 'a.codigo',
+                'usuario_nombre' => 'u.nombre_completo',
+                'sala_anterior_nombre' => 'sa.nombre',
+                'sala_nueva_nombre' => 'sn.nombre',
+                'estado_nuevo' => 'h.estado_nuevo'
+            ];
+            $campoOrdenSql = $camposMap[$ordenarPor] ?? 'h.fecha';
+
             // Obtener usuario de sesion
             $usuario = $_SESSION['auth_user'] ?? [];
-            $esAdministrador = isset($usuario['rol_nombre']) && $usuario['rol_nombre'] === 'Administrador';
+            $esAdministrador = isset($usuario['rol_id']) && \App\Support\Roles::is($usuario['rol_id'], \App\Support\Roles::ADMIN);
             $userId = (int)($usuario['id'] ?? 0);
 
             // Obtener parametros de filtros
@@ -48,24 +72,60 @@ class HistorialController
                 $edificiosAccesiblesIds = $stmtEdificios->fetchAll(PDO::FETCH_COLUMN);
             }
 
-            // Construir consulta base
+            // --- 1. CONTAR TOTAL PARA PAGINACIÓN ---
+            $sqlCount = "SELECT COUNT(*) FROM historial_activo h
+                        JOIN activo a ON a.id = h.activo_id
+                        JOIN usuario u ON u.id = h.usuario_id
+                        LEFT JOIN sala sa ON sa.id = h.sala_anterior_id
+                        LEFT JOIN sala sn ON sn.id = h.sala_nueva_id
+                        WHERE 1=1";
+            $paramsCount = [];
+
+            // Jurisdicción (Count)
+            if (!$esAdministrador) {
+                if (empty($edificiosAccesiblesIds)) {
+                    $sqlCount .= " AND h.usuario_id = ?";
+                    $paramsCount[] = $userId;
+                } else {
+                    $placeholders = implode(',', array_fill(0, count($edificiosAccesiblesIds), '?'));
+                    $sqlCount .= " AND (h.usuario_id = ? OR sa.edificio_id IN ($placeholders) OR sn.edificio_id IN ($placeholders))";
+                    $paramsCount = array_merge([$userId], $edificiosAccesiblesIds, $edificiosAccesiblesIds);
+                }
+            }
+
+            // Filtros (Count)
+            if (!empty($busqueda)) {
+                $sqlCount .= " AND (h.detalle LIKE ? OR a.nombre LIKE ? OR a.codigo LIKE ? OR u.nombre_completo LIKE ?)";
+                $b = "%$busqueda%";
+                $paramsCount = array_merge($paramsCount, [$b, $b, $b, $b]);
+            }
+            if (!empty($filtroAccion)) {
+                $sqlCount .= " AND accion = ?";
+                $paramsCount[] = $filtroAccion;
+            }
+            if (!empty($filtroEstado)) {
+                $sqlCount .= " AND (estado_anterior = ? OR estado_nuevo = ?)";
+                $paramsCount = array_merge($paramsCount, [$filtroEstado, $filtroEstado]);
+            }
+            if ($esAdministrador && $filtroUsuario > 0) {
+                $sqlCount .= " AND usuario_id = ?";
+                $paramsCount[] = $filtroUsuario;
+            }
+
+            $stmtCount = $this->db->prepare($sqlCount);
+            $stmtCount->execute($paramsCount);
+            $total = (int) $stmtCount->fetchColumn();
+            $totalPaginas = (int) ceil($total / $porPagina);
+
+            // --- 2. CONSULTA PAGINADA ---
             $sql = "SELECT
-                h.id, 
-                h.fecha, 
-                h.accion, 
-                h.detalle,
-                h.estado_anterior,
-                h.estado_nuevo,
-                h.sala_anterior_id,
-                h.sala_nueva_id,
-                h.usuario_id,
-                a.codigo AS activo_codigo,
-                a.nombre AS activo_nombre,
-                u.nombre_completo AS usuario_nombre,
-                u.username AS usuario_username,
-                sa.nombre AS sala_anterior_nombre,
-                sn.nombre AS sala_nueva_nombre,
-                sa.edificio_id AS edificio_anterior_id,
+                h.id, h.fecha, h.accion, h.detalle,
+                h.estado_anterior, h.estado_nuevo,
+                h.sala_anterior_id, h.sala_nueva_id,
+                h.usuario_id, a.codigo AS activo_codigo,
+                a.nombre AS activo_nombre, u.nombre_completo AS usuario_nombre,
+                u.username AS usuario_username, sa.nombre AS sala_anterior_nombre,
+                sn.nombre AS sala_nueva_nombre, sa.edificio_id AS edificio_anterior_id,
                 sn.edificio_id AS edificio_nuevo_id
             FROM historial_activo h
             JOIN activo a ON a.id = h.activo_id
@@ -75,85 +135,63 @@ class HistorialController
             WHERE 1=1";
             $params = [];
 
-            // ✅ LÓGICA DE JURISDICCIÓN REFORZADA
+            // Jurisdicción (Query)
             if (!$esAdministrador) {
                 if (empty($edificiosAccesiblesIds)) {
-                    // Si no tiene edificios, solo ve sus propias acciones
                     $sql .= " AND h.usuario_id = ?";
                     $params[] = $userId;
                 } else {
                     $placeholders = implode(',', array_fill(0, count($edificiosAccesiblesIds), '?'));
-                    $sql .= " AND (
-                        h.usuario_id = ? 
-                        OR sa.edificio_id IN ($placeholders)
-                        OR sn.edificio_id IN ($placeholders)
-                    )";
-                    
-                    // Añadir parámetros: primero el userId, luego los edificios para sa, luego para sn
+                    $sql .= " AND (h.usuario_id = ? OR sa.edificio_id IN ($placeholders) OR sn.edificio_id IN ($placeholders))";
                     $params = array_merge([$userId], $edificiosAccesiblesIds, $edificiosAccesiblesIds);
                 }
             }
 
-            // Aplicar filtros
+            // Filtros (Query)
             if (!empty($busqueda)) {
                 $sql .= " AND (h.detalle LIKE ? OR a.nombre LIKE ? OR a.codigo LIKE ? OR u.nombre_completo LIKE ?)";
-                $busquedaParam = "%$busqueda%";
-                $params[] = $busquedaParam;
-                $params[] = $busquedaParam;
-                $params[] = $busquedaParam;
-                $params[] = $busquedaParam;
+                $b = "%$busqueda%";
+                $params = array_merge($params, [$b, $b, $b, $b]);
             }
-
             if (!empty($filtroAccion)) {
                 $sql .= " AND accion = ?";
                 $params[] = $filtroAccion;
             }
-
             if (!empty($filtroEstado)) {
                 $sql .= " AND (estado_anterior = ? OR estado_nuevo = ?)";
-                $params[] = $filtroEstado;
-                $params[] = $filtroEstado;
+                $params = array_merge($params, [$filtroEstado, $filtroEstado]);
             }
-
-            // Filtro por usuario solo para administrador
             if ($esAdministrador && $filtroUsuario > 0) {
                 $sql .= " AND usuario_id = ?";
                 $params[] = $filtroUsuario;
             }
 
-            // Ordenar por fecha descendente
-            $sql .= " ORDER BY fecha DESC LIMIT 500";
+            $sql .= " ORDER BY $campoOrdenSql $ordenDireccion, h.id DESC LIMIT ? OFFSET ?";
+            $params[] = (int) $porPagina;
+            $params[] = (int) $offset;
 
-            // Ejecutar consulta
             $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
+            // Bind manual para asegurar tipos
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k + 1, $v, is_int($v) ? PDO::PARAM_INT : PDO::PARAM_STR);
+            }
+            $stmt->execute();
             $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ✅ Compatibilidad con registros antiguos: reemplazar IDs por nombres
+            // Compatibilidad con registros antiguos
             foreach ($historial as &$registro) {
-                // Reemplazar IDs de sala por nombres en registros antiguos
                 if (!empty($registro['detalle'])) {
-                    // Reemplazar sala anterior
                     if (!empty($registro['sala_anterior_id']) && !empty($registro['sala_anterior_nombre'])) {
-                        $registro['detalle'] = str_replace(
-                            '"' . $registro['sala_anterior_id'] . '"',
-                            '"' . $registro['sala_anterior_nombre'] . '"',
-                            $registro['detalle']
-                        );
+                        $registro['detalle'] = str_replace('"' . $registro['sala_anterior_id'] . '"', '"' . $registro['sala_anterior_nombre'] . '"', $registro['detalle']);
                     }
-                    // Reemplazar sala nueva
                     if (!empty($registro['sala_nueva_id']) && !empty($registro['sala_nueva_nombre'])) {
-                        $registro['detalle'] = str_replace(
-                            '"' . $registro['sala_nueva_id'] . '"',
-                            '"' . $registro['sala_nueva_nombre'] . '"',
-                            $registro['detalle']
-                        );
+                        $registro['detalle'] = str_replace('"' . $registro['sala_nueva_id'] . '"', '"' . $registro['sala_nueva_nombre'] . '"', $registro['detalle']);
                     }
                 }
             }
             unset($registro);
 
-            // Obtener lista de usuarios solo para administrador
+            // Usuarios para filtro
             $usuarios = [];
             if ($esAdministrador) {
                 $stmtUsuarios = $this->db->query("SELECT id, nombre_completo FROM usuario WHERE activo = 1 ORDER BY nombre_completo");
@@ -167,7 +205,12 @@ class HistorialController
                 'busqueda' => $busqueda,
                 'filtroAccion' => $filtroAccion,
                 'filtroEstado' => $filtroEstado,
-                'filtroUsuario' => $filtroUsuario
+                'filtroUsuario' => $filtroUsuario,
+                'pagina' => $pagina,
+                'totalPaginas' => $totalPaginas,
+                'total' => $total,
+                'ordenarPor' => $ordenarPor,
+                'ordenDireccion' => $ordenDireccion
             ]);
 
         } catch (Throwable $exception) {

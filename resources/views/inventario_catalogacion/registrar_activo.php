@@ -73,25 +73,45 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                value="<?= htmlspecialchars($_SESSION['auth_user']['nombre_completo'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
 
+                    <!-- CÓDIGO PREFIJO -->
                     <div class="form-group">
-                        <label for="codigo">Código: <span class="required">*</span></label>
-                        <input type="text" id="codigo" name="codigo" required 
-                               placeholder="Automatically generated when entering the name"
-                               value="<?= htmlspecialchars($formData['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                        <label for="codigo_cuenta">Código prefijo (cuenta o autogenerado):</label>
+                        <input type="text" id="codigo_cuenta" name="codigo_cuenta" 
+                               placeholder="Ej: ESCT-MOB (vacío = autogenerado del nombre + tipo)"
+                               class="input-codigo-cuenta"
                                pattern="[A-Za-z0-9\-]+"
-                               title="Solo letras, números y guiones"
-                               readonly class="input-readonly">
+                               title="Solo letras, números y guiones">
+                        <small class="form-hint">Si se deja vacío, se genera automáticamente a partir del nombre y tipo</small>
                     </div>
                 </div>
 
                 <!-- Fila 2 -->
                 <div class="form-row">
+
+                    <div class="form-group">
+                        <label for="codigo">Código completo: <span class="required">*</span></label>
+                        <input type="text" id="codigo" name="codigo" required 
+                               placeholder="*ESCT-MOB-001-25*"
+                               value="<?= htmlspecialchars($formData['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                               pattern="[\*A-Za-z0-9\-]+"
+                               title="Letras, números, guiones y asteriscos"
+                               class="input-readonly input-codigo-completo" readonly>
+                        <small class="form-hint">Formato: *[PREFIJO]-[CORRELATIVO(3)]-[AÑO(2)]* · Ej: *ESCT-MOB-001-25*</small>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="nombre">Nombre: <span class="required">*</span></label>
                         <input type="text" id="nombre" name="nombre" required 
                                placeholder="Nombre del activo"
                                value="<?= htmlspecialchars($formData['nombre'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="valor_adquisicion">Valor de adquisición ($):</label>
+                        <input type="number" id="valor_adquisicion" name="valor_adquisicion" 
+                               step="0.01" min="0" placeholder="0.00"
+                               value="<?= htmlspecialchars($formData['valor_adquisicion'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
 
                     <div class="form-group">

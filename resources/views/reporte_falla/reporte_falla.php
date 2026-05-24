@@ -3,7 +3,7 @@
 /** @var array $activo */
 
 $sigmuPageTitle = 'REPORTAR FALLA';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
 $sigmuExtraCss = ['/assets/css/reporte-falla.css'];
 $sigmuExtraScripts = ['/assets/js/reporte-falla.js'];
 $fechaDeteccion = $fechaDeteccion ?? date('Y-m-d H:i');
@@ -26,6 +26,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </div>
 
             <form id="formReporteFalla">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="activo_id" value="<?= (int)$activo['id'] ?>">
                 
                 <div class="form-grid">
@@ -83,12 +84,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        globalThis.authUser = {
-            id: <?= (int)$sessionUser['id'] ?>,
-            nombre_completo: <?= json_encode($sessionUser['nombre_completo'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
-            foto: <?= json_encode($sessionUser['foto'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>,
-            rol_nombre: <?= json_encode($sessionUser['rol_nombre'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>
-        };
-    </script>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

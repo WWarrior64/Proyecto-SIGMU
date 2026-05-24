@@ -7,8 +7,10 @@ namespace App\Http\Controllers;
 use App\Models\Activo;
 use App\Services\SigmuService;
 use App\Services\AssetImportService;
+use App\Support\Logger;
 use App\Support\Session;
 use App\Support\Csrf;
+use App\Support\Validator;
 use Throwable;
 
 final class ActivoController
@@ -60,7 +62,8 @@ final class ActivoController
         $salaId = (int)($_POST['sala_id'] ?? 0);
         
         if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
-            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode("Debes seleccionar un archivo válido"));
+            Logger::warning('Intento de importación sin archivo válido');
+            header("Location: /sigmu/activo/importar?sala_id={$salaId}&error=" . urlencode("Debe seleccionar un archivo válido"));
             return;
         }
 
@@ -93,16 +96,39 @@ final class ActivoController
             return '';
         }
 
+        // 1. Intentar obtener de parámetro (URL)
+        if ($id > 0) {
+            // Si viene en URL, lo guardamos en sesión como "memoria"
+            Session::set('ultimo_activo_id', $id);
+        } else {
+            // 2. Si no viene (id=0), intentar recuperar de la "memoria" de sesión
+            $id = (int)Session::get('ultimo_activo_id', 0);
+            
+            // 3. Si lo recuperamos de sesión, redirigimos a la URL correcta 
+            // para que el navegador "se arregle" y el F5 funcione siempre.
+            if ($id > 0) {
+                $params = $_GET;
+                $params['id'] = $id;
+                header("Location: /sigmu/activo/ver?" . http_build_query($params));
+                exit;
+            }
+        }
+
         $activo = $this->modelo->obtenerPorId($id);
         
         if (!$activo) {
-            header('Location: /sigmu/edificios?error=activo_no_encontrado');
-            return '';
+            $salaId = Session::get('ultima_sala_id');
+            $url = $salaId ? "/sigmu/sala?sala_id={$salaId}" : "/sigmu/edificios";
+            header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo solicitado no existe o ha sido eliminado del sistema.'));
+            exit;
         }
 
-        // ✅ VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
+        // Guardar la sala también para asegurar consistencia
+        Session::set('ultima_sala_id', (int)$activo['sala_id']);
+
+        // VALIDACIÓN DE PERMISOS: No permitir ver si el usuario no tiene acceso a la sala
         $user = Session::get('auth_user');
-        if ($user['rol_nombre'] !== 'Administrador') {
+        if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
             // Usamos las salas accesibles para el usuario
             $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
             $idsSalas = array_column($salasAccesibles, 'id');
@@ -174,7 +200,7 @@ final class ActivoController
             return;
         }
 
-        // ✅ VALIDACIÓN DE ESTADO
+        // VALIDACIÓN DE ESTADO
         if (!array_key_exists($estado, Activo::ESTADOS)) {
             header("Location: /sigmu/activo/registrar?sala_id={$salaId}&error=" . urlencode("Estado no válido seleccionado"));
             return;
@@ -185,6 +211,7 @@ final class ActivoController
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
+            'valor_adquisicion' => isset($_POST['valor_adquisicion']) && $_POST['valor_adquisicion'] !== '' ? (float)$_POST['valor_adquisicion'] : null,
             'estado' => $estado,
             'sala_id' => $salaId,
             'cantidad' => (int)($_POST['cantidad'] ?? 1)
@@ -198,13 +225,25 @@ final class ActivoController
 
             if ($datos['cantidad'] > 1) {
                 $res = $this->sigmuService->registrarMultiplesActivos(
-                    $datos['cantidad'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
+                    $datos['cantidad'],
+                    $datos['nombre'],
+                    $datos['tipo_activo_id'],
+                    $datos['descripcion'],
+                    $datos['valor_adquisicion'],
+                    $datos['estado'],
+                    $datos['sala_id'],
+                    $fotoPaths
                 );
             } else {
                 $res = $this->sigmuService->registrarActivo(
-                    $datos['codigo'], $datos['nombre'], $datos['tipo_activo_id'],
-                    $datos['descripcion'], $datos['estado'], $datos['sala_id'], $fotoPaths
+                    $datos['codigo'],
+                    $datos['nombre'],
+                    $datos['tipo_activo_id'],
+                    $datos['descripcion'],
+                    $datos['valor_adquisicion'],
+                    $datos['estado'],
+                    $datos['sala_id'],
+                    $fotoPaths
                 );
             }
 
@@ -227,15 +266,37 @@ final class ActivoController
             return '';
         }
 
+        // 1. Intentar obtener de parámetro (URL)
+        if ($id > 0) {
+            // Si viene en URL, lo guardamos en sesión como "memoria"
+            Session::set('ultimo_activo_id', $id);
+        } else {
+            // 2. Si no viene (id=0), intentar recuperar de la "memoria" de sesión
+            $id = (int)Session::get('ultimo_activo_id', 0);
+            
+            // 3. Si lo recuperamos de sesión, redirigimos a la URL correcta 
+            if ($id > 0) {
+                $params = $_GET;
+                $params['id'] = $id;
+                header("Location: /sigmu/activo/editar?" . http_build_query($params));
+                exit;
+            }
+        }
+
         $activo = $this->modelo->obtenerPorId($id);
-        $habitaciones = $this->modelo->obtenerHabitaciones();
+        $habitaciones = $this->modelo->obtenerSalas();
         $tiposActivo = $this->modelo->obtenerTiposActivo();
         $edificios = $this->modelo->obtenerEdificios();
-        
+
         if (!$activo) {
-            header('Location: /sigmu/edificios?error=activo_no_encontrado');
-            return '';
+            $salaId = Session::get('ultima_sala_id');
+            $url = $salaId ? "/sigmu/sala?sala_id={$salaId}" : "/sigmu/edificios";
+            header('Location: ' . $url . (str_contains($url, '?') ? '&' : '?') . 'error=' . urlencode('El activo que intenta editar no existe o ha sido eliminado.'));
+            exit;
         }
+
+        // Guardar contexto
+        Session::set('ultima_sala_id', (int)$activo['sala_id']);
 
         // Obtener el edificio_id de la sala actual para pre-seleccionarlo
         $edificioActualId = 0;
@@ -248,7 +309,7 @@ final class ActivoController
 
         return view('inventario_catalogacion.editar_activo', [
             'activo' => $activo,
-            'habitaciones' => $this->modelo->obtenerHabitaciones(),
+            'habitaciones' => $this->modelo->obtenerSalas(),
             'tiposActivo' => $this->sigmuService->obtenerTiposActivo(),
             'edificios' => $edificios,
             'edificioActualId' => $edificioActualId,
@@ -267,7 +328,7 @@ final class ActivoController
 
         $estado = trim((string)($_POST['estado'] ?? ''));
 
-        // ✅ VALIDACIÓN DE ESTADO
+        // VALIDACIÓN DE ESTADO
         if (!array_key_exists($estado, Activo::ESTADOS)) {
             header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode("Estado no válido seleccionado"));
             return;
@@ -276,6 +337,7 @@ final class ActivoController
         $datos = [
             'nombre' => trim((string)($_POST['nombre'] ?? '')),
             'descripcion' => trim((string)($_POST['descripcion'] ?? '')),
+            'valor_adquisicion' => isset($_POST['valor_adquisicion']) && $_POST['valor_adquisicion'] !== '' ? (float)$_POST['valor_adquisicion'] : null,
             'tipo_activo_id' => (int)($_POST['tipo_activo_id'] ?? 0),
             'estado' => $estado,
             'codigo' => trim((string)($_POST['codigo'] ?? '')),
@@ -284,6 +346,18 @@ final class ActivoController
         ];
 
         try {
+            // Validar nombre y descripcion
+            $errorNombre = Validator::nombre($datos['nombre'], 'Nombre del activo', Validator::MAX_NOMBRE_ACTIVO);
+            if ($errorNombre !== null) {
+                header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($errorNombre));
+                return;
+            }
+            $errorDesc = Validator::descripcion($datos['descripcion'], 'Descripcion');
+            if ($errorDesc !== null) {
+                header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($errorDesc));
+                return;
+            }
+
             // Verificar si el activo ya tiene fotos antes de procesar las nuevas
             $fotosExistentes = $this->sigmuService->obtenerFotosActivo($id);
             $tieneFotosPrevias = !empty($fotosExistentes);
@@ -302,10 +376,32 @@ final class ActivoController
                 }
             }
 
+            $activoAnterior = $this->modelo->obtenerPorId($id);
+            $salaAnteriorId = (int)$activoAnterior['sala_id'];
+            $salaNuevaId = (int)$datos['sala_id'];
+
             $this->modelo->actualizar($id, $datos);
-            header("Location: /sigmu/activo/ver?id={$id}&success=activo_actualizado");
+
+            // Determinar mensaje de éxito
+            $mensaje = "El activo fue actualizado correctamente.";
+            if ($salaAnteriorId !== $salaNuevaId) {
+                $mensaje = "El activo fue trasladado con éxito.";
+                
+                // Verificar acceso del usuario a la nueva sala
+                $user = Session::get('auth_user');
+                if (!\App\Support\Roles::is($user['rol_id'], \App\Support\Roles::ADMIN)) {
+                    $salasAccesibles = $this->sigmuService->obtenerTodasLasSalas();
+                    $idsSalas = array_column($salasAccesibles, 'id');
+                    
+                    if (!in_array($salaNuevaId, $idsSalas)) {
+                        $mensaje .= " Sin embargo, el activo ha sido movido a una ubicación a la que no tienes permisos de acceso.";
+                    }
+                }
+            }
+
+            header("Location: /sigmu/activo/ver?id={$id}&success=" . urlencode($mensaje));
         } catch (Throwable $e) {
-            header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode($e->getMessage()));
+            header("Location: /sigmu/activo/editar?id={$id}&error=" . urlencode("No fue posible actualizar el activo: " . $e->getMessage()));
         }
     }
 
@@ -321,9 +417,9 @@ final class ActivoController
             $activo = $this->modelo->obtenerPorId($id);
             
             if ($this->modelo->darDeBaja($id, (int)$user['id'])) {
-                header("Location: /sigmu/sala?sala_id={$activo['sala_id']}&success=activo_descartado");
+                header("Location: /sigmu/sala?sala_id={$activo['sala_id']}&success=Activo descartado correctamente");
             } else {
-                header("Location: /sigmu/activo/ver?id={$id}&error=error_al_descartar");
+                header("Location: /sigmu/activo/ver?id={$id}&error=No fue posible descartar el activo");
             }
         } catch (Throwable $e) {
             header("Location: /sigmu/activo/ver?id={$id}&error=" . urlencode($e->getMessage()));
@@ -333,27 +429,41 @@ final class ActivoController
     /**
      * Eliminar (borrado físico)
      */
-    public function destroy(int $id): void
+    public function destroy(): void
     {
         if (!$this->requireAuth()) return;
 
+        $id = (int)($_POST['id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
+        $userSession = Session::get('auth_user');
+
         try {
+            // 1. Validar contraseña
+            $user = $this->sigmuService->obtenerUsuarioPorId((int)$userSession['id']);
+            if (!$user || !password_verify($password, (string)$user['contrasena_hash'])) {
+                header("Location: /sigmu/edificios?error=Contraseña incorrecta");
+                return;
+            }
+
+            // 2. Eliminar
             $activo = $this->modelo->obtenerPorId($id);
-            $salaId = $activo['sala_id'];
+            if (!$activo) {
+                header("Location: /sigmu/edificios?error=Activo no encontrado");
+                return;
+            }
+
+            $salaId = (int)$activo['sala_id'];
             
             if ($this->modelo->eliminar($id)) {
-                header("Location: /sigmu/sala?sala_id={$salaId}&success=activo_eliminado");
+                header("Location: /sigmu/sala?sala_id={$salaId}&success=Activo eliminado permanentemente");
             } else {
-                header("Location: /sigmu/sala?sala_id={$salaId}&error=error_al_eliminar");
+                header("Location: /sigmu/sala?sala_id={$salaId}&error=No fue posible eliminar el activo");
             }
         } catch (Throwable $e) {
             header("Location: /sigmu/edificios?error=" . urlencode($e->getMessage()));
         }
     }
 
-    /**
-     * Historial de un activo
-     */
     public function historial(int $id): string
     {
         if (!$this->requireAuth()) return '';
@@ -361,27 +471,94 @@ final class ActivoController
         $activo = $this->modelo->obtenerPorId($id);
         if (!$activo) return 'Activo no encontrado';
 
-        $historial = $this->modelo->obtenerHistorial(
-            $id, 
-            trim((string)($_GET['busqueda'] ?? '')),
-            trim((string)($_GET['accion'] ?? '')),
-            trim((string)($_GET['estado'] ?? ''))
-        );
+        $pagina = (int) ($_GET['pagina'] ?? 1);
+        $porPagina = 50;
+        $busqueda = trim((string)($_GET['busqueda'] ?? ''));
+        $accion = trim((string)($_GET['accion'] ?? ''));
+        $estado = trim((string)($_GET['estado'] ?? ''));
+        
+        $ordenarPor = trim((string) ($_GET['ordenar_por'] ?? 'fecha'));
+        $ordenDireccion = strtoupper((string) ($_GET['orden_direccion'] ?? 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+
+        $historial = $this->modelo->obtenerHistorial($id, $busqueda, $accion, $estado, $pagina, $porPagina, $ordenarPor, $ordenDireccion);
+        $total = $this->modelo->contarHistorial($id, $busqueda, $accion, $estado);
+        $totalPaginas = (int) ceil($total / $porPagina);
 
         return view('inventario_catalogacion.historial_activo', [
             'activo' => $activo,
-            'historial' => $historial
+            'historial' => $historial,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'total' => $total,
+            'busqueda' => $busqueda,
+            'filtroAccion' => $accion,
+            'filtroEstado' => $estado,
+            'ordenarPor' => $ordenarPor,
+            'ordenDireccion' => $ordenDireccion
         ]);
     }
 
     /**
-     * Endpoint AJAX para generar código
+     * Endpoint AJAX para generar código (legacy, solo con nombre)
      */
     public function generarCodigo(): void
     {
         header('Content-Type: application/json');
         $nombre = trim((string)($_GET['nombre'] ?? ''));
         echo json_encode(['success' => true, 'codigo' => $this->sigmuService->generarCodigoActivo($nombre)]);
+    }
+
+    /**
+     * Endpoint AJAX para generar código completo con el nuevo formato
+     * GET /sigmu/activo/generar-codigo-completo?nombre=Escritorio&tipo_id=1&codigo_cuenta=
+     * Si codigo_cuenta está vacío, se autogenera: [NOMBRE_ABREV]-[TIPO_ABREV]
+     * Luego se completa: [CODIGO_CUENTA]-[CORRELATIVO(3)]-[AÑO(2)]
+     */
+    public function generarCodigoCompleto(): void
+    {
+        header('Content-Type: application/json');
+        
+        $nombre = trim((string)($_GET['nombre'] ?? ''));
+        $tipoId = (int)($_GET['tipo_id'] ?? 0);
+        $codigoCuenta = trim((string)($_GET['codigo_cuenta'] ?? ''));
+        
+        try {
+            // Si no hay código de cuenta manual, autogenerarlo
+            if (empty($codigoCuenta)) {
+                if (empty($nombre) || $tipoId <= 0) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Se requiere nombre y tipo de activo para generar el código',
+                        'codigo_completo' => '',
+                        'codigo_cuenta' => '',
+                        'abreviatura_nombre' => '',
+                        'abreviatura_tipo' => ''
+                    ]);
+                    return;
+                }
+                
+                $abrevNombre = $this->sigmuService->generarAbreviaturaNombre($nombre);
+                $tipoNombre = $this->sigmuService->obtenerNombreTipoActivo($tipoId);
+                $abrevTipo = $this->sigmuService->generarAbreviaturaTipo($tipoNombre);
+                $codigoCuenta = $abrevNombre . '-' . $abrevTipo;
+            }
+            
+            // Generar código completo con correlativo
+            $resultado = $this->sigmuService->generarCodigoCompleto($codigoCuenta);
+            
+            echo json_encode([
+                'success' => true,
+                'codigo_completo' => '*' . $resultado['codigo_completo'] . '*',
+                'codigo_cuenta' => $codigoCuenta,
+                'correlativo' => $resultado['correlativo'],
+                'year' => $resultado['year'],
+            ]);
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al generar código: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function setPrincipalPhoto(): void
@@ -410,9 +587,9 @@ final class ActivoController
         $activoId = (int)($_POST['activo_id'] ?? 0);
 
         if ($this->sigmuService->eliminarFotoActivo($fotoId)) {
-            header("Location: /sigmu/activo/editar?id={$activoId}&success=foto_eliminada");
+            header("Location: /sigmu/activo/editar?id={$activoId}&success=La foto se ha eliminado con exito");
         } else {
-            header("Location: /sigmu/activo/editar?id={$activoId}&error=error_al_eliminar_foto");
+            header("Location: /sigmu/activo/editar?id={$activoId}&error=Hubo un error al eliminar la foto");
         }
     }
 

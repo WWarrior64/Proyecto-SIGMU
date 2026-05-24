@@ -13,7 +13,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
     <div class="main-content">
         <!-- Back Button -->
         <div class="back-button">
-            <button class="back-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) ($activo['sala_id'] ?? 0) ?>'">
+            <button class="back-btn" onclick="window.location.href='/sigmu/sala?sala_id=<?= (int) ($activo['sala_id'] ?? 0) ?>'" title="Volver a la sala">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
@@ -39,6 +39,16 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         </svg>
                     </a>
                     
+                    <a href="/sigmu/reporte/individual?id=<?= (int) $activo['id'] ?>" class="btn-reporte" title="Configurar y exportar reporte PDF" style="background-color: #28a745;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        Reporte PDF
+                    </a>
+
                     <a href="/sigmu/activo/historial?id=<?= (int) $activo['id'] ?>" class="btn-historial" title="Ver historial de cambios">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -61,8 +71,8 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     
                     <?php 
                         // Mostrar botón dar de baja solo si usuario tiene permisos y activo no esta descartado
-                        $usuarioRol = $_SESSION['auth_user']['rol_nombre'] ?? '';
-                        $puedeDarBaja = in_array($usuarioRol, ['Administrador', 'Responsable de Area']);
+                        $user = $_SESSION['auth_user'] ?? [];
+                        $puedeDarBaja = \App\Support\Roles::in($user['rol_id'] ?? 0, [\App\Support\Roles::ADMIN, \App\Support\Roles::RESPONSABLE_AREA]);
                         
                         if ($puedeDarBaja && $activo['estado'] !== 'descartado'): 
                     ?>
@@ -164,6 +174,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             </div>
                         </div>
 
+                        <!-- Valor de Adquisicion -->
+                        <div class="detail-group">
+                            <label class="detail-label">Valor de Adquisición</label>
+                            <div class="detail-value">
+                                <?= $activo['valor_adquisicion'] !== null ? '$' . number_format((float)$activo['valor_adquisicion'], 2) : '<span class="no-value">No registrado</span>' ?>
+                            </div>
+                        </div>
+
                         <!-- Creado Por -->
                         <div class="detail-group">
                             <label class="detail-label">Creado Por</label>
@@ -177,7 +195,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <label class="detail-label">Estado</label>
                             <div class="detail-value">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? 'Sin estado'), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                             </div>
                         </div>
@@ -216,7 +234,14 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
     <div id="modalConfirmacionBaja" class="modal-overlay" style="display: none;">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>⚠️ Confirmar Dar de Baja</h3>
+                <h3 style="display: flex; align-items: center; gap: 10px; color: #dc2626;">
+                    <svg xmlns="http://w3.org" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="15"/>
+                        <line x1="12" y1="19" x2="12.01" y2="19"/>
+                    </svg>
+                    Confirmar Dar de Baja
+                </h3>
                 <button class="modal-close" id="btnCerrarModal">&times;</button>
             </div>
             <div class="modal-body">
@@ -230,7 +255,9 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="btnCancelarBaja">Cancelar</button>
                 <form method="POST" action="/sigmu/activo/dar-baja" style="display: inline;">
+                    <?= \App\Support\Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int)$activo['id'] ?>">
+                    <input type="hidden" name="sala_id" value="<?= (int)($activo['sala_id'] ?? 0) ?>">
                     <button type="submit" class="btn btn-danger">Confirmar Dar de Baja</button>
                 </form>
             </div>

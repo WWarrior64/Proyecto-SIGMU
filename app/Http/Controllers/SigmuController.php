@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\SigmuService;
+use App\Support\Roles;
 use App\Support\Csrf;
 use App\Support\Session;
 use Throwable;
@@ -41,9 +42,9 @@ final class SigmuController
             ]);
         }
 
-        // ✅ REDIRECCION SEGUN ROL DE USUARIO
+        // REDIRECCION SEGUN ROL DE USUARIO
         // Si es ADMINISTRADOR mostrar panel exclusivo
-        if ($sessionUser['rol_nombre'] === 'Administrador') {
+        if ((int)$sessionUser['rol_id'] === Roles::ADMIN) {
             return view('administracion_usuarios.inicio', [
                 'sessionUser' => $sessionUser,
                 'error' => $error,
@@ -51,7 +52,7 @@ final class SigmuController
         }
 
         // Si es PERSONAL DE MANTENIMIENTO, redirigir a su panel específico
-        if ($sessionUser['rol_nombre'] === 'Personal Mantenimiento') {
+        if ((int)$sessionUser['rol_id'] === Roles::MANTENIMIENTO) {
             header('Location: /sigmu/mantenimiento');
             return '';
         }
@@ -128,4 +129,3 @@ final class SigmuController
         echo json_encode($activos);
     }
 }
-

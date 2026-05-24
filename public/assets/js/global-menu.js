@@ -36,14 +36,28 @@
 
     function buildNavHtml() {
         const u = globalThis.authUser || {};
-        const role = u.rol_nombre || "";
-        const isAdmin = role === "Administrador";
-        const isMantenimiento = role === "Personal Mantenimiento";
+        const roleId = parseInt(u.rol_id) || 0;
+        const hasGlobalAccess = !!u.ver_todo;
+        
+        // Asumiendo que 1=Admin, 2=Responsable, 3=Mantenimiento (según BD)
+        const isAdmin = roleId === 1;
+        const isMantenimiento = roleId === 3;
+        const isResponsable = roleId === 2;
 
         let html = "";
         html += link("/sigmu", "Inicio", svg.home, "/sigmu");
         html += link("/sigmu/perfil", "Mi información", svg.user, "/sigmu/perfil");
-        html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
+        
+        // Visible si NO es mantenimiento O si tiene acceso global
+        if (!isMantenimiento || hasGlobalAccess) {
+            html += link("/sigmu/edificios", "Edificios y salas", svg.building, "/sigmu/edificios");
+        }
+        
+        // Reportes visibles para Admin, Responsable o cualquier rol con Acceso Global
+        if (isAdmin || isResponsable || hasGlobalAccess) {
+            html += link("/sigmu/reportes", "Reportes", svg.file, "/sigmu/reportes");
+        }
+
         html += link("/sigmu/historial", "Historial general", svg.clock, "/sigmu/historial");
         html += link("/sigmu/mantenimiento", "Panel mantenimiento", svg.wrench, "/sigmu/mantenimiento");
         html += link("/sigmu/mantenimiento/listado", "Lista de reparaciones", svg.list, "/sigmu/mantenimiento/listado");
@@ -55,6 +69,7 @@
         if (isAdmin) {
             html += '<div class="sigmu-sidebar__group-label">Administración</div>';
             html += link("/sigmu/admin/usuarios", "Gestión de usuarios", svg.key, "/sigmu/admin/usuarios");
+            html += link("/sigmu/administracion_usuarios/asignacion_espacios", "Asignación de espacios", svg.building, "/sigmu/administracion_usuarios/asignacion_espacios");
         }
 
         return html;

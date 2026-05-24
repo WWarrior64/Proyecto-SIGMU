@@ -15,16 +15,11 @@ $nombresMeses = [
 
 $diasSemana = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/**
- * LÓGICA DE CALENDARIO
- * mktime(hour, minute, second, month, day, year)
- */
 $primerDiaMesTimestamp = mktime(0, 0, 0, $mes, 1, $anio);
 $numeroDias = (int) date('t', $primerDiaMesTimestamp);
-$diaInicio = (int) date('w', $primerDiaMesTimestamp); // 0 (Dom) a 6 (Sab)
+$diaInicio = (int) date('w', $primerDiaMesTimestamp);
 $hoy = date('Y-m-d');
 
-// Agrupar eventos por día
 $eventosPorDia = [];
 foreach ($calendario as $evento) {
     if (!empty($evento['fecha_agendada'])) {
@@ -33,11 +28,18 @@ foreach ($calendario as $evento) {
     }
 }
 
-// Clases de colores para eventos
 $colores = ['event-blue', 'event-red', 'event-green', 'event-purple', 'event-orange'];
 
+// Calcular mes anterior y siguiente para navegacion
+$mesAnt = $mes - 1;
+$anioAnt = $anio;
+if ($mesAnt < 1) { $mesAnt = 12; $anioAnt--; }
+$mesSig = $mes + 1;
+$anioSig = $anio;
+if ($mesSig > 12) { $mesSig = 1; $anioSig++; }
+
 $sigmuPageTitle = 'MANTENIMIENTO';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
 $sigmuExtraCss = ['/assets/css/mantenimiento.css'];
 $sigmuExtraScripts = ['/assets/js/mantenimiento.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
@@ -57,8 +59,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             
             <!-- IZQUIERDA: CALENDARIO -->
             <section class="card">
-                <div class="card-header-red">
-                    CALENDARIO DE REPARACIONES - <?= $nombresMeses[$mes] ?> <?= $anio ?>
+                <div class="card-header-red" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>CALENDARIO DE REPARACIONES - <?= $nombresMeses[$mes] ?> <?= $anio ?></span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesAnt ?>&anio=<?= $anioAnt ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes anterior">&lsaquo;</a>
+                        <a href="/sigmu/mantenimiento?mes=<?= $mesSig ?>&anio=<?= $anioSig ?>" style="color: white; text-decoration: none; font-size: 22px; font-weight: bold; padding: 0 10px; line-height: 1;" title="Mes siguiente">&rsaquo;</a>
+                    </div>
                 </div>
                 <div class="calendar-container">
                     <div class="calendar-grid">
@@ -66,12 +72,10 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <div class="day-header"><?= $diaNombre ?></div>
                         <?php endforeach; ?>
 
-                        <!-- Espacios vacíos antes del inicio del mes -->
                         <?php for ($i = 0; $i < $diaInicio; $i++): ?>
                             <div class="calendar-day other-month"></div>
                         <?php endfor; ?>
 
-                        <!-- Días del mes -->
                         <?php for ($dia = 1; $dia <= $numeroDias; $dia++): 
                             $fechaActual = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
                             $esHoy = ($fechaActual === $hoy);
@@ -91,7 +95,6 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             </div>
                         <?php endfor; ?>
 
-                        <!-- Espacios vacíos después del fin del mes -->
                         <?php 
                         $totalCeldas = $diaInicio + $numeroDias;
                         $restante = (7 - ($totalCeldas % 7)) % 7;
@@ -137,7 +140,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                             ? '/' . ltrim($item['foto_principal'], '/') 
                                             : 'https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png';
                                     ?>
-                                    <img src="<?= $fotoPath ?>" 
+                                    <img src="<?= $fotoPath ?>"
                                          alt="<?= htmlspecialchars($item['activo_codigo']) ?>" 
                                          class="asset-img"
                                          onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e0/PlaceholderLC.png'">
@@ -180,6 +183,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 AGENDAR REPARACIÓN
             </div>
             <form id="formProgramar">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="mantenimiento_id" id="mantenimiento_id">
                 <div class="modal-body">
                     <div class="form-group">
@@ -195,7 +199,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fecha">Fecha:</label>
-                            <input type="date" name="fecha" id="fecha" class="form-control" required value="<?= date('Y-m-d') ?>">
+                            <input type="date" name="fecha" id="fecha" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="form-group">
                             <label for="hora">Hora:</label>

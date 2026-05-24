@@ -45,6 +45,7 @@ $error = isset($error) ? (string) $error : '';
         <?php if (!$message): ?>
             <!-- Formulario para solicitar el link de recuperación -->
             <form class="form" method="post" action="/sigmu/recuperar">
+                <?= \App\Support\Csrf::field() ?>
                 <div class="field">
                     <label for="login">Usuario o email</label>
                     <input id="login" name="login" type="text" placeholder="Tu usuario o correo" required>
@@ -59,18 +60,8 @@ $error = isset($error) ? (string) $error : '';
         <?php else: ?>
             <div style="margin-top: 8px;">
                 <p style="margin: 0 0 12px; font-size: 13px; opacity: 0.85;">
-                    Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.
+                    Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña en tu correo electrónico.
                 </p>
-                <?php if ($debugToken): ?>
-                    <!-- En local mostramos el token para probar sin correo -->
-                    <p style="margin: 0 0 10px; font-size: 13px;">
-                        Modo local (debug): token generado:
-                        <code><?= htmlspecialchars($debugToken, ENT_QUOTES, 'UTF-8') ?></code>
-                    </p>
-                    <p style="margin: 0 0 6px; font-size: 13px;">
-                        <a href="/sigmu/reset?token=<?= urlencode($debugToken) ?>">Ir a crear nueva contraseña</a>
-                    </p>
-                <?php endif; ?>
                 <p style="margin: 12px 0 0; font-size: 13px;">
                     <a href="/sigmu">Volver a login</a>
                 </p>

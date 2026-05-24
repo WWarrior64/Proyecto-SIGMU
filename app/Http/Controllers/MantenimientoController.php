@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Services\MantenimientoService;
 use App\Services\SigmuService;
+use App\Support\Logger;
 use App\Support\Session;
 use Throwable;
 
@@ -29,12 +30,14 @@ final class MantenimientoController
         $sessionUser = Session::get('auth_user');
 
         // Redirección si es técnico
-        if ($sessionUser['rol_nombre'] === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::MANTENIMIENTO)) {
             return $this->dashboardTecnico();
         }
 
         try {
-            $data = $this->mantenimientoService->obtenerDatosDashboard();
+            $mes = (int) ($_GET['mes'] ?? 0);
+            $anio = (int) ($_GET['anio'] ?? 0);
+            $data = $this->mantenimientoService->obtenerDatosDashboard($mes, $anio);
 
             return view('mantenimiento.mantenimiento', [
                 'sessionUser' => $sessionUser,
@@ -46,6 +49,7 @@ final class MantenimientoController
                 'anio' => $data['anio']
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error en index mantenimiento', ['error' => $e->getMessage()]);
             return "Error: " . $e->getMessage();
         }
     }
@@ -58,7 +62,9 @@ final class MantenimientoController
 
         try {
             $sessionUser = Session::get('auth_user');
-            $data = $this->mantenimientoService->obtenerDatosDashboardTecnico((int) $sessionUser['id']);
+            $mes = (int) ($_GET['mes'] ?? 0);
+            $anio = (int) ($_GET['anio'] ?? 0);
+            $data = $this->mantenimientoService->obtenerDatosDashboardTecnico((int) $sessionUser['id'], $mes, $anio);
 
             return view('mantenimiento.dashboard_tecnico', [
                 'sessionUser' => $sessionUser,
@@ -68,6 +74,7 @@ final class MantenimientoController
                 'anio' => $data['anio']
             ]);
         } catch (Throwable $e) {
+            Logger::error('Error en dashboard técnico', ['error' => $e->getMessage()]);
             return "Error: " . $e->getMessage();
         }
     }
@@ -108,7 +115,7 @@ final class MantenimientoController
 
             return json_encode(['success' => true, 'mantenimiento_id' => $mantenimientoId]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'No se pudo registrar la falla: ' . $e->getMessage()]);
         }
     }
 
@@ -128,11 +135,16 @@ final class MantenimientoController
                 return json_encode(['success' => false, 'message' => 'Datos incompletos']);
             }
 
+            // Validar que la fecha no sea pasada
+            if (strtotime($fecha) < strtotime(date('Y-m-d'))) {
+                return json_encode(['success' => false, 'message' => 'La fecha seleccionada no puede ser pasada']);
+            }
+
             $success = $this->mantenimientoService->agendarReparacion($mantenimientoId, $tecnicoId, $fecha, $notas);
 
             return json_encode(['success' => $success]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'Error al agendar: ' . $e->getMessage()]);
         }
     }
 
@@ -151,7 +163,7 @@ final class MantenimientoController
                 'mantenimientos' => $mantenimientos
             ]);
         } catch (Throwable $e) {
-            return "Error: " . $e->getMessage();
+            return "Ocurrió un error al cargar el listado: " . $e->getMessage();
         }
     }
 
@@ -169,15 +181,54 @@ final class MantenimientoController
             $observaciones = $_POST['observaciones'] ?? '';
 
             if ($id <= 0) {
-                return json_encode(['success' => false, 'message' => 'ID inválido']);
+                return json_encode(['success' => false, 'message' => 'Identificador no válido']);
             }
 
             $success = $this->mantenimientoService->finalizarMantenimiento($id, $notas, $fechaReal, $resultado, $observaciones);
 
             return json_encode(['success' => $success]);
         } catch (Throwable $e) {
-            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => 'Error al finalizar mantenimiento: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Muestra el detalle de un activo para el personal de mantenimiento
+     */
+    public function verActivo(int $id): string
+    {
+        if (!$this->requireAuth()) {
+            return '';
+        }
+
+        $sessionUser = Session::get('auth_user');
+        
+        // El personal de mantenimiento puede ver si tiene un mantenimiento asignado
+        // O si es administrador.
+        $esAdmin = \App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN);
+        $esMantenimiento = \App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::MANTENIMIENTO);
+
+        if (!$esAdmin && !$esMantenimiento) {
+            header('Location: /sigmu?error=acceso_denegado');
+            return '';
+        }
+
+        $activo = (new \App\Models\Activo())->obtenerPorId($id);
+        
+        if (!$activo) {
+            header('Location: /sigmu/mantenimiento?error=activo_no_encontrado');
+            return '';
+        }
+
+        // Obtener todas las fotos
+        $fotos = $this->sigmuService->obtenerFotosActivo($id);
+        $activo['fotos'] = $fotos;
+        $activo['imagen'] = !empty($fotos) ? $fotos[0]['ruta_foto'] : null;
+
+        return view('mantenimiento.ver_activo', [
+            'activo' => $activo,
+            'sessionUser' => $sessionUser
+        ]);
     }
 
     private function requireAuth(): bool

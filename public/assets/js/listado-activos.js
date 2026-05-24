@@ -209,20 +209,45 @@ function initFilter() {
             </div>
         `;
 
+        // Agregar clase para CSS responsive
+        dropdown.className = 'filter-dropdown';
+        
         // Posicionamiento
         const rect = filterBtn.getBoundingClientRect();
-        dropdown.style.cssText = `
-            position: absolute;
-            top: ${rect.bottom + 8}px;
-            right: ${window.innerWidth - rect.right}px;
-            background: white;
-            border: 1px solid #E0E0E0;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            z-index: 1000;
-            min-width: 450px;
-        `;
+        const windowWidth = window.innerWidth;
+        const isMobile = windowWidth <= 768;
+        
+        if (isMobile) {
+            dropdown.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                border: 1px solid #E0E0E0;
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                z-index: 1000;
+                width: calc(100% - 24px);
+                max-width: 420px;
+                max-height: 80vh;
+                overflow-y: auto;
+            `;
+        } else {
+            dropdown.style.cssText = `
+                position: absolute;
+                top: ${rect.bottom + 8}px;
+                right: ${window.innerWidth - rect.right}px;
+                background: white;
+                border: 1px solid #E0E0E0;
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+                z-index: 1000;
+                min-width: 450px;
+            `;
+        }
 
         document.body.appendChild(dropdown);
 

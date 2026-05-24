@@ -12,7 +12,7 @@ if (!Session::has('auth_user')) {
 $sessionUser = Session::get('auth_user');
 
 // Verificar que sea Administrador exclusivamente
-if ($sessionUser['rol_nombre'] !== 'Administrador') {
+if (!\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN)) {
     header('Location: /sigmu');
     exit;
 }
@@ -35,8 +35,8 @@ $sigmuExtraCss = ['/assets/css/gestion-usuarios.css'];
 $sigmuExtraScripts = ['/assets/js/gestion-usuarios.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-    <div class="back-container">
-        <button type="button" class="back-btn" onclick="window.location.href='/sigmu'">
+    <div class="back-button">
+        <button type="button" class="back-btn" onclick="window.location.href='/sigmu'" title="Volver al inicio">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
@@ -49,7 +49,8 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="header-row">
                 <h2 class="page-title">USUARIOS</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary">ADMINISTRAR ESPACIOS</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/sigmu/administracion_usuarios/gestion_roles'">ADMINISTRAR ROLES</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/sigmu/administracion_usuarios/asignacion_espacios'">ADMINISTRAR ESPACIOS</button>
                     <button class="btn btn-primary" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=crear'">+</button>
                 </div>
             </div>
@@ -101,7 +102,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <div class="users-list" id="usersList">
 
                 <!-- ENCABEZADO -->
-                <div class="user-item header">
+                <div class="user-item list-header">
                     <div class="user-avatar"></div>
                     <div class="user-username">Nombre de Usuario</div>
                     <div class="user-role">Rol</div>
@@ -125,8 +126,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <?php endif; ?>
                     </div>
                     <div class="user-username"><?= htmlspecialchars($usuario['username']) ?></div>
-                    <div class="user-role"><?= htmlspecialchars($usuario['rol_nombre']) ?></div>
-                    <div class="user-status"><?= $usuario['activo'] ? '✅ Activo' : '❌ Inactivo' ?></div>
+                    <div class="user-role"><?= str_replace(['_', '-'], ' ', htmlspecialchars($usuario['rol_nombre'])) ?></div>
+                    <div class="user-status">
+                        <span class="status-badge <?= $usuario['activo'] ? 'status-active' : 'status-inactive' ?>">
+                            <?= $usuario['activo'] ? 'ACTIVO' : 'INACTIVO' ?>
+                        </span>
+                    </div>
                     <div class="user-actions">
                         <button class="icon-btn edit-btn" title="Editar usuario" onclick="window.location.href='/sigmu/administracion_usuarios/formulario_usuario?modo=editar&id=<?= $usuario['id'] ?>'">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

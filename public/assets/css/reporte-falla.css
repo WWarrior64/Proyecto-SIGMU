@@ -176,3 +176,87 @@ textarea.form-control {
 .btn-confirm:hover {
     background-color: #d69e2e;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+    
+    .main-container {
+        padding: 16px;
+    }
+    
+    .ticket-card {
+        padding: 20px;
+    }
+    
+    .ticket-header h2 {
+        font-size: 20px;
+    }
+    
+    .header-title {
+        font-size: 20px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+    
+    .main-container {
+        padding: 12px;
+    }
+    
+    .ticket-card {
+        padding: 16px;
+    }
+    
+    .ticket-header h2 {
+        font-size: 17px;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .header-bar {
+        padding: 0 12px;
+        height: 56px;
+    }
+    
+    .logo {
+        height: 32px;
+    }
+    
+    .header-title {
+        font-size: 16px;
+        max-width: 100px;
+    }
+    
+    .back-btn-container {
+        padding: 10px 12px 0;
+    }
+    
+    .form-group label {
+        font-size: 14px;
+    }
+}

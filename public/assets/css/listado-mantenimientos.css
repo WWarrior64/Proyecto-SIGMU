@@ -1,0 +1,129 @@
+/**
+ * CSS para Listado de Mantenimientos
+ */
+
+.list-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.table-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.table-header {
+    background: #8b0000;
+    color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.maint-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.maint-table th {
+    text-align: left;
+    padding: 12px 20px;
+    background: #f8f9fa;
+    color: #4a5568;
+    font-size: 13px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.maint-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 14px;
+    color: #2d3748;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pendiente { background: #fef3c7; color: #92400e; }
+.status-en_proceso { background: #dcfce7; color: #166534; }
+.status-completado { background: #d1fae5; color: #065f46; }
+.status-cancelado { background: #fee2e2; color: #991b1b; }
+
+.btn-complete {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-complete:hover { background: #047857; }
+
+.empty-msg {
+    padding: 40px;
+    text-align: center;
+    color: #718096;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .list-container {
+        padding: 12px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .maint-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .maint-table th,
+    .maint-table td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .list-container {
+        padding: 8px;
+    }
+    
+    .maint-table th,
+    .maint-table td {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    
+    .status-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .btn-complete {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}

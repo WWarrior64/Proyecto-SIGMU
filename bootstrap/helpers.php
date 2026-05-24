@@ -45,7 +45,7 @@ if (!function_exists('view')) {
             return 'View not found: ' . $viewPath;
         }
 
-        // ✅ AGREGAR AUTOMATICAMENTE DATOS DEL USUARIO A TODAS LAS VISTAS
+        // AGREGAR AUTOMATICAMENTE DATOS DEL USUARIO A TODAS LAS VISTAS
         if (isset($_SESSION['auth_user'])) {
             $data['authUser'] = $_SESSION['auth_user'];
             
@@ -71,7 +71,7 @@ if (!function_exists('view')) {
         require $viewPath;
         $output = (string) ob_get_clean();
 
-        // ✅ AUTO-RECARGA POR EXPIRACIÓN (JS)
+        // AUTO-RECARGA POR EXPIRACIÓN (JS)
         // Inyectamos el script que cerrará la sesión automáticamente al cumplirse el tiempo
         if (isset($_SESSION['auth_user']) && isset($_SESSION['ultima_actividad'])) {
             $timeoutMs = defined('SESSION_TIMEOUT') ? SESSION_TIMEOUT * 1000 : 900000;
@@ -105,11 +105,10 @@ if (!function_exists('view')) {
 }
 
 /**
- * ✅ TIMEOUT DE SESION POR INACTIVIDAD (Nativo)
+ * TIMEOUT DE SESION POR INACTIVIDAD (Nativo)
+ * NOTA: session_start() ya se llama en public/index.php, no duplicar aquí
+ * para evitar conflictos con configuraciones estrictas de sesión.
  */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 // Tiempo de inactividad permitido: 15 MINUTOS (900 segundos)
 if (!defined('SESSION_TIMEOUT')) {

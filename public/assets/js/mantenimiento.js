@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            const fechaInput = document.getElementById('fecha');
+            const fechaSeleccionada = new Date(fechaInput.value + 'T00:00:00');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            if (fechaSeleccionada < hoy) {
+                showToast('No se puede agendar en una fecha pasada', 'error');
+                return;
+            }
+
             const formData = new FormData(form);
             const submitBtn = this.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
@@ -46,16 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Reparación agendada correctamente');
-                    location.reload();
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('success', 'Reparación agendada correctamente');
+                    window.location.href = url.toString();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                     if (submitBtn) submitBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al procesar la solicitud');
+                showToast('Ocurrió un error al procesar la solicitud', 'error');
                 if (submitBtn) submitBtn.disabled = false;
             });
         });

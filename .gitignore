@@ -1,7 +1,13 @@
 /vendor/
 /.env
+/sonar-cli/
+/public/img/usuarios/*
+!/public/img/usuarios/.gitkeep
+/public/uploads/*
+!/public/uploads/.gitkeep
 /storage/logs/*.log
 /storage/cache/*
+/storage/backups/*
 !/storage/cache/.gitkeep
 /storage/uploads/*
 !/storage/uploads/.gitkeep

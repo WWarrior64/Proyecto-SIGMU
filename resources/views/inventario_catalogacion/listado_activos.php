@@ -42,12 +42,27 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <div class="section-header">
             <h1 class="section-title">
                 <?php if ($edificio && $sala): ?>
-                    <?= htmlspecialchars($edificio, ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($sala, ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars((string)$edificio, ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars((string)$sala, ENT_QUOTES, 'UTF-8') ?>
                 <?php else: ?>
                     Activos Registrados
                 <?php endif; ?>
             </h1>
             <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="exportarInventario('pdf')" class="btn-reporte" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    PDF
+                </button>
+                <button type="button" onclick="exportarInventario('excel')" class="btn-reporte" style="background: #198754; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Excel
+                </button>
+                <script>
+                function exportarInventario(formato) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('formato', formato);
+                    window.location.href = '/sigmu/reporte/inventario/exportar?' + urlParams.toString();
+                }
+                </script>
                 <button class="add-btn" style="background-color: #4b5563;" onclick="window.location.href='/sigmu/activo/importar?sala_id=<?= $salaId ?>'" title="Importar activos desde Excel/CSV">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -79,11 +94,17 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <!-- Search and Filter Bar -->
         <div class="search-filter-bar">
             <div class="search-container">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" class="search-input" placeholder="Buscar activos..." id="searchInput">
+                <form onsubmit="return false;" style="display:inline-block; width: 100%;">
+                    <!-- Campos trampa para engañar al autocompletador -->
+                    <input type="text" name="prevent_autofill_user" style="display:none">
+                    <input type="password" name="prevent_autofill_pass" style="display:none">
+                    
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Buscar activos..." id="searchInput" autocomplete="off" name="search_field_dummy">
+                </form>
             </div>
             <button class="filter-btn" id="filterBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -114,6 +135,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         Tipo
                         <span class="sort-icon <?= $ordenarPor === 'tipo' ? 'active' : '' ?>">
                             <?= $ordenarPor === 'tipo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-valor sortable" data-sort="valor_adquisicion">
+                        Valor
+                        <span class="sort-icon <?= $ordenarPor === 'valor_adquisicion' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'valor_adquisicion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
                         </span>
                     </div>
                     <div class="table-cell cell-status sortable" data-sort="estado">
@@ -147,9 +174,10 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <div class="table-cell cell-id" data-label="Código"><?= htmlspecialchars((string) ($activo['codigo'] ?? $activo['id']), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-name" data-label="Nombre"><?= htmlspecialchars((string) ($activo['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             <div class="table-cell cell-type" data-label="Tipo Activo" data-tipo-id="<?= (int) ($activo['tipo_activo_id'] ?? 0) ?>"><?= htmlspecialchars((string) ($activo['tipo'] ?? 'Sin tipo'), ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="table-cell cell-valor" data-label="Valor"><?= $activo['valor_adquisicion'] !== null ? '$' . number_format((float)$activo['valor_adquisicion'], 2) : '-' ?></div>
                             <div class="table-cell cell-status" data-label="Estado">
                                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                             </div>
                             <div class="table-cell cell-ubicacion" data-label="Ubicación"><?= htmlspecialchars((string) ($activo['sala_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
@@ -167,7 +195,9 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     </svg>
                                 </a>
                                 <form method="POST" action="/sigmu/activo/eliminar" style="display: inline;" class="delete-form">
+                                    <?= \App\Support\Csrf::field() ?>
                                     <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
+                                    <input type="hidden" name="sala_id" value="<?= (int) ($salaId ?? 0) ?>">
                                     <button type="submit" class="action-btn action-delete" title="Eliminar">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="3 6 5 6 21 6"></polyline>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Support\Router;
+use App\Support\Logger;
 
 // Configuración de zona horaria (UNICAES - El Salvador)
 date_default_timezone_set('America/El_Salvador');
@@ -28,8 +29,17 @@ if (is_file($envFile)) {
     }
 }
 
+// Logger: limpieza automática de logs antiguos al iniciar (mayor a 30 días)
+Logger::clean(30);
+
 // Creamos el router y cargamos las rutas web.
 $router = new Router();
+
+// Registrar middleware de autorización
+$router->middleware(static function (string $method, string $path): bool {
+    return \App\Middleware\AuthorizationMiddleware::handle($method, $path);
+});
+
 require __DIR__ . '/../routes/web.php';
 
 return $router;

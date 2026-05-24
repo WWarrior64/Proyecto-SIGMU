@@ -1,8 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/** @var array|null $activo */
+/** @var array $historial */
+/** @var int $pagina */
+/** @var int $totalPaginas */
+/** @var int $total */
+/** @var string $busqueda */
+/** @var string $filtroAccion */
+/** @var string $filtroEstado */
+/** @var string $ordenarPor */
+/** @var string $ordenDireccion */
+
 $activo = $activo ?? null;
 $historial = $historial ?? [];
+$pagina = $pagina ?? 1;
+$totalPaginas = $totalPaginas ?? 1;
+$total = $total ?? 0;
+$busqueda = $busqueda ?? '';
+$filtroAccion = $filtroAccion ?? '';
+$filtroEstado = $filtroEstado ?? '';
+$ordenarPor = $ordenarPor ?? 'fecha';
+$ordenDireccion = $ordenDireccion ?? 'DESC';
 
 $sigmuPageTitle = 'HISTORIAL DEL ACTIVO';
 $sigmuLayoutAdmin = false;
@@ -35,7 +54,8 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         <?php endif; ?>
 
         <!-- Search and Filter Bar -->
-        <form method="GET" action="" class="search-filter-bar">
+        <form method="GET" action="" class="search-filter-bar" onsubmit="return false;">
+            <?= \App\Support\Csrf::field() ?>
             <input type="hidden" name="id" value="<?= (int) ($activo['id'] ?? 0) ?>">
             
             <div class="search-container">
@@ -79,13 +99,48 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-id">ID</div>
-                    <div class="table-cell cell-name">Acción / Detalle</div>
-                    <div class="table-cell cell-status">Estado</div>
-                    <div class="table-cell">Sala Anterior</div>
-                    <div class="table-cell">Sala Actual</div>
-                    <div class="table-cell cell-date">Fecha</div>
-                    <div class="table-cell cell-user">Usuario</div>
+                    <div class="table-cell cell-id sortable" data-sort="id">
+                        ID
+                        <span class="sort-icon <?= $ordenarPor === 'id' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'id' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-name sortable" data-sort="accion">
+                        Acción / Detalle
+                        <span class="sort-icon <?= $ordenarPor === 'accion' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'accion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-status sortable" data-sort="estado_nuevo">
+                        Estado
+                        <span class="sort-icon <?= $ordenarPor === 'estado_nuevo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'estado_nuevo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_anterior_nombre">
+                        Sala Anterior
+                        <span class="sort-icon <?= $ordenarPor === 'sala_anterior_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_anterior_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_nueva_nombre">
+                        Sala Actual
+                        <span class="sort-icon <?= $ordenarPor === 'sala_nueva_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_nueva_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-date sortable" data-sort="fecha">
+                        Fecha
+                        <span class="sort-icon <?= $ordenarPor === 'fecha' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'fecha' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-user sortable" data-sort="usuario_nombre">
+                        Usuario
+                        <span class="sort-icon <?= $ordenarPor === 'usuario_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'usuario_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -110,7 +165,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <!-- ACCIÓN / DETALLE -->
                             <div class="table-cell cell-name" data-label="Acción / Detalle">
                                 <span class="action-badge action-<?= htmlspecialchars((string) ($registro['accion'] ?? 'desconocida'), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                                 <span class="detail-text">
                                     <?= htmlspecialchars((string) ($registro['detalle'] ?? 'Sin detalle'), ENT_QUOTES, 'UTF-8') ?>
@@ -121,12 +176,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <div class="table-cell cell-status" data-label="Estado">
                                 <?php if (!empty($registro['estado_anterior']) && !empty($registro['estado_nuevo'])): ?>
                                     <div class="status-changes">
-                                        <span class="status-old"><?= htmlspecialchars($registro['estado_anterior'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-old"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_anterior'], ENT_QUOTES, 'UTF-8')) ?></span>
                                         <span class="status-arrow">→</span>
-                                        <span class="status-new"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-new"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                     </div>
                                 <?php elseif (!empty($registro['estado_nuevo'])): ?>
-                                    <span class="status-only"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="status-only"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                 <?php else: ?>
                                     <span class="empty-value">-</span>
                                 <?php endif; ?>
@@ -177,6 +232,52 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <?php
+            // Generar la cadena de consulta base manteniendo los filtros y ordenamiento
+            $currentParams = $_GET;
+            unset($currentParams['pagina']);
+            $queryString = http_build_query($currentParams);
+            $baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
+            ?>
+
+            <!-- Pagination -->
+            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando <?= count($historial) ?> de <?= $total ?> registros
+                </div>
+                <div class="pagination">
+                    <?php if ($pagina > 1): ?>
+                        <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Anterior
+                        </a>
+                    <?php endif; ?>
+
+                    <div class="pagination-pages">
+                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                            <?php if ($i == $pagina): ?>
+                                <span class="pagination-btn active"><?= $i ?></span>
+                            <?php else: ?>
+                                <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </div>
+
+                    <?php if ($pagina < $totalPaginas): ?>
+                        <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
+                            Siguiente
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 

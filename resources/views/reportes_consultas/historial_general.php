@@ -1,9 +1,31 @@
 <?php
 declare(strict_types=1);
 
+/** @var array $historial */
+/** @var array $usuarios */
+/** @var bool $esAdministrador */
+/** @var string $busqueda */
+/** @var string $filtroAccion */
+/** @var string $filtroEstado */
+/** @var int $filtroUsuario */
+/** @var int $pagina */
+/** @var int $totalPaginas */
+/** @var int $total */
+/** @var string $ordenarPor */
+/** @var string $ordenDireccion */
+
 $historial = $historial ?? [];
 $usuarios = $usuarios ?? [];
 $esAdministrador = $esAdministrador ?? false;
+$busqueda = $busqueda ?? '';
+$filtroAccion = $filtroAccion ?? '';
+$filtroEstado = $filtroEstado ?? '';
+$filtroUsuario = $filtroUsuario ?? 0;
+$pagina = $pagina ?? 1;
+$totalPaginas = $totalPaginas ?? 1;
+$total = $total ?? 0;
+$ordenarPor = $ordenarPor ?? 'fecha';
+$ordenDireccion = $ordenDireccion ?? 'DESC';
 
 $sigmuPageTitle = 'HISTORIAL GENERAL';
 $sigmuLayoutAdmin = (bool) $esAdministrador;
@@ -29,8 +51,8 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
 
         <!-- Search and Filter Bar -->
-        <form method="GET" action="" class="search-filter-bar">
-            
+        <form method="GET" action="" class="search-filter-bar" onsubmit="return false;">
+            <?= \App\Support\Csrf::field() ?>
             <div class="search-container">
                 <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -40,7 +62,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                        name="busqueda" id="searchInputHistorial" value="<?= htmlspecialchars($busqueda ?? '', ENT_QUOTES, 'UTF-8') ?>">
             </div>
 
-            <select name="accion" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 160px;">
+            <select name="accion" class="filter-select">
                 <option value="">Todas las acciones</option>
                 <option value="registro" <?= ($filtroAccion ?? '') === 'registro' ? 'selected' : '' ?>>Registro</option>
                 <option value="modificacion" <?= ($filtroAccion ?? '') === 'modificacion' ? 'selected' : '' ?>>Modificación</option>
@@ -51,7 +73,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 <option value="eliminacion" <?= ($filtroAccion ?? '') === 'eliminacion' ? 'selected' : '' ?>>Eliminación</option>
             </select>
 
-            <select name="estado" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 160px;">
+            <select name="estado" class="filter-select">
                 <option value="">Todos los estados</option>
                 <option value="disponible" <?= ($filtroEstado ?? '') === 'disponible' ? 'selected' : '' ?>>Disponible</option>
                 <option value="en_uso" <?= ($filtroEstado ?? '') === 'en_uso' ? 'selected' : '' ?>>En Uso</option>
@@ -60,7 +82,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </select>
 
             <?php if ($esAdministrador): ?>
-            <select name="usuario" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 180px;">
+            <select name="usuario" class="filter-select">
                 <option value="">Todos los usuarios</option>
                 <?php foreach ($usuarios as $usuario): ?>
                 <option value="<?= (int) $usuario['id'] ?>" <?= ($filtroUsuario ?? '') == $usuario['id'] ? 'selected' : '' ?>>
@@ -70,7 +92,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             </select>
             <?php endif; ?>
 
-            <button type="button" class="filter-btn" id="limpiarFiltrosBtn" style="background: #ffffff; border: 2px solid #212529; color: #212529;">
+            <button type="button" class="filter-btn btn-clean" id="limpiarFiltrosBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -85,14 +107,54 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
             <!-- Table Header -->
             <div class="table-header">
                 <div class="table-row">
-                    <div class="table-cell cell-user" style="width: 140px;">Usuario</div>
-                    <div class="table-cell cell-id">ID</div>
-                    <div class="table-cell">Activo</div>
-                    <div class="table-cell cell-name">Acción / Detalle</div>
-                    <div class="table-cell cell-status">Estado</div>
-                    <div class="table-cell">Sala Anterior</div>
-                    <div class="table-cell">Sala Actual</div>
-                    <div class="table-cell cell-date">Fecha</div>
+                    <div class="table-cell cell-user sortable" data-sort="usuario_nombre">
+                        Usuario
+                        <span class="sort-icon <?= $ordenarPor === 'usuario_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'usuario_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-id sortable" data-sort="id">
+                        ID
+                        <span class="sort-icon <?= $ordenarPor === 'id' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'id' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="activo_codigo">
+                        Activo
+                        <span class="sort-icon <?= $ordenarPor === 'activo_codigo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'activo_codigo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-name sortable" data-sort="accion">
+                        Acción / Detalle
+                        <span class="sort-icon <?= $ordenarPor === 'accion' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'accion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-status sortable" data-sort="estado_nuevo">
+                        Estado
+                        <span class="sort-icon <?= $ordenarPor === 'estado_nuevo' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'estado_nuevo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_anterior_nombre">
+                        Sala Anterior
+                        <span class="sort-icon <?= $ordenarPor === 'sala_anterior_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_anterior_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell sortable" data-sort="sala_nueva_nombre">
+                        Sala Actual
+                        <span class="sort-icon <?= $ordenarPor === 'sala_nueva_nombre' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'sala_nueva_nombre' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
+                    <div class="table-cell cell-date sortable" data-sort="fecha">
+                        Fecha
+                        <span class="sort-icon <?= $ordenarPor === 'fecha' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'fecha' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -110,7 +172,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                         <div class="table-row historial-row">
 
                             <!-- USUARIO -->
-                            <div class="table-cell cell-user" data-label="Usuario" style="width: 140px;">
+                            <div class="table-cell cell-user" data-label="Usuario">
                                 <div class="user-inline">
                                     <div class="user-avatar-small">
                                         <?= strtoupper(substr($registro['usuario_nombre'] ?? 'U', 0, 1)) ?>
@@ -138,7 +200,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <!-- ACCIÓN / DETALLE -->
                             <div class="table-cell cell-name" data-label="Acción / Detalle">
                                 <span class="action-badge action-<?= htmlspecialchars((string) ($registro['accion'] ?? 'desconocida'), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8') ?>
+                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8')) ?>
                                 </span>
                                 <span class="detail-text">
                                     <?= htmlspecialchars((string) ($registro['detalle'] ?? 'Sin detalle'), ENT_QUOTES, 'UTF-8') ?>
@@ -149,12 +211,12 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <div class="table-cell cell-status" data-label="Estado">
                                 <?php if (!empty($registro['estado_anterior']) && !empty($registro['estado_nuevo'])): ?>
                                     <div class="status-changes">
-                                        <span class="status-old"><?= htmlspecialchars($registro['estado_anterior'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-old"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_anterior'], ENT_QUOTES, 'UTF-8')) ?></span>
                                         <span class="status-arrow">→</span>
-                                        <span class="status-new"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="status-new"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                     </div>
                                 <?php elseif (!empty($registro['estado_nuevo'])): ?>
-                                    <span class="status-only"><?= htmlspecialchars($registro['estado_nuevo'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="status-only"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
                                 <?php else: ?>
                                     <span class="empty-value">-</span>
                                 <?php endif; ?>
@@ -192,6 +254,52 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <?php
+            // Generar la cadena de consulta base manteniendo los filtros y ordenamiento
+            $currentParams = $_GET;
+            unset($currentParams['pagina']);
+            $queryString = http_build_query($currentParams);
+            $baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
+            ?>
+
+            <!-- Pagination -->
+            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando <?= count($historial) ?> de <?= $total ?> registros
+                </div>
+                <div class="pagination">
+                    <?php if ($pagina > 1): ?>
+                        <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Anterior
+                        </a>
+                    <?php endif; ?>
+
+                    <div class="pagination-pages">
+                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                            <?php if ($i == $pagina): ?>
+                                <span class="pagination-btn active"><?= $i ?></span>
+                            <?php else: ?>
+                                <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </div>
+
+                    <?php if ($pagina < $totalPaginas): ?>
+                        <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
+                            Siguiente
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

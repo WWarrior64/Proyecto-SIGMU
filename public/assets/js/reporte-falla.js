@@ -1,3 +1,7 @@
+/**
+ * JS para Reporte de Falla
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formReporteFalla');
     if (!form) return;
@@ -19,16 +23,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Reporte registrado correctamente. El activo ha cambiado a estado de reparación.');
+                showToast('Reporte registrado correctamente. El activo ha cambiado a estado de reparación.');
                 window.location.href = '/sigmu/activo/ver?id=' + activoId;
             } else {
-                alert('Error: ' + data.message);
+                showToast('Error: ' + data.message, 'error');
                 if (submitBtn) submitBtn.disabled = false;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Ocurrió un error al procesar el reporte.');
+            showToast('Ocurrió un error al procesar el reporte.', 'error');
             if (submitBtn) submitBtn.disabled = false;
         });
     });

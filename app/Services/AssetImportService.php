@@ -36,14 +36,49 @@ final class AssetImportService
         try {
             return match ($extension) {
                 'xlsx'  => $this->importFromXlsx($filePath, $tmpDir, $salaId),
+                'xls'   => $this->importFromExcelXml($filePath, $salaId),
                 'csv'   => $this->importFromCsv($filePath, $salaId),
-                default => throw new RuntimeException("Formato no soportado: .$extension. Use .xlsx o .csv"),
+                default => throw new RuntimeException("Formato no soportado: .$extension. Use .xlsx, .xls o .csv"),
             };
         } catch (Throwable $e) {
             return ['success' => 0, 'errors' => ["Error crítico: " . $e->getMessage()], 'total' => 0];
         } finally {
             $this->recursiveRemove($tmpDir);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // EXCEL 2003 XML (XLS)
+    // -------------------------------------------------------------------------
+
+    private function importFromExcelXml(string $filePath, int $salaId): array
+    {
+        $xml = simplexml_load_file($filePath);
+        if (!$xml) {
+            throw new RuntimeException("No se pudo parsear el archivo XML.");
+        }
+
+        // Registrar namespaces para el XML de Excel
+        $xml->registerXPathNamespace('ss', 'urn:schemas-microsoft-com:office:spreadsheet');
+        
+        $rows = $xml->xpath('//ss:Row');
+        $matrix = [];
+
+        foreach ($rows as $row) {
+            $rowData = [];
+            foreach ($row->Cell as $cell) {
+                $rowData[] = (string) $cell->Data;
+            }
+            if (!empty(array_filter($rowData, static fn($v) => trim($v) !== ''))) {
+                $matrix[] = $rowData;
+            }
+        }
+
+        if (empty($matrix)) {
+            throw new RuntimeException("No se encontraron datos en el archivo XML.");
+        }
+
+        return $this->processMatrix($matrix, $salaId);
     }
 
     // -------------------------------------------------------------------------
@@ -136,27 +171,30 @@ final class AssetImportService
             return $dateFormats;
         }
 
+        $ns  = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
         $xml = simplexml_load_file($path);
-        $xml->registerXPathNamespace('x', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
 
         // IDs de formato built-in de Excel que corresponden a fechas
         $builtinDateFmtIds = range(14, 22);
 
         // Leer formatos personalizados que parezcan fechas
         $customDateFmtIds = [];
-        foreach ($xml->numFmts->numFmt ?? [] as $fmt) {
+        $numFmts = $xml->children($ns)->numFmts;
+        foreach ($numFmts->children($ns) as $fmt) {
             $id   = (int)    $fmt['numFmtId'];
             $code = (string) $fmt['formatCode'];
-            // Heurística: si el formato contiene d, m, y, h (pero no solo #,0,%)
-            if (preg_match('/[dmyh]/i', $code) && !preg_match('/^[#0%,.\s]+$/', $code)) {
+            if (preg_match('/[dmyh]/i', $code)
+                && !preg_match('/^[#0%,.\s]+$/', $code)
+                && !preg_match('/[\$€£¥]|#,##0/', $code)) {
                 $customDateFmtIds[] = $id;
             }
         }
 
         $allDateIds = array_merge($builtinDateFmtIds, $customDateFmtIds);
 
-        // Mapear cada xf (cell format index) a si es fecha o no
-        foreach ($xml->cellXfs->xf ?? [] as $idx => $xf) {
+        // Mapear cada xf con namespace explícito
+        $cellXfs = $xml->children($ns)->cellXfs;
+        foreach ($cellXfs->children($ns) as $idx => $xf) {
             $fmtId             = (int) $xf['numFmtId'];
             $dateFormats[$idx] = in_array($fmtId, $allDateIds, true);
         }
@@ -248,8 +286,7 @@ final class AssetImportService
 
     /**
      * Convierte el número serial de fecha de Excel a string legible.
-     * Excel tiene un bug histórico (año 1900 bisiesto falso) que se
-     * corrige restando 1 a seriales >= 60.
+     * Excel tiene un bug histórico (año 1900 bisiesto falso).
      */
     private function excelSerialToDate(float $serial): string
     {
@@ -257,11 +294,15 @@ final class AssetImportService
             return '';
         }
 
-        // Corrección del bug de Excel con el año bisiesto de 1900
-        $offset    = $serial >= 60 ? $serial - 1 : $serial;
+        // Excel considera erróneamente 1900 como bisiesto. 
+        // Para fechas posteriores al 28/02/1900 (serial 59), restamos 1.
+        $offset = ($serial > 60) ? $serial - 1 : $serial;
+        
+        // Base de Excel: 1899-12-30
         $timestamp = ($offset - self::EXCEL_EPOCH) * 86400;
 
-        // Descartamos valores absurdos (antes de 1970 o después de 2100)
+        // Descartamos valores absurdos (antes de 1900 o después de 2100)
+        // 1900-01-01 es aprox -2208988800
         if ($timestamp < -2208988800 || $timestamp > 4102444800) {
             return (string) $serial;
         }
@@ -275,29 +316,31 @@ final class AssetImportService
 
     private function processMatrix(array $matrix, int $salaId): array
     {
-        $mapping      = ['codigo' => -1, 'nombre' => -1, 'tipo' => -1, 'descripcion' => -1, 'estado' => -1, 'fecha' => -1];
+        $mapping      = ['codigo' => -1, 'nombre' => -1, 'tipo' => -1, 'descripcion' => -1, 'estado' => -1, 'fecha' => -1, 'valor_adquisicion' => -1];
         $headerRowIdx = -1;
         $bestScore    = 0;
 
-        // MEJORA: elegir la fila con MÁS columnas reconocidas (no la primera que pase el umbral)
-        foreach ($matrix as $idx => $row) {
+        $candidates = $this->buildHeaderCandidates($matrix);
+
+        foreach ($candidates as ['row' => $row, 'sourceIdx' => $sourceIdx]) {
             $currentMapping = $this->guessMapping($row);
             $score          = count(array_filter($currentMapping, static fn($v) => $v !== -1));
 
-            $hasMinimum = $currentMapping['nombre'] !== -1
-                && ($currentMapping['codigo'] !== -1 || $currentMapping['descripcion'] !== -1);
+            // Relajar requisitos: permitir nombre O descripción, pero SIEMPRE código
+            $hasMinimum = ($currentMapping['nombre'] !== -1 || $currentMapping['descripcion'] !== -1)
+                && ($currentMapping['codigo'] !== -1);
 
             if ($hasMinimum && $score > $bestScore) {
                 $bestScore    = $score;
                 $mapping      = $currentMapping;
-                $headerRowIdx = $idx;
+                $headerRowIdx = $sourceIdx;
             }
         }
 
         if ($headerRowIdx === -1) {
             throw new RuntimeException(
-                "No se pudieron identificar las columnas. " .
-                "Asegúrate de tener encabezados como: Código_Activo, Nombre_Activo, Categoría, Estado, Observaciones."
+                "No se pudieron identificar las columnas necesarias. " .
+                "Asegúrate de tener encabezados como: Código, Nombre (o Descripción), Fecha de Adquisición."
             );
         }
 
@@ -310,13 +353,16 @@ final class AssetImportService
                 continue;
             }
 
+            if ($this->isSubtotalRow($row)) {
+                continue;
+            }
+
             $results['total']++;
             $data = $this->extractDataFromRow($row, $mapping);
 
             $nombre = $this->cleanString($data['nombre'] ?? '');
             $desc   = $this->cleanString($data['descripcion'] ?? '');
 
-            // Fallback: si no hay nombre, usar los primeros 80 chars de la descripción
             if ($nombre === '' && $desc !== '') {
                 $nombre = mb_strimwidth($desc, 0, 80, '…');
             }
@@ -331,19 +377,27 @@ final class AssetImportService
                 $codigo = $this->sigmuService->generarCodigoActivo($nombre);
             }
 
-            // Convertir la fecha del Excel a formato MySQL (Y-m-d H:i:s) o null
+            // Normalización robusta de fecha
             $fechaDb = $this->normalizeFechaParaDb($data['fecha'] ?? '');
+            
+            $valorRaw = $data['valor_adquisicion'] ?? null;
+            $valorAdquisicion = null;
+            if ($valorRaw !== null && $valorRaw !== '') {
+                $valorAdquisicion = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', (string) $valorRaw));
+            }
 
             $res = $this->sigmuService->registrarActivo(
                 $codigo,
                 mb_strimwidth($nombre, 0, 98, '…'),
-                $this->resolveTipoActivo($data['tipo'] ?? ''),
+                $this->resolveTipoActivo($data['tipo'] ?? '', $nombre),
                 $desc,
+                $valorAdquisicion,
                 $this->normalizeEstado($data['estado'] ?? ''),
                 $salaId,
-                [], // 7mo: fotoPaths (vacío en importación)
-                $fechaDb // 8vo: fechaCreado (la fecha real del Excel)
+                [],
+                $fechaDb
             );
+
             if ($res['success']) {
                 $results['success']++;
             } else {
@@ -352,6 +406,93 @@ final class AssetImportService
         }
 
         return $results;
+    }
+
+    /**
+     * Detecta filas de subtotal/total que no son activos reales.
+     * Ejemplos: "TOTAL ACUMULADO AÑO 2005", "SUBTOTAL", "TOTAL GENERAL", etc.
+     */
+    private function isSubtotalRow(array $row): bool
+    {
+        foreach ($row as $val) {
+            $s = $this->simplifyString((string) $val);
+            if ($s === '') {
+                continue;
+            }
+            // Coincide con patrones de fila de total
+            if (preg_match('/^(total|subtotal|acumulado|grandtotal|totalgeneral|totalaño|totalacumulado)/', $s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Genera candidatos a fila de encabezado evaluando:
+     * - Cada fila individual
+     * - Cada par de filas consecutivas fusionadas celda a celda (para encabezados partidos en 2 filas)
+     *
+     * Retorna array de ['row' => array, 'sourceIdx' => int]
+     * donde sourceIdx es el índice de la última fila original que forma el candidato.
+     */
+    private function buildHeaderCandidates(array $matrix): array
+    {
+        $candidates = [];
+
+        for ($i = 0; $i < count($matrix); $i++) {
+            // Candidato individual
+            $candidates[] = [
+                'row'       => array_values($matrix[$i]),
+                'sourceIdx' => $i,
+            ];
+
+            // Candidato fusionado con la siguiente fila
+            if (isset($matrix[$i + 1])) {
+                $candidates[] = [
+                    'row'       => $this->mergeTwoRows($matrix[$i], $matrix[$i + 1]),
+                    'sourceIdx' => $i + 1, // los datos empiezan después de la segunda fila
+                ];
+            }
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * Fusiona filas contiguas que parecen ser encabezados partidos en varias líneas.
+     * Estrategia: si una fila tiene al menos 1 celda no vacía pero NO tiene
+     * suficientes columnas llenas como para ser datos, se intenta concatenar
+     * con la siguiente fila celda a celda.
+     *
+     * Ejemplo:
+     *   Fila 4: [null,       null,          "FECHA DE",      "VALOR DE"     ]
+     *   Fila 5: ["CODIGO",   "DESCRIPCION", "ADQUISICION $", "ADQUISICION $"]
+     *   → merged: ["CODIGO", "DESCRIPCION", "FECHA DE ADQUISICION $", "VALOR DE ADQUISICION $"]
+     */
+    /**
+     * Fusiona dos filas celda a celda:
+     * - Si ambas tienen valor: concatena con espacio → "FECHA DE" + "ADQUISICION $" = "FECHA DE ADQUISICION $"
+     * - Si solo una tiene valor: toma esa
+     */
+    private function mergeTwoRows(array $rowA, array $rowB): array
+    {
+        $maxLen = max(count($rowA), count($rowB));
+        $merged = [];
+
+        for ($col = 0; $col < $maxLen; $col++) {
+            $top    = trim((string) ($rowA[$col] ?? ''));
+            $bottom = trim((string) ($rowB[$col] ?? ''));
+
+            if ($top !== '' && $bottom !== '') {
+                $merged[$col] = $top . ' ' . $bottom;
+            } elseif ($top !== '') {
+                $merged[$col] = $top;
+            } else {
+                $merged[$col] = $bottom;
+            }
+        }
+
+        return $merged;
     }
 
     // -------------------------------------------------------------------------
@@ -364,33 +505,35 @@ final class AssetImportService
      */
     private function guessMapping(array $row): array
     {
-        $m = ['codigo' => -1, 'nombre' => -1, 'tipo' => -1, 'descripcion' => -1, 'estado' => -1, 'fecha' => -1];
+        $m = ['codigo' => -1, 'nombre' => -1, 'tipo' => -1, 'descripcion' => -1, 'estado' => -1, 'fecha' => -1, 'valor_adquisicion' => -1];
 
         $ignoreList = '/^(responsable|encargado|departamento|piso|marca|modelo|color|material|'
                     . 'ubicacion|ubicacionfisica|edificio|aula|sala|proveedor|factura|garantia|'
                     . 'fechamantenimiento|fechaultimo|fechaproximo|fechaultimomantenimiento|'
-                    . 'fechaproximomantenimiento|vidautil|costo|costoadquisicion|valoractual|'
-                    . 'valorcompra|codigobarra|barcode|numero|correlativo)$/i';
+                    . 'fechaproximomantenimiento|vidautil|valoractual|'
+                    . 'codigobarra|barcode|numero|correlativo)$/i';
 
         $dict = [
-            'codigo' => '/^(codigoactivo|codactivo|codigobien|nroinventario|numeroinventario|'
-                      . 'placa|sku|codigopat|codigopatrimonial|codigo|codigointerno|folio|idbien|idactivo|cod|inv|ref|nro|tag|bn)$/',
+            'codigo' => '/(codigoactivo|codactivo|codigobien|nroinventario|numeroinventario|'
+                      . 'placa|sku|codigopat|codigopatrimonial|codigo|codigointerno|folio|idbien|idactivo|cod|inv|ref|nro|tag|bn)/',
 
-            'nombre' => '/^(descripciondelbien|descripciondelactivo|descripciondelelemento|'
+            'nombre' => '/(descripciondelbien|descripciondelactivo|descripciondelelemento|'
                       . 'descripciondelequipo|descripcionbien|nombreactivo|nomactivo|nombrearticulo|'
                       . 'nombreelemento|nombreequipo|mobiliario|articulo|elemento|'
-                      . 'bien|activo|objeto|item|nombre|nom)$/',
+                      . 'bien|activo|objeto|item|nombre|nom)/',
 
-            'tipo'   => '/^(tipodeactivo|tipoactivo|tipobien|categoriaactivo|clasificaciondeactivo|'
-                      . 'clasificacion|subcategoria|categoria|tipo|cat|cla|fam|gen)$/',
+            'tipo'   => '/(tipodeactivo|tipoactivo|tipobien|categoriaactivo|clasificaciondeactivo|'
+                      . 'clasificacion|subcategoria|categoria|tipo|cat|cla|fam|gen)/',
 
-            'estado' => '/^(estadoactual|estadoactivo|estadofisico|condicionactual|condicion|estado|cond|stat)$/',
+            'valor_adquisicion' => '/(valoradquisicion|valordeadquisicion|valordecompra|valorcompra|'
+                         . 'costoadquisicion|costo_adquisicion|precioneto|precio_neto|costo|precio|valor)/',
 
-            'fecha'  => '/^(fechaingreso|fechaadquisicion|fecharegistro|fechacompra|'
-                      . 'fechaalta|fechaincorporacion|fecha|ingreso|adquisicion|adquisi|registro|crea|incorporacion|compra|date)$/',
+            'estado' => '/(estadoactual|estadoactivo|estadofisico|condicionactual|condicion|estado|cond|stat)/',
 
-            // descripcion va AL FINAL con contains (sin ^$) —
-            // el ignoreList ya bloqueó los falsos positivos
+            // Fecha de adquisición: muy flexible (sin anclas ^ $)
+            'fecha'  => '/(fechaingreso|fechaadquisicion|fechadeadquisicion|fechadquisicion|fecharegistro|fechacompra|'
+                      . 'fechaalta|fechaincorporacion|ingreso|adquisicion|adquisi|registro|incorporacion|compra|date|fecha)/',
+
             'descripcion' => '/(descripcion|observacion|observaciones|observ|notas|detalles|'
                            . 'especificacion|comentario|caracteristica|carac|detalle)/',
         ];
@@ -444,32 +587,117 @@ final class AssetImportService
         return Activo::ESTADO_DISPONIBLE;
     }
 
-    private function resolveTipoActivo(string $raw): int
+    private function resolveTipoActivo(string $raw, string $nombreActivo = ''): int
     {
-        $s = $this->simplifyString($raw);
-
-        if ($s === '') {
+        $tipos = $this->repository->typesActive();
+        if (empty($tipos)) {
             return 1;
         }
 
-        $tipos = $this->repository->typesActive();
+        $sRaw    = $this->simplifyString($raw);
+        $sNombre = $this->simplifyString($nombreActivo);
 
-        // Búsqueda exacta primero
-        foreach ($tipos as $t) {
-            if ($this->simplifyString($t['nombre']) === $s) {
-                return (int) $t['id'];
+        // --- 1. DICCIONARIO DE SINÓNIMOS (Corrección ortográfica y regionalismos) ---
+        $synonyms = [
+            'pizarron'     => 'pizarra', 'pizarrones'   => 'pizarra', 'pizarras'     => 'pizarra',
+            'computador'   => 'computadora', 'ordenador'    => 'computadora', 'pc'           => 'computadora',
+            'escritorios'  => 'escritorio', 'mesas'        => 'mesa', 'sillas'       => 'silla',
+            'asiento'      => 'silla', 'libreros'     => 'librero', 'librera'      => 'librero',
+            'estantes'     => 'estante', 'archivos'     => 'archivo', 'archiveros'   => 'archivero', 
+            'camaras'      => 'camara', 'laptops'      => 'laptop', 'monitores'    => 'monitor', 
+            'impresoras'   => 'impresora', 'ventiladores' => 'ventilador', 'extintores'   => 'extintor', 
+            'podios'       => 'podio', 'telefonos'    => 'telefono', 'proyectores'  => 'proyector', 
+            'escaneres'    => 'escaner', 'sofás'        => 'sofa', 'sillones'     => 'sillon', 
+            'lámparas'     => 'lampara', 'grabadora'    => 'equipoelectronico', 'televisor'    => 'television',
+            'pantalla'     => 'monitor', 'pizarra'      => 'pizarra'
+        ];
+
+        // Función de ayuda para buscar coincidencias (Exacta, Prefijo o Sinónimo)
+        $findMatch = function(string $input) use ($tipos, $synonyms) {
+            if ($input === '') return null;
+            
+            // A. Probar con sinónimos primero
+            foreach ($synonyms as $bad => $good) {
+                if (str_starts_with($input, $bad) || $input === $bad) {
+                    foreach ($tipos as $t) {
+                        if ($this->simplifyString($t['nombre']) === $good) return (int)$t['id'];
+                    }
+                }
             }
-        }
 
-        // Búsqueda parcial
+            // B. Probar coincidencia de prefijo con tipos reales
+            foreach ($tipos as $t) {
+                $tn = $this->simplifyString($t['nombre']);
+                if ($tn !== '' && (str_starts_with($input, $tn) || str_starts_with($tn, $input))) {
+                    return (int) $t['id'];
+                }
+            }
+            return null;
+        };
+
+        // --- PRIORIDAD 1: Coincidencia en el NOMBRE (Prefijo/Sinónimos) ---
+        $match = $findMatch($sNombre);
+        if ($match) return $match;
+
+        // --- PRIORIDAD 2: Coincidencia en la COLUMNA de tipo ---
+        $match = $findMatch($sRaw);
+        if ($match) return $match;
+
+        // --- PRIORIDAD 3: Coincidencia de CONTENIDO en el nombre ---
         foreach ($tipos as $t) {
             $tn = $this->simplifyString($t['nombre']);
-            if (str_contains($s, $tn) || str_contains($tn, $s)) {
-                return (int) $t['id'];
+            if ($tn !== '' && str_contains($sNombre, $tn)) return (int) $t['id'];
+        }
+
+        // --- PRIORIDAD 4: Heurísticas Tecnológicas (Marcas y términos específicos) ---
+        $keywordsIT = [
+            'hp', 'dell', 'lenovo', 'toshiba', 'acer', 'asus', 'intel', 'amd', 'cpu', 'laptop',
+            'workstation', 'server', 'servidor', 'computador', 'desktop', 'monitor', 'teclado',
+            'mouse', 'ups', 'apc', 'cisco', 'switch', 'router', 'modem', 'hub', 'wifi', 'accesspoint',
+            'disco', 'memoria', 'procesador', 'tablet', 'ipad', 'impresora', 'laserjet', 'epson',
+            'canon', 'brother', 'pantalla', 'scanner', 'escaner', 'hikvision', 'dahua', 'camara',
+            'nvr', 'dvr', 'phone', 'telefono', 'avaya', 'grandstream', 'polycom', 'sony', 'lg',
+            'samsung', 'kyocera', 'logitech', 'linksys', 'tp-link', 'tivo', 'roku', 'smart', 'tv'
+        ];
+        
+        foreach ($keywordsIT as $kw) {
+            if (str_contains($sNombre, $kw) || str_contains($sRaw, $kw)) {
+                // Primero intentar "Equipo informático"
+                foreach ($tipos as $t) {
+                    if ($this->simplifyString($t['nombre']) === 'equipoinformatico') return (int) $t['id'];
+                }
+                // Si no, "Equipo electrónico"
+                foreach ($tipos as $t) {
+                    if ($this->simplifyString($t['nombre']) === 'equipoelectronico') return (int) $t['id'];
+                }
             }
         }
 
-        return !empty($tipos) ? (int) $tipos[0]['id'] : 1;
+        // --- PRIORIDAD 5: Heurísticas de Otros Equipos (Aire, Extintor, Ventilador) ---
+        $keywordsOther = [
+            'aire', 'split', 'btu', 'refrigeraci', 'acondicionado', 'extintor', 'co2', 'fuego',
+            'ventilador', 'techo', 'industrial', 'pedestal', 'proyector', 'poyec',
+            'television', 'televisor', 'smart', 'tv'
+        ];
+
+        foreach ($keywordsOther as $kw) {
+            if (str_contains($sNombre, $kw)) {
+                // Intentar buscar el tipo específico (ej: "Aire acondicionado")
+                foreach ($tipos as $t) {
+                    if (str_contains($this->simplifyString($t['nombre']), $kw)) return (int) $t['id'];
+                }
+            }
+        }
+
+        // --- FALLBACK FINAL ---
+        // Si parece mueble pero no sabemos cuál
+        if (str_contains($sNombre, 'mueble') || str_contains($sNombre, 'madera') || str_contains($sNombre, 'metal')) {
+            foreach ($tipos as $t) {
+                if ($this->simplifyString($t['nombre']) === 'mueble') return (int) $t['id'];
+            }
+        }
+
+        return (int) $tipos[0]['id'];
     }
 
     // -------------------------------------------------------------------------
@@ -512,7 +740,7 @@ final class AssetImportService
     // -------------------------------------------------------------------------
 
     /**
-     * Convierte una fecha del Excel (dd/mm/yyyy, yyyy-mm-dd, dd-mm-yyyy)
+     * Convierte una fecha del Excel (múltiples formatos)
      * al formato que MySQL espera para DATETIME: 'Y-m-d H:i:s'.
      * Retorna null si la fecha está vacía o no es reconocible.
      */
@@ -523,35 +751,54 @@ final class AssetImportService
             return null;
         }
 
-        // Formato dd/mm/yyyy  (viene de excelSerialToDate)
-        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $raw, $m)) {
-            $ts = mktime(0, 0, 0, (int) $m[2], (int) $m[1], (int) $m[3]);
-            return $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
+        // 1. ¿Es un número serial de Excel que se coló como string? (ej: "38470")
+        // Los seriales de fechas válidas (1980-2050) están entre 29000 y 55000.
+        if (is_numeric($raw) && (float)$raw > 20000 && (float)$raw < 60000) {
+            return $this->excelSerialToDate((float)$raw);
         }
 
-        // Formato yyyy-mm-dd hh:ii:ss  (ya correcto para MySQL)
-        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $raw)) {
-            return $raw;
+        // 2. Detectar si es un AÑO aislado (ej: "2005")
+        if (preg_match('/^\d{4}$/', $raw)) {
+            return $raw . '-01-01 00:00:00';
         }
 
-        // Formato yyyy-mm-dd  (solo fecha, sin hora)
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
-            return $raw . ' 00:00:00';
+        // 3. Limpiar la cadena de caracteres basura pero mantener números y separadores
+        // Maneja casos como "19/1082006" intentando rescatar los números
+        $clean = preg_replace('/[^0-9\/\-\. :]/', '', $raw);
+        
+        // 4. Intentar parseo con DateTime para formatos comunes (ordenados por probabilidad)
+        $formats = [
+            'd/m/Y', 'd-m-Y', 'd.m.Y',
+            'j/n/Y', 'j-n-Y', 'j.n.Y',
+            'Y-m-d H:i:s', 'Y-m-d',
+            'm/d/Y', 'Y/m/d',
+            'd/m/y', 'd-m-y', 'j/n/y'
+        ];
+
+        foreach ($formats as $fmt) {
+            try {
+                $d = \DateTime::createFromFormat($fmt, $clean);
+                if ($d && $d->format($fmt) === $clean) {
+                    // Si el año es de 2 dígitos, PHP lo maneja automáticamente (00-69 -> 2000-2069)
+                    return $d->format('Y-m-d H:i:s');
+                }
+            } catch (Throwable) {
+                continue;
+            }
         }
 
-        // Formato dd-mm-yyyy con guiones
-        if (preg_match('/^(\d{1,2})-(\d{1,2})-(\d{4})$/', $raw, $m)) {
-            $ts = mktime(0, 0, 0, (int) $m[2], (int) $m[1], (int) $m[3]);
-            return $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
+        // 5. Fallback con strtotime (último recurso para formatos locos)
+        // Reemplazar '/' por '-' para que strtotime asuma formato europeo d-m-y
+        $ts = strtotime(str_replace(['/', '.'], '-', $clean));
+        if ($ts !== false && $ts > 0) {
+            // Evitar fechas por defecto de sistema (como 1970) si no tienen sentido
+            $year = (int)date('Y', $ts);
+            if ($year > 1900 && $year < 2100) {
+                return date('Y-m-d H:i:s', $ts);
+            }
         }
 
-        // Formato dd.mm.yyyy con puntos (común en Europa)
-        if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $raw, $m)) {
-            $ts = mktime(0, 0, 0, (int) $m[2], (int) $m[1], (int) $m[3]);
-            return $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
-        }
-
-        return null; // formato no reconocido → MySQL usará CURRENT_TIMESTAMP (por COALESCE en el SP)
+        return null; 
     }
 
     private function columnLetterToIndex(string $col): int
@@ -579,6 +826,7 @@ final class AssetImportService
             ['a', 'e', 'i', 'o', 'u', 'u', 'n', 'a', 'e', 'i', 'o', 'u'],
             $str
         );
+        // Mantener solo letras y números para comparaciones de encabezados
         return preg_replace('/[^a-z0-9]/', '', $str);
     }
 

@@ -3,82 +3,11 @@
 /** @var array $mantenimientos */
 
 $sigmuPageTitle = 'LISTADO MANTENIMIENTOS';
-$sigmuLayoutAdmin = (($sessionUser['rol_nombre'] ?? '') === 'Administrador');
-$sigmuExtraCss = ['/assets/css/mantenimiento.css'];
+$sigmuLayoutAdmin = (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::ADMIN));
+$sigmuExtraCss = ['/assets/css/mantenimiento.css', '/assets/css/listado-mantenimientos.css'];
+$sigmuExtraScripts = ['/assets/js/listado-mantenimientos.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
 ?>
-<style>
-        .list-container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .table-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        .table-header {
-            background: #8b0000;
-            color: white;
-            padding: 15px 20px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .maint-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .maint-table th {
-            text-align: left;
-            padding: 12px 20px;
-            background: #f8f9fa;
-            color: #4a5568;
-            font-size: 13px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .maint-table td {
-            padding: 14px 20px;
-            border-bottom: 1px solid #edf2f7;
-            font-size: 14px;
-            color: #2d3748;
-        }
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .status-pendiente { background: #fef3c7; color: #92400e; }
-        .status-en_proceso { background: #dcfce7; color: #166534; }
-        .status-completado { background: #d1fae5; color: #065f46; }
-        .status-cancelado { background: #fee2e2; color: #991b1b; }
-        
-        .btn-complete {
-            background: #059669;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-complete:hover { background: #047857; }
-        
-        .empty-msg {
-            padding: 40px;
-            text-align: center;
-            color: #718096;
-        }
-    </style>
 
     <div class="back-btn-container">
         <button class="back-btn" onclick="window.location.href='/sigmu/mantenimiento'" title="Regresar al Panel">
@@ -124,7 +53,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                                     <td><?= htmlspecialchars($m['responsable'] ?? 'Sin asignar') ?></td>
                                     <td>
                                         <span class="status-badge status-<?= $m['estado'] ?>">
-                                            <?= str_replace('_', ' ', $m['estado']) ?>
+                                            <?= str_replace(['_', '-'], ' ', $m['estado']) ?>
                                         </span>
                                     </td>
                                     <td>
@@ -154,6 +83,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                 FINALIZAR REPARACIÓN - <span id="modalActivoCodigo"></span>
             </div>
             <form id="formCompletar">
+                <?= \App\Support\Csrf::field() ?>
                 <input type="hidden" name="mantenimiento_id" id="mantenimiento_id_completar">
                 <div class="modal-body">
                     <p style="font-size: 13px; color: #4a5568; margin-bottom: 15px;">
@@ -168,7 +98,7 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fecha_real">Fecha intervención:</label>
-                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>">
+                            <input type="date" name="fecha_real" id="fecha_real" class="form-control" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label for="resultado">Resultado del mantenimiento:</label>
@@ -193,40 +123,4 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
         </div>
     </div>
 
-    <script>
-        const modal = document.getElementById('modalCompletar');
-        
-        function abrirModalCompletar(id, codigo) {
-            document.getElementById('mantenimiento_id_completar').value = id;
-            document.getElementById('modalActivoCodigo').textContent = codigo;
-            modal.style.display = 'flex';
-        }
-
-        function cerrarModalCompletar() {
-            modal.style.display = 'none';
-        }
-
-        document.getElementById('formCompletar').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch('/sigmu/mantenimiento/completar', {
-                method: 'POST',
-                body: formData
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Mantenimiento finalizado con éxito');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error al procesar la solicitud');
-            });
-        });
-    </script>
 <?php require __DIR__ . '/../partials/sigmu_shell_end.php';

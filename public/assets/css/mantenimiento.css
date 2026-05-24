@@ -86,7 +86,7 @@ body {
 .back-btn {
     background: none;
     border: none;
-    color: #718096;
+    color: #696969;
     padding: 5px;
     cursor: pointer;
     display: flex;
@@ -94,7 +94,7 @@ body {
 }
 
 .back-btn:hover {
-    background: #edf2f7;
+    background: #ffffff;
 }
 
 /* CONTENEDOR PRINCIPAL */
@@ -154,11 +154,12 @@ body {
 }
 
 .calendar-day {
-    min-height: 85px;
+    height: 85px;
     background: #fdfdfd;
     border-radius: 4px;
     padding: 6px;
     border: 1px solid #f0f0f0;
+    overflow: hidden;
 }
 
 .calendar-day.today {
@@ -345,24 +346,33 @@ body {
 /* MODAL COMPACTO */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0,0,0,0.5);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     backdrop-filter: blur(2px);
+    padding: 16px;
 }
 
 .modal-content {
     background: white;
-    width: 400px;
+    width: 100%;
+    max-width: 400px;
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }
 
 .modal-header {
@@ -371,10 +381,29 @@ body {
     padding: 12px 15px;
     font-size: 14px;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .modal-body {
     padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+    /* Scrollbar personalizada para SIGMU */
+    scrollbar-width: thin;
+    scrollbar-color: #8b0000 #f0f0f0;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background-color: #8b0000;
+    border-radius: 3px;
 }
 
 .form-group {
@@ -411,6 +440,7 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .btn-secondary {
@@ -433,4 +463,123 @@ body {
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .layout-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-title {
+        font-size: 20px;
+    }
+    
+    .main-container {
+        padding: 10px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pending-item {
+        grid-template-columns: 60px 1fr;
+        gap: 12px;
+    }
+    
+    .action-container {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+    
+    .asset-img-container {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .calendar-day {
+        min-height: 60px;
+        padding: 4px;
+    }
+    
+    .header-title {
+        font-size: 18px;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .back-btn-container {
+        padding: 8px 12px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 8px 10px;
+    }
+    
+    .pending-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .asset-img-container {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-day {
+        min-height: 45px;
+        padding: 3px;
+    }
+    
+    .day-number {
+        font-size: 10px;
+    }
+    
+    .day-header {
+        font-size: 9px;
+    }
+    
+    .header-bar {
+        padding: 0 12px;
+        height: 56px;
+    }
+    
+    .logo {
+        height: 32px;
+    }
+    
+    .header-title {
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+    
+    .header-right {
+        gap: 6px;
+    }
+    
+    .card-header-red {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .pending-list {
+        padding: 8px;
+        max-height: 400px;
+    }
+    
+    .program-btn, .view-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
 }

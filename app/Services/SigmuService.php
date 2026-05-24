@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\SigmuRepository;
+use App\Support\Validator;
 use RuntimeException;
 
 // In the service we put simple business logic and validations.
@@ -12,10 +13,22 @@ use RuntimeException;
 final class SigmuService
 {
     private readonly SigmuRepository $repository;
+    private readonly MailService $mailService;
 
-    public function __construct(?SigmuRepository $repository = null)
+    public function __construct(?SigmuRepository $repository = null, ?MailService $mailService = null)
     {
         $this->repository = $repository ?? new SigmuRepository();
+        $this->mailService = $mailService ?? new MailService();
+    }
+
+    public function getRepository(): SigmuRepository
+    {
+        return $this->repository;
+    }
+
+    public function getMailService(): MailService
+    {
+        return $this->mailService;
     }
 
     public function iniciarSesionBd(int $userId): void
@@ -94,7 +107,7 @@ final class SigmuService
      */
     public function obtenerEdificiosParaUbicacion(array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoEdificios();
         }
 
@@ -118,7 +131,7 @@ final class SigmuService
      */
     public function obtenerSalasParaUbicacion(int $edificioId, array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoSalasPorEdificio($edificioId);
         }
 
@@ -142,7 +155,7 @@ final class SigmuService
      */
     public function obtenerActivosParaUbicacion(int $salaId, array $sessionUser, ?int $edificioId = null): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->catalogoActivosPorSala($salaId, $edificioId);
         }
 
@@ -176,6 +189,41 @@ final class SigmuService
     }
 
     /**
+     * Genera abreviatura de 4 caracteres desde el nombre del activo
+     */
+    public function generarAbreviaturaNombre(string $nombre): string
+    {
+        return $this->repository->generarAbreviaturaNombre($nombre);
+    }
+
+    /**
+     * Genera abreviatura de 3 caracteres desde el tipo de activo
+     */
+    public function generarAbreviaturaTipo(string $tipoNombre): string
+    {
+        return $this->repository->generarAbreviaturaTipo($tipoNombre);
+    }
+
+    /**
+     * Obtiene el nombre de un tipo de activo por su ID
+     */
+    public function obtenerNombreTipoActivo(int $tipoId): string
+    {
+        return $this->repository->obtenerNombreTipoActivo($tipoId);
+    }
+
+    /**
+     * Genera el código completo con el nuevo formato
+     * Formato: [CODIGO_CUENTA]-[CORRELATIVO(3)]-[AÑO(2)]
+     * 
+     * @return array{correlativo: string, year: string, codigo_completo: string}
+     */
+    public function generarCodigoCompleto(string $codigoCuenta): array
+    {
+        return $this->repository->generarCodigoCompleto($codigoCuenta);
+    }
+
+    /**
      * Registra un nuevo activo en el sistema
      * @param array<string> $fotoPaths
      * @return array{success: bool, message: string, activo_id?: int}
@@ -185,12 +233,21 @@ final class SigmuService
         string $nombre,
         int $tipoActivoId,
         string $descripcion,
+        ?float $valorAdquisicion,
         string $estado,
         int $salaId,
         array $fotoPaths = [],
         ?string $fechaCreado = null
     ): array {
         try {
+            $errorNombre = Validator::nombre($nombre, 'Nombre del activo', Validator::MAX_NOMBRE_ACTIVO);
+            if ($errorNombre !== null) {
+                return ['success' => false, 'message' => $errorNombre];
+            }
+            $errorDesc = Validator::descripcion($descripcion, 'Descripcion', Validator::MAX_DESCRIPCION);
+            if ($errorDesc !== null) {
+                return ['success' => false, 'message' => $errorDesc];
+            }
             // Verificar que el código no exista
             if ($this->repository->existeCodigoActivo($codigo)) {
                 return [
@@ -205,6 +262,7 @@ final class SigmuService
                 $nombre,
                 $tipoActivoId,
                 $descripcion,
+                $valorAdquisicion,
                 $estado,
                 $salaId,
                 $fechaCreado
@@ -239,18 +297,25 @@ final class SigmuService
      * Registrar multiples activos iguales con codigos automaticos diferentes
      * @param array<string> $fotoPaths
      */
-    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, string $estado, int $salaId, array $fotoPaths = []): array
+    public function registrarMultiplesActivos(int $cantidad, string $nombre, int $tipoActivoId, string $descripcion, ?float $valorAdquisicion, string $estado, int $salaId, array $fotoPaths = []): array
     {
         try {
             $creados = 0;
             $errores = 0;
             $ultimoError = '';
 
-            for ($i = 0; $i < $cantidad; $i++) {
-                // Generar codigo unico automatico para CADA activo
-                $codigo = $this->generarCodigoActivo($nombre);
+            // Obtener nombre del tipo para generar el prefijo
+            $tipoNombre = $this->obtenerNombreTipoActivo($tipoActivoId);
+            $abrevNombre = $this->generarAbreviaturaNombre($nombre);
+            $abrevTipo = $this->generarAbreviaturaTipo($tipoNombre ?: 'General');
+            $codigoCuenta = $abrevNombre . '-' . $abrevTipo;
 
-                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $estado, $salaId, $fotoPaths);
+            for ($i = 0; $i < $cantidad; $i++) {
+                // Generar codigo completo con el nuevo formato para CADA activo
+                $resultadoCodigo = $this->generarCodigoCompleto($codigoCuenta);
+                $codigo = '*' . $resultadoCodigo['codigo_completo'] . '*';
+
+                $resultado = $this->registrarActivo($codigo, $nombre, $tipoActivoId, $descripcion, $valorAdquisicion, $estado, $salaId, $fotoPaths);
 
                 if ($resultado['success']) {
                     $creados++;
@@ -323,14 +388,24 @@ final class SigmuService
         }
 
         $usuarioId = (int) $user['id'];
-        $expiresMinutes = 60;
+        $email = (string) ($user['email'] ?? '');
+        $nombreUsuario = (string) ($user['nombre_completo'] ?? 'Usuario');
+        $expiresMinutes = 15;
 
         // Guardamos el token (hash) en BD. El token plano solo lo mostramos en local para debug.
         $token = $this->repository->crearTokenPasswordReset($usuarioId, $expiresMinutes);
 
+        // Enviar el correo electrónico
+        $enviado = false;
+        if ($email !== '') {
+            $enviado = $this->mailService->enviarRecuperacionPassword($email, $nombreUsuario, $token);
+        }
+
         return [
             'success' => true,
-            'message' => 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.',
+            'message' => $enviado 
+                ? 'Si la cuenta existe, recibirás instrucciones para crear una nueva contraseña.' 
+                : 'Se generó el token pero hubo un problema al enviar el correo. Contacta al administrador.',
             'debugToken' => $debugLocal ? $token : null,
         ];
     }
@@ -385,13 +460,37 @@ final class SigmuService
 
     public function registrarUsuario(string $username, string $email, string $password, string $nombreCompleto, int $rolId): int
     {
+        $errorUser = Validator::username($username);
+        if ($errorUser !== null) {
+            throw new RuntimeException($errorUser);
+        }
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
         return $this->repository->registrarUsuario($username, $email, $passwordHash, $nombreCompleto, $rolId);
     }
 
-    public function editarUsuario(int $usuarioId, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
+    public function editarUsuario(int $usuarioId, string $username, string $email, string $nombreCompleto, int $rolId, bool $activo): bool
     {
-        return $this->repository->editarUsuario($usuarioId, $email, $nombreCompleto, $rolId, $activo);
+        $errorUser = Validator::username($username);
+        if ($errorUser !== null) {
+            throw new RuntimeException($errorUser);
+        }
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
+        return $this->repository->editarUsuario($usuarioId, $username, $email, $nombreCompleto, $rolId, $activo);
     }
 
     public function desactivarUsuario(int $usuarioId): bool
@@ -433,6 +532,14 @@ final class SigmuService
 
     public function editarPerfil(int $usuarioId, string $email, string $nombreCompleto): bool
     {
+        $errorEmail = Validator::email($email);
+        if ($errorEmail !== null) {
+            throw new RuntimeException($errorEmail);
+        }
+        $errorNombre = Validator::nombre($nombreCompleto, 'Nombre completo');
+        if ($errorNombre !== null) {
+            throw new RuntimeException($errorNombre);
+        }
         return $this->repository->editarPerfil($usuarioId, $email, $nombreCompleto);
     }
 
@@ -449,5 +556,54 @@ final class SigmuService
     public function agregarFotoActivo(int $activoId, string $rutaFoto, string $descripcion = '', bool $esPrincipal = true): int
     {
         return $this->repository->agregarFotoActivo($activoId, $rutaFoto, $descripcion, $esPrincipal);
+    }
+
+    /**
+     * Obtiene todos los usuarios con rol "Responsable de Area"
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerResponsablesArea(): array
+    {
+        return $this->repository->obtenerUsuariosPorRolId(\App\Support\Roles::RESPONSABLE_AREA);
+    }
+
+    /**
+     * Obtiene los usuarios asignados a un edificio
+     */
+    public function obtenerUsuariosAsignadosAEdificio(int $edificioId): array
+    {
+        return $this->repository->obtenerUsuariosAsignadosAEdificio($edificioId);
+    }
+
+    /**
+     * Obtiene todas las asignaciones de edificios a usuarios
+     */
+    public function obtenerTodasAsignaciones(): array
+    {
+        return $this->repository->obtenerTodasAsignaciones();
+    }
+
+    /**
+     * Obtiene edificios que no están asignados a ningún usuario
+     */
+    public function obtenerEdificiosNoAsignados(): array
+    {
+        return $this->repository->obtenerEdificiosNoAsignados();
+    }
+
+    /**
+     * Asigna un edificio a un usuario
+     */
+    public function asignarEdificio(int $usuarioId, int $edificioId): bool
+    {
+        return $this->repository->asignarEdificioAUsuario($usuarioId, $edificioId);
+    }
+
+    /**
+     * Quita la asignación de un edificio a un usuario
+     */
+    public function quitarAsignacionEdificio(int $usuarioId, int $edificioId): bool
+    {
+        return $this->repository->quitarAsignacionEdificio($usuarioId, $edificioId);
     }
 }

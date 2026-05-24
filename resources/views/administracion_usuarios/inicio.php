@@ -12,7 +12,7 @@ if (!Session::has('auth_user')) {
 $sessionUser = Session::get('auth_user');
 
 // Verificar que sea Administrador exclusivamente
-if ($sessionUser['rol_nombre'] !== 'Administrador') {
+if (!\App\Support\Roles::is($sessionUser['rol_id'], \App\Support\Roles::ADMIN)) {
     header('Location: /sigmu');
     exit;
 }
@@ -53,8 +53,19 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                     <span class="menu-label">USUARIOS</span>
                 </a>
 
+                <!-- ASIGNACION ESPACIOS -->
+                <a href="/sigmu/administracion_usuarios/asignacion_espacios" class="menu-card">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="menu-label">ASIGNACIÓN ESPACIOS</span>
+                </a>
+
                 <!-- REPORTES -->
-                <a href="#" class="menu-card">
+                <a href="/sigmu/reportes" class="menu-card">
                     <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>

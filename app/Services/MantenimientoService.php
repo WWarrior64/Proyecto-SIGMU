@@ -15,10 +15,10 @@ final class MantenimientoService
         $this->repository = $repository ?? new MantenimientoRepository();
     }
 
-    public function obtenerDatosDashboard(): array
+    public function obtenerDatosDashboard(int $mes = 0, int $anio = 0): array
     {
-        $mesActual = (int) date('m');
-        $anioActual = (int) date('Y');
+        $mesActual = $mes > 0 ? $mes : (int) date('m');
+        $anioActual = $anio > 0 ? $anio : (int) date('Y');
 
         return [
             'calendario' => $this->repository->obtenerMantenimientosCalendario($mesActual, $anioActual),
@@ -30,10 +30,10 @@ final class MantenimientoService
         ];
     }
 
-    public function obtenerDatosDashboardTecnico(int $tecnicoId): array
+    public function obtenerDatosDashboardTecnico(int $tecnicoId, int $mes = 0, int $anio = 0): array
     {
-        $mesActual = (int) date('m');
-        $anioActual = (int) date('Y');
+        $mesActual = $mes > 0 ? $mes : (int) date('m');
+        $anioActual = $anio > 0 ? $anio : (int) date('Y');
 
         return [
             'asignados' => $this->repository->obtenerMantenimientosPorTecnico($tecnicoId),
@@ -97,7 +97,7 @@ final class MantenimientoService
      */
     public function obtenerListadoParaUsuario(array $sessionUser): array
     {
-        if (($sessionUser['rol_nombre'] ?? '') === 'Personal Mantenimiento') {
+        if (\App\Support\Roles::is($sessionUser['rol_id'] ?? 0, \App\Support\Roles::MANTENIMIENTO)) {
             return $this->repository->obtenerListadoMantenimientosPorTecnico((int) ($sessionUser['id'] ?? 0));
         }
 
