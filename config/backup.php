@@ -19,6 +19,10 @@ try {
     $dbName = $config['database'];
     $dbHost = $config['host'];
     
+    // Host desde el cual la aplicación se conecta a la base de datos (para los GRANT)
+    $appHost = $_ENV['DB_APP_HOST'] ?? 'localhost';
+    $fullAppUser = "'sigmu_app'@'{$appHost}'";
+    
     echo "Conectando a la base de datos '{$dbName}' en '{$dbHost}'...\n";
     $db = \App\Support\Database::connection();
 
@@ -330,62 +334,62 @@ try {
     fwrite($fileHandle, "-- PERMISOS DEL USUARIO DE APLICACIÓN\n");
     fwrite($fileHandle, "-- ============================================================\n");
     fwrite($fileHandle, "-- Crear o actualizar usuario de aplicación\n");
-    fwrite($fileHandle, "CREATE USER IF NOT EXISTS 'sigmu_app'@'localhost'\n");
+    fwrite($fileHandle, "CREATE USER IF NOT EXISTS {$fullAppUser}\n");
     fwrite($fileHandle, "    IDENTIFIED BY 'CambiarEstaContrasena2026!';\n\n");
-    fwrite($fileHandle, "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "REVOKE ALL PRIVILEGES, GRANT OPTION FROM {$fullAppUser};\n\n");
 
     // Permisos de sesión
     fwrite($fileHandle, "-- Sesión\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`set_usuario_sesion`             TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`limpiar_usuario_sesion`         TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`set_usuario_sesion`             TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`limpiar_usuario_sesion`         TO {$fullAppUser};\n\n");
 
     // Permisos de activos
     fwrite($fileHandle, "-- Activos\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_activo`            TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_activo`               TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_activo`             TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_activo`            TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_activo`               TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_activo`             TO {$fullAppUser};\n\n");
 
     // Permisos de fotos de activos
     fwrite($fileHandle, "-- Fotos de activos\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_activo`         TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_activo`        TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_activo`         TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_activo`        TO {$fullAppUser};\n\n");
 
     // Permisos de fotos de edificios
     fwrite($fileHandle, "-- Fotos de edificios\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_edificio`       TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_edificio`      TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_edificio`       TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_edificio`      TO {$fullAppUser};\n\n");
 
     // Permisos de fotos de usuario
     fwrite($fileHandle, "-- Fotos de usuario\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_usuario`        TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_usuario`       TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_agregar_foto_usuario`        TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_foto_usuario`       TO {$fullAppUser};\n\n");
 
     // Permisos de mantenimientos
     fwrite($fileHandle, "-- Mantenimientos\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_mantenimiento`     TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_completar_mantenimiento`     TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_mantenimiento`     TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_completar_mantenimiento`     TO {$fullAppUser};\n\n");
 
     // Permisos de tipos de activo
     fwrite($fileHandle, "-- Tipos de activo\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_tipo_activo`       TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_tipo_activo`          TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_tipo_activo`       TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_tipo_activo`          TO {$fullAppUser};\n\n");
 
     // Permisos de usuarios
     fwrite($fileHandle, "-- Usuarios\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_usuario`           TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_usuario`              TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_cambiar_contrasena`          TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_asignar_edificio`            TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_quitar_edificio`             TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_usuario`           TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_usuario`              TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_cambiar_contrasena`          TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_asignar_edificio`            TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_quitar_edificio`             TO {$fullAppUser};\n\n");
 
     // Permisos de edificios y salas
     fwrite($fileHandle, "-- Edificios y salas\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_edificio`          TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_edificio`             TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_edificio`           TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_sala`              TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_sala`                 TO 'sigmu_app'@'localhost';\n");
-    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_sala`               TO 'sigmu_app'@'localhost';\n\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_edificio`          TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_edificio`             TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_edificio`           TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_registrar_sala`              TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_editar_sala`                 TO {$fullAppUser};\n");
+    fwrite($fileHandle, "GRANT EXECUTE ON PROCEDURE `{$dbName}`.`sp_eliminar_sala`               TO {$fullAppUser};\n\n");
 
     // Permisos de vistas de lectura
     fwrite($fileHandle, "-- Vistas de lectura\n");
@@ -404,7 +408,7 @@ try {
         'vista_roles',
     ];
     foreach ($viewGrants as $viewName) {
-        fwrite($fileHandle, "GRANT SELECT ON `{$dbName}`.`{$viewName}` TO 'sigmu_app'@'localhost';\n");
+        fwrite($fileHandle, "GRANT SELECT ON `{$dbName}`.`{$viewName}` TO {$fullAppUser};\n");
     }
     fwrite($fileHandle, "\nFLUSH PRIVILEGES;\n\n");
 
