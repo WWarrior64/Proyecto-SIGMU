@@ -20,7 +20,14 @@ final class MailService
     {
         $this->config = require __DIR__ . '/../../config/mail.php';
         $appConfig = require __DIR__ . '/../../config/app.php';
-        $this->baseUrl = rtrim($appConfig['url'] ?? 'http://localhost:8000', '/');
+        
+        // Detectar dinámicamente la URL base desde el servidor
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $this->baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'];
+        } else {
+            $this->baseUrl = rtrim($appConfig['url'] ?? 'http://localhost:8000', '/');
+        }
     }
 
     /**
