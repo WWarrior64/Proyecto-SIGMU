@@ -8,7 +8,8 @@
 declare(strict_types=1);
 
 $sigmuPageTitle = 'REPORTE GENERAL CONFIGURABLE';
-$sigmuLayoutAdmin = true; // Mostrados en menu admin
+$user = \App\Support\Session::get('auth_user');
+$sigmuLayoutAdmin = \App\Support\Roles::is($user['rol_id'] ?? 0, \App\Support\Roles::ADMIN);
 $sigmuExtraCss = ['/assets/css/reportes.css'];
 $sigmuExtraScripts = ['/assets/js/reportes.js'];
 require __DIR__ . '/../partials/sigmu_shell_start.php';
