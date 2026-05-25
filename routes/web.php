@@ -276,6 +276,22 @@ $router->get('/sigmu/ajax/activos', static function (): void {
     $controller->getActivosAjax($salaId);
 });
 
+// NUEVOS Endpoints AJAX para búsquedas live
+$router->get('/sigmu/sala/ajax', static function (): string {
+    $controller = new \App\Http\Controllers\AjaxSearchController();
+    return $controller->activos();
+});
+
+$router->get('/sigmu/historial/ajax', static function (): string {
+    $controller = new \App\Http\Controllers\AjaxSearchController();
+    return $controller->historial();
+});
+
+$router->get('/sigmu/activo/historial/ajax', static function (): string {
+    $controller = new \App\Http\Controllers\AjaxSearchController();
+    return $controller->historial();
+});
+
 // RUTAS ADMINISTRACION USUARIOS
 $router->get('/sigmu/administracion_usuarios/gestion_roles', static function (): string {
     $controller = new \App\Http\Controllers\RolController();

@@ -6,7 +6,7 @@ namespace App\Support;
 
 final class Validator
 {
-    public const REGEX_NOMBRE = "/^[a-zA-Z\xC3\xA1\xC3\xA9\xC3\xAD\xC3\xB3\xC3\xBA\xC3\x81\xC3\x89\xC3\x8D\xC3\x93\xC3\x9A\xC3\xB1\xC3\x910-9 .,&'-]+$/u";
+    public const REGEX_NOMBRE = "/^[a-zA-Z\xC3\xA1\xC3\xA9\xC3\xAD\xC3\xB3\xC3\xBA\xC3\x81\xC3\x89\xC3\x8D\xC3\x93\xC3\x9A\xC3\xB1\xC3\x910-9 .,&\/\(\)\"'+*\x{2026}-]+$/u";
 
     public const REGEX_USERNAME = '/^[a-zA-Z0-9_.-]+$/';
 
@@ -26,7 +26,7 @@ final class Validator
             return "$campo no puede exceder $maxLength caracteres";
         }
         if (!preg_match(self::REGEX_NOMBRE, $value)) {
-            return "$campo contiene caracteres no permitidos. Solo letras, numeros, espacios, tildes, ., &, ' y -";
+            return "$campo contiene caracteres no permitidos. Permitidos: letras, numeros, espacios, tildes y ( . , & / ( ) \" ' + * - )";
         }
         return null;
     }

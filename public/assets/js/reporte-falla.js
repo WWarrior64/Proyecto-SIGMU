@@ -23,8 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast('Reporte registrado correctamente. El activo ha cambiado a estado de reparación.');
-                window.location.href = '/sigmu/activo/ver?id=' + activoId;
+                window.location.href = '/sigmu/activo/ver?id=' + activoId + '&success=' + encodeURIComponent('Reporte registrado correctamente. El activo ha cambiado a estado de reparación.');
             } else {
                 showToast('Error: ' + data.message, 'error');
                 if (submitBtn) submitBtn.disabled = false;

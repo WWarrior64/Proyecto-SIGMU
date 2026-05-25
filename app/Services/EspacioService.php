@@ -20,16 +20,12 @@ final class EspacioService
 
     public function listarEdificios(): array
     {
-        return Cache::remember('edificios.todos', function () {
-            return $this->repository->obtenerEdificiosConConteo();
-        }, 300); // 5 minutos de caché
+        return $this->repository->obtenerEdificiosConConteo();
     }
 
     public function listarSalas(int $edificioId): array
     {
-        return Cache::remember("salas.edificio.{$edificioId}", function () use ($edificioId) {
-            return $this->repository->obtenerSalasConConteo($edificioId);
-        }, 300); // 5 minutos de caché
+        return $this->repository->obtenerSalasConConteo($edificioId);
     }
 
     public function obtenerEdificio(int $id): array

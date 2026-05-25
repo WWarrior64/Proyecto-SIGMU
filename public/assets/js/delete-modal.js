@@ -6,6 +6,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     createDeleteModal();
     setupDeleteForms();
+    
+    // Re-inicializar cuando se cargue contenido via AJAX
+    document.addEventListener('ajax-content-loaded', function() {
+        // No es necesario re-crear el modal (ya existe),
+        // solo necesitamos que los nuevos formularios sean captados
+        // por el event delegation en setupDeleteForms()
+    });
 });
 
 function createDeleteModal() {
@@ -35,11 +42,14 @@ function createDeleteModal() {
 }
 
 function setupDeleteForms() {
-    document.querySelectorAll('form[action*="eliminar"]').forEach(form => {
-        form.addEventListener('submit', (e) => {
+    // Event delegation: capturar submits de formularios de eliminación
+    // incluso si son cargados dinámicamente via AJAX
+    document.addEventListener('submit', function(e) {
+        const form = e.target.closest('form[action*="eliminar"]');
+        if (form) {
             e.preventDefault();
             showDeleteModal(form);
-        });
+        }
     });
 }
 

@@ -1,5 +1,5 @@
 /**
- * HISTORIAL ACTIVO - BUSQUEDA EN TIEMPO REAL
+ * HISTORIAL ACTIVO - BUSQUEDA EN TIEMPO REAL (AJAX)
  * 
  * @author SIGMU UNICAES
  */
@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Menu lateral
     const menuBtn = document.getElementById('menuBtn');
     if (menuBtn) {
-        // En algunas vistas el menu se maneja por global-menu.js y en otras por toggle de clase
         if (!menuBtn.onclick) {
             menuBtn.addEventListener('click', function() {
                 document.body.classList.toggle('menu-open');
@@ -15,49 +14,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // BUSQUEDA - CLIENT-SIDE FILTERING (IDENTICO A LISTADO_ACTIVOS)
+    // BUSQUEDA - AJAX con debounce
     const searchInput = document.getElementById('searchInputHistorial');
-    // Capture the original rows when loading (as in active-listing)
-    const tableRows = document.querySelectorAll('.table-body .table-row');
     
     if (searchInput) {
+        let searchTimer = null;
+        
         searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            
-            tableRows.forEach(row => {
-                // No procesar el estado vacío original de la BD si existiera
-                if (row.classList.contains('empty-state') && !row.classList.contains('search-empty-state')) return;
-
-                const cells = row.querySelectorAll('.table-cell');
-                let found = false;
-                
-                cells.forEach(cell => {
-                    const text = cell.textContent.toLowerCase();
-                    if (text.includes(searchTerm)) {
-                        found = true;
-                    }
-                });
-                
-                if (found || searchTerm === '') {
-                    // Usar setProperty con important para sobreescribir el CSS del historial
-                    row.style.setProperty('display', 'grid', 'important');
-                    row.style.opacity = '1';
-                } else {
-                    // Forzar ocultamiento absoluto para que la tabla se redimensione
-                    row.style.setProperty('display', 'none', 'important');
-                    row.style.opacity = '0';
-                }
-            });
-            
-            // Mostrar estado vacío si no hay resultados (como en listado-activos)
-            updateEmptyStateHistorial(searchTerm);
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                buscarHistorialAjax(1);
+            }, 300);
         });
 
         // Limpiar al presionar Escape
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 this.value = '';
-                this.dispatchEvent(new Event('input'));
+                clearTimeout(searchTimer);
+                buscarHistorialAjax(1);
             }
         });
 
@@ -69,117 +44,122 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    /**
-     * Actualiza el estado vacío (Copiado de listado-activos.js)
-     */
-    function updateEmptyStateHistorial(searchTerm) {
-        const tableBody = document.querySelector('.table-body');
-        if (!tableBody) return;
-
-        const allRows = tableBody.querySelectorAll('.table-row');
-        
-        // Contar realmente filas visibles
-        let visibleCount = 0;
-        allRows.forEach(row => {
-            const computedStyle = window.getComputedStyle(row);
-            if (computedStyle.display !== 'none' && !row.classList.contains('search-empty-state')) {
-                visibleCount++;
-            }
-        });
-        
-        const existingEmpty = tableBody.querySelector('.search-empty-state');
-        
-        if (visibleCount === 0 && searchTerm !== '') {
-            if (!existingEmpty) {
-                const emptyState = document.createElement('div');
-                emptyState.className = 'empty-state search-empty-state';
-                emptyState.innerHTML = `
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <p>No se encontraron registros con "${searchTerm}"</p>
-                `;
-                tableBody.appendChild(emptyState);
-            }
-        } else if (existingEmpty) {
-            existingEmpty.remove();
-        }
-    }
-
-    // APLICAR FILTROS AUTOMATICAMENTE AL CAMBIAR SELECTS
+    // APLICAR FILTROS AUTOMATICAMENTE AL CAMBIAR SELECTS (AJAX)
     const selectAccion = document.querySelector('select[name="accion"]');
     const selectEstado = document.querySelector('select[name="estado"]');
     const selectUsuario = document.querySelector('select[name="usuario"]');
 
-    if (selectAccion) selectAccion.addEventListener('change', aplicarFiltros);
-    if (selectEstado) selectEstado.addEventListener('change', aplicarFiltros);
-    if (selectUsuario) selectUsuario.addEventListener('change', aplicarFiltros);
+    if (selectAccion) selectAccion.addEventListener('change', function() { buscarHistorialAjax(1); });
+    if (selectEstado) selectEstado.addEventListener('change', function() { buscarHistorialAjax(1); });
+    if (selectUsuario) selectUsuario.addEventListener('change', function() { buscarHistorialAjax(1); });
 
-    // BOTON LIMPIAR FILTROS
+    // BOTON LIMPIAR FILTROS (AJAX)
     const botonLimpiar = document.getElementById('limpiarFiltrosBtn');
     if (botonLimpiar) {
         botonLimpiar.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Limpiar todos los campos
+            // Limpiar inputs
             if (searchInput) searchInput.value = '';
             if (selectAccion) selectAccion.selectedIndex = 0;
             if (selectEstado) selectEstado.selectedIndex = 0;
             if (selectUsuario) selectUsuario.selectedIndex = 0;
 
-            // Redirigir sin parametros (pero manteniendo el ID si existe)
-            const urlParams = new URLSearchParams(window.location.search);
-            const activoId = urlParams.get('id');
-            
-            if (activoId) {
-                window.location.href = window.location.pathname + '?id=' + activoId;
-            } else {
-                window.location.href = window.location.pathname;
-            }
+            // Recargar via AJAX sin filtros
+            buscarHistorialAjax(1);
         });
     }
 
-    /**
-     * Aplica los filtros y actualiza la pagina
-     */
-    function aplicarFiltros() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const params = new URLSearchParams();
+    // PAGINACION AJAX (para clase .ajax-page-historial)
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('.ajax-page-historial');
+        if (!target) return;
         
-        // 1. Mantener ID del activo si existe (para historial individual)
-        const activoId = urlParams.get('id');
-        if (activoId) {
-            params.set('id', activoId);
+        e.preventDefault();
+        
+        const pagina = target.getAttribute('data-pagina');
+        if (pagina) {
+            buscarHistorialAjax(parseInt(pagina));
         }
-
-        // 2. Agregar busqueda
-        if (searchInput && searchInput.value.trim() !== '') {
-            params.set('busqueda', searchInput.value.trim());
-        }
-
-        // 3. Agregar filtro accion
-        if (selectAccion && selectAccion.value !== '') {
-            params.set('accion', selectAccion.value);
-        }
-
-        // 4. Agregar filtro estado
-        if (selectEstado && selectEstado.value !== '') {
-            params.set('estado', selectEstado.value);
-        }
-
-        // 5. Agregar filtro usuario (para historial general)
-        if (selectUsuario && selectUsuario.value !== '') {
-            params.set('usuario', selectUsuario.value);
-        }
-
-        // Construir nueva URL
-        const queryStr = params.toString();
-        const nuevaUrl = window.location.pathname + (queryStr ? '?' + queryStr : '');
-
-        // Solo actualizar si la URL cambio (evitar bucles)
-        if (window.location.search !== (queryStr ? '?' + queryStr : '')) {
-            window.location.href = nuevaUrl;
-        }
-    }
+    });
 });
+
+/**
+ * Realiza la búsqueda/paginación del historial vía AJAX
+ */
+function buscarHistorialAjax(pagina) {
+    const searchInput = document.getElementById('searchInputHistorial');
+    const busqueda = searchInput ? searchInput.value.trim() : '';
+    const tableBody = document.getElementById('historialTableBody');
+    const paginationContainer = document.getElementById('paginationContainer');
+    
+    if (!tableBody) return;
+    
+    // Mostrar indicador de carga
+    tableBody.innerHTML = '<div class="empty-state"><p>Cargando...</p></div>';
+    
+    // Construir parámetros
+    const urlParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+    
+    params.set('pagina', String(pagina));
+    
+    // ID del activo (para historial individual)
+    const activoId = urlParams.get('id');
+    if (activoId) {
+        params.set('id', activoId);
+    }
+    
+    // Búsqueda
+    if (busqueda) {
+        params.set('busqueda', busqueda);
+    }
+    
+    // Filtros de selects
+    const selectAccion = document.querySelector('select[name="accion"]');
+    const selectEstado = document.querySelector('select[name="estado"]');
+    const selectUsuario = document.querySelector('select[name="usuario"]');
+    
+    if (selectAccion && selectAccion.value !== '') {
+        params.set('accion', selectAccion.value);
+    }
+    if (selectEstado && selectEstado.value !== '') {
+        params.set('estado', selectEstado.value);
+    }
+    if (selectUsuario && selectUsuario.value !== '') {
+        params.set('usuario', selectUsuario.value);
+    }
+    
+    // Orden (desde la URL actual)
+    if (urlParams.get('ordenar_por')) {
+        params.set('ordenar_por', urlParams.get('ordenar_por'));
+    }
+    if (urlParams.get('orden_direccion')) {
+        params.set('orden_direccion', urlParams.get('orden_direccion'));
+    }
+    
+    // Determinar URL del endpoint
+    let endpoint = '/sigmu/historial/ajax';
+    if (activoId) {
+        endpoint = '/sigmu/activo/historial/ajax';
+    }
+    
+    fetch(endpoint + '?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.htmlRows) {
+                    tableBody.innerHTML = data.htmlRows;
+                }
+                if (data.htmlPagination && paginationContainer) {
+                    paginationContainer.innerHTML = data.htmlPagination;
+                }
+            } else {
+                tableBody.innerHTML = '<div class="empty-state"><p>Error al cargar datos</p></div>';
+            }
+        })
+        .catch(err => {
+            console.error('Error en búsqueda AJAX de historial:', err);
+            tableBody.innerHTML = '<div class="empty-state"><p>Error de conexión</p></div>';
+        });
+}

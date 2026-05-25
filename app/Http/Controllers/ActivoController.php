@@ -37,9 +37,16 @@ final class ActivoController
 
         $salaId = filter_input(INPUT_GET, 'sala_id', FILTER_VALIDATE_INT);
         if (!$salaId) {
-            header('Location: /sigmu/edificios?error=sala_no_especificada');
+            // Recuperar de sesión si se perdió el parámetro (ej. recarga después de importar)
+            $salaId = (int)Session::get('ultima_sala_importacion', 0);
+        }
+        if (!$salaId) {
+            header('Location: /sigmu/edificios?error=La sala no fue especificada para la importación');
             return '';
         }
+
+        // Guardar en sesión para recordar al recargar la página
+        Session::set('ultima_sala_importacion', $salaId);
 
         return view('inventario_catalogacion.importar_activos', [
             'salaId' => $salaId,
@@ -74,6 +81,8 @@ final class ActivoController
                 $salaId
             );
             
+            // Guardar en sesión para recordar el sala_id al recargar
+            Session::set('ultima_sala_importacion', $salaId);
             Session::set('import_results', $results);
             
             $mensaje = "Importación completada: {$results['success']} activos importados.";
@@ -162,7 +171,7 @@ final class ActivoController
 
         $salaId = filter_input(INPUT_GET, 'sala_id', FILTER_VALIDATE_INT);
         if (!$salaId) {
-            header('Location: /sigmu/edificios?error=sala_no_especificada');
+            header('Location: /sigmu/edificios?error=La sala no fue especificada para el registro');
             return '';
         }
 

@@ -160,146 +160,19 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
 
             <!-- Table Body -->
             <div class="table-body" id="historialTableBody">
-                <?php if (empty($historial)): ?>
-                    <div class="empty-state">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M9 11l3 3l8-8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p>No hay registros en el historial general</p>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($historial as $registro): ?>
-                        <div class="table-row historial-row">
-
-                            <!-- USUARIO -->
-                            <div class="table-cell cell-user" data-label="Usuario">
-                                <div class="user-inline">
-                                    <div class="user-avatar-small">
-                                        <?= strtoupper(substr($registro['usuario_nombre'] ?? 'U', 0, 1)) ?>
-                                    </div>
-                                    <div class="user-info">
-                                        <span class="user-fullname"><?= htmlspecialchars((string) ($registro['usuario_nombre'] ?? 'Usuario desconocido'), ENT_QUOTES, 'UTF-8') ?></span>
-                                        <span class="user-username">@<?= htmlspecialchars((string) ($registro['usuario_username'] ?? 'usuario'), ENT_QUOTES, 'UTF-8') ?></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ID -->
-                            <div class="table-cell cell-id" data-label="ID">
-                                <?= (int) ($registro['id'] ?? 0) ?>
-                            </div>
-
-                            <!-- ACTIVO -->
-                            <div class="table-cell" data-label="Activo">
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <span style="font-weight: 600;"><?= htmlspecialchars((string) ($registro['activo_codigo'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></span>
-                                    <span style="font-size: 0.85rem; color: #6c757d;"><?= htmlspecialchars((string) ($registro['activo_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
-                                </div>
-                            </div>
-
-                            <!-- ACCIÓN / DETALLE -->
-                            <div class="table-cell cell-name" data-label="Acción / Detalle">
-                                <span class="action-badge action-<?= htmlspecialchars((string) ($registro['accion'] ?? 'desconocida'), ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= str_replace(['_', '-'], ' ', htmlspecialchars(ucfirst((string) ($registro['accion'] ?? 'N/A')), ENT_QUOTES, 'UTF-8')) ?>
-                                </span>
-                                <span class="detail-text">
-                                    <?= htmlspecialchars((string) ($registro['detalle'] ?? 'Sin detalle'), ENT_QUOTES, 'UTF-8') ?>
-                                </span>
-                            </div>
-
-                            <!-- ESTADO -->
-                            <div class="table-cell cell-status" data-label="Estado">
-                                <?php if (!empty($registro['estado_anterior']) && !empty($registro['estado_nuevo'])): ?>
-                                    <div class="status-changes">
-                                        <span class="status-old"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_anterior'], ENT_QUOTES, 'UTF-8')) ?></span>
-                                        <span class="status-arrow">→</span>
-                                        <span class="status-new"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
-                                    </div>
-                                <?php elseif (!empty($registro['estado_nuevo'])): ?>
-                                    <span class="status-only"><?= str_replace('_', ' ', htmlspecialchars((string)$registro['estado_nuevo'], ENT_QUOTES, 'UTF-8')) ?></span>
-                                <?php else: ?>
-                                    <span class="empty-value">-</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- SALA ANTERIOR -->
-                            <div class="table-cell" data-label="Sala Anterior">
-                                <?php if (!empty($registro['sala_anterior_nombre'])): ?>
-                                    <span class="sala-anterior"><?= htmlspecialchars($registro['sala_anterior_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
-                                <?php else: ?>
-                                    <span class="empty-value">Ninguna</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- SALA ACTUAL -->
-                            <div class="table-cell" data-label="Sala Actual">
-                                <?php if (!empty($registro['sala_nueva_nombre'])): ?>
-                                    <span class="sala-nueva"><?= htmlspecialchars($registro['sala_nueva_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
-                                <?php else: ?>
-                                    <span class="empty-value">-</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- FECHA -->
-                            <div class="table-cell cell-date" data-label="Fecha">
-                                <?php if (!empty($registro['fecha']) && strtotime($registro['fecha']) !== false): ?>
-                                    <span><?= date('d-m-Y', strtotime($registro['fecha'])) ?></span>
-                                    <span class="time-text"><?= date('H:i', strtotime($registro['fecha'])) ?></span>
-                                <?php else: ?>
-                                    <span class="empty-value">Fecha no disponible</span>
-                                <?php endif; ?>
-                            </div>
-
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <?php partial('historial_table_rows', ['historial' => $historial, 'general' => true]); ?>
             </div>
 
-            <?php
-            // Generar la cadena de consulta base manteniendo los filtros y ordenamiento
-            $currentParams = $_GET;
-            unset($currentParams['pagina']);
-            $queryString = http_build_query($currentParams);
-            $baseUrl = '?' . $queryString . (empty($queryString) ? '' : '&') . 'pagina=';
-            ?>
-
-            <!-- Pagination -->
-            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Mostrando <?= count($historial) ?> de <?= $total ?> registros
-                </div>
-                <div class="pagination">
-                    <?php if ($pagina > 1): ?>
-                        <a href="<?= $baseUrl . ($pagina - 1) ?>" class="pagination-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                            Anterior
-                        </a>
-                    <?php endif; ?>
-
-                    <div class="pagination-pages">
-                        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                            <?php if ($i == $pagina): ?>
-                                <span class="pagination-btn active"><?= $i ?></span>
-                            <?php else: ?>
-                                <a href="<?= $baseUrl . $i ?>" class="pagination-btn"><?= $i ?></a>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </div>
-
-                    <?php if ($pagina < $totalPaginas): ?>
-                        <a href="<?= $baseUrl . ($pagina + 1) ?>" class="pagination-btn">
-                            Siguiente
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </a>
-                    <?php endif; ?>
-                </div>
+            <div id="paginationContainer" class="pagination-container">
+                <?php partial('pagination_ajax', [
+                    'items' => $historial,
+                    'total' => $total,
+                    'pagina' => $pagina,
+                    'totalPaginas' => $totalPaginas,
+                    'label' => 'registros',
+                    'ajaxClass' => 'ajax-page-historial'
+                ]); ?>
             </div>
-            <?php endif; ?>
         </div>
     </div>
-<?php require __DIR__ . '/../partials/sigmu_shell_end.php';
+<?php require __DIR__ . '/../partials/sigmu_shell_end.php'; ?>

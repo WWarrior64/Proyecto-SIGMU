@@ -4,12 +4,6 @@
  */
 
 // Global state for active filters
-// ✅ ✅ ✅ COMPORTAMIENTO EXACTAMENTE COMO PEDIDO:
-// 🔹 AL ABRIR LA PAGINA: TODOS LOS FILTROS SIN MARCAR
-// 🔹 CUANDO NINGUNO ESTA MARCADO: MOSTRAR TODOS MENOS DESCARTADOS
-// 🔹 CUANDO MARCAS ALGUNO: MOSTRAR SOLO LOS MARCADOS
-// 🔹 SI MARCAS SOLO DESCARTADO: VER SOLO LOS DESCARTADOS
-// 🔹 SI MARCAS TODOS LOS 4: VER ABSOLUTAMENTE TODOS
 let activeStatusFilters = [];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initAnimations();
     initAlertsAutoHide();
     initSorting();
+    initAjaxPagination();
     
     // ✅ Aplicar filtro por defecto al cargar
     filterByStatus(activeStatusFilters);
@@ -60,84 +55,120 @@ function initSorting() {
 }
 
 /**
- * Search functionality
+ * Search functionality - now uses AJAX for server-side search
  */
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
-    const tableRows = document.querySelectorAll('.table-body .table-row');
     
     if (!searchInput) return;
     
+    // Debounce timer to avoid excessive AJAX calls
+    let searchTimer = null;
+    
     searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
-        
-        tableRows.forEach(row => {
-            const cells = row.querySelectorAll('.table-cell');
-            let found = false;
-            
-            cells.forEach(cell => {
-                const text = cell.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    found = true;
-                }
-            });
-            
-            if (found || searchTerm === '') {
-                row.style.display = '';
-                row.style.opacity = '1';
-            } else {
-                row.style.display = 'none';
-                row.style.opacity = '0';
-            }
-        });
-        
-        // Show empty state if no results
-        updateEmptyState(searchTerm);
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            buscarActivosAjax(1);
+        }, 300);
     });
     
     // Clear search on escape
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             this.value = '';
-            this.dispatchEvent(new Event('input'));
+            clearTimeout(searchTimer);
+            buscarActivosAjax(1);
         }
     });
 }
 
 /**
- * Update empty state based on search results
+ * Realiza la búsqueda/paginación de activos vía AJAX
  */
-function updateEmptyState(searchTerm) {
-    const tableBody = document.querySelector('.table-body');
-    const allRows = tableBody.querySelectorAll('.table-row');
+function buscarActivosAjax(pagina) {
+    const searchInput = document.getElementById('searchInput');
+    const busqueda = searchInput ? searchInput.value.trim() : '';
+    const tableBody = document.getElementById('activosTableBody');
+    const paginationContainer = document.getElementById('paginationContainer');
     
-    // ✅ FORMA CORRECTA: Contar realmente filas visibles (no display: none)
-    let visibleCount = 0;
-    allRows.forEach(row => {
-        const computedStyle = window.getComputedStyle(row);
-        if (computedStyle.display !== 'none') {
-            visibleCount++;
+    if (!tableBody) return;
+    
+    // Mostrar indicador de carga
+    tableBody.innerHTML = '<div class="empty-state"><p>Cargando...</p></div>';
+    
+    // Construir URL con los parámetros actuales
+    const urlParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+    
+    params.set('pagina', String(pagina));
+    
+    if (busqueda) {
+        params.set('busqueda', busqueda);
+    }
+    
+    // Mantener filtros de estado y tipo
+    const estados = urlParams.getAll('estados[]');
+    estados.forEach(e => params.append('estados[]', e));
+    
+    const tipos = urlParams.getAll('tipos[]');
+    tipos.forEach(t => params.append('tipos[]', t));
+    
+    // Mantener orden
+    if (urlParams.get('sala_id')) {
+        params.set('sala_id', urlParams.get('sala_id'));
+    }
+    if (urlParams.get('ordenar_por')) {
+        params.set('ordenar_por', urlParams.get('ordenar_por'));
+    }
+    if (urlParams.get('orden_direccion')) {
+        params.set('orden_direccion', urlParams.get('orden_direccion'));
+    }
+    
+    fetch('/sigmu/sala/ajax?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.htmlRows) {
+                    tableBody.innerHTML = data.htmlRows;
+                }
+                if (data.htmlPagination && paginationContainer) {
+                    paginationContainer.innerHTML = data.htmlPagination;
+                }
+                
+                // Re-inicializar las animaciones para las nuevas filas
+                initAnimations();
+                
+                // Re-inicializar el menú de acciones (delete-modal)
+                if (window.SIGMU) {
+                    // Disparar evento para que delete-modal se reinicialice
+                    document.dispatchEvent(new CustomEvent('ajax-content-loaded'));
+                }
+            } else {
+                tableBody.innerHTML = '<div class="empty-state"><p>Error al cargar datos</p></div>';
+            }
+        })
+        .catch(err => {
+            console.error('Error en búsqueda AJAX:', err);
+            tableBody.innerHTML = '<div class="empty-state"><p>Error de conexión</p></div>';
+        });
+}
+
+/**
+ * Inicializa la paginación AJAX
+ * Intercepta clics en los botones de paginación con clase .ajax-page
+ */
+function initAjaxPagination() {
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('.ajax-page');
+        if (!target) return;
+        
+        e.preventDefault();
+        
+        const pagina = target.getAttribute('data-pagina');
+        if (pagina) {
+            buscarActivosAjax(parseInt(pagina));
         }
     });
-    
-    const existingEmpty = tableBody.querySelector('.search-empty-state');
-    
-    if (visibleCount === 0 && searchTerm !== '') {
-        if (!existingEmpty) {
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state search-empty-state';
-            emptyState.innerHTML = `
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <p>No se encontraron activos con "${searchTerm}"</p>
-            `;
-            tableBody.appendChild(emptyState);
-        }
-    } else if (existingEmpty) {
-        existingEmpty.remove();
-    }
 }
 
 /**
