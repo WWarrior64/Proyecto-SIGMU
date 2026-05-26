@@ -64,7 +64,7 @@ final class SalaController
             $ordenDireccion = trim((string) ($_GET['orden_direccion'] ?? 'DESC'));
             
             // Validar campos permitidos
-            $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado', 'valor_adquisicion', 'sala_nombre'];
+            $camposPermitidos = ['id', 'codigo', 'nombre', 'descripcion', 'tipo', 'estado', 'valor_adquisicion', 'sala_nombre'];
             $ordenarPor = in_array($ordenarPor, $camposPermitidos) ? $ordenarPor : 'id';
             $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
             

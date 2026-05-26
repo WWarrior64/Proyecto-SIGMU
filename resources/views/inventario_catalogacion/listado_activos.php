@@ -137,10 +137,10 @@ require __DIR__ . '/../partials/sigmu_shell_start.php';
                             <?= $ordenarPor === 'tipo' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
                         </span>
                     </div>
-                    <div class="table-cell cell-valor sortable" data-sort="valor_adquisicion">
-                        Valor
-                        <span class="sort-icon <?= $ordenarPor === 'valor_adquisicion' ? 'active' : '' ?>">
-                            <?= $ordenarPor === 'valor_adquisicion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
+                    <div class="table-cell cell-descripcion sortable" data-sort="descripcion">
+                        Descripción
+                        <span class="sort-icon <?= $ordenarPor === 'descripcion' ? 'active' : '' ?>">
+                            <?= $ordenarPor === 'descripcion' ? ($ordenDireccion === 'ASC' ? '↑' : '↓') : '' ?>
                         </span>
                     </div>
                     <div class="table-cell cell-status sortable" data-sort="estado">

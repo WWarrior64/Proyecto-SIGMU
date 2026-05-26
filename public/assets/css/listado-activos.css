@@ -276,7 +276,7 @@ body {
 
 .table-header .table-row {
     display: grid;
-    grid-template-columns: 140px minmax(200px, 1fr) 130px 100px 120px 140px 120px;
+    grid-template-columns: 120px minmax(180px, 1fr) 120px minmax(250px, 1.5fr) 110px 140px 110px;
     gap: 16px;
     padding: 16px 20px;
 }
@@ -296,7 +296,7 @@ body {
 
 .table-row {
     display: grid;
-    grid-template-columns: 140px minmax(200px, 1fr) 130px 100px 120px 140px 120px;
+    grid-template-columns: 120px minmax(180px, 1fr) 120px minmax(250px, 1.5fr) 110px 140px 110px;
     gap: 16px;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border-color);
@@ -333,9 +333,10 @@ body {
     color: var(--text-secondary);
 }
 
-.cell-valor {
-    font-weight: 600;
-    color: var(--unicaes-red);
+.cell-descripcion {
+    font-weight: 400;
+    color: var(--text-secondary);
+    max-width: none;
 }
 
 /* Status Badge */
@@ -442,7 +443,7 @@ body {
 @media (max-width: 1024px) {
     .table-header .table-row,
     .table-row {
-        grid-template-columns: 60px minmax(140px, 1fr) 110px 90px 100px 120px 110px;
+        grid-template-columns: 60px minmax(140px, 1fr) 110px minmax(160px, 1.5fr) 100px 120px 110px;
         gap: 12px;
     }
 }
@@ -473,7 +474,7 @@ body {
     
     .table-header .table-row,
     .table-body .table-row {
-        grid-template-columns: minmax(120px, 1fr) 100px 80px 100px 100px 110px;
+        grid-template-columns: minmax(120px, 1fr) 100px minmax(100px, 1.5fr) 100px 100px 110px;
         gap: 8px;
         padding: 12px 16px;
         font-size: 13px;
@@ -533,8 +534,8 @@ body {
     
     .table-header .cell-type,
     .table-body .cell-type,
-    .table-header .cell-valor,
-    .table-body .cell-valor {
+    .table-header .cell-descripcion,
+    .table-body .cell-descripcion {
         display: none;
     }
     

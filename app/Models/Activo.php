@@ -44,7 +44,7 @@ class Activo
             $offset = ($pagina - 1) * $porPagina;
             
         // Validar campos de ordenamiento permitidos
-        $camposPermitidos = ['id', 'codigo', 'nombre', 'tipo', 'estado', 'sala_nombre', 'fecha_creado'];
+        $camposPermitidos = ['id', 'codigo', 'nombre', 'descripcion', 'tipo', 'estado', 'sala_nombre', 'fecha_creado'];
         $ordenarPor = in_array(strtolower($ordenarPor), $camposPermitidos) ? $ordenarPor : 'id';
         $ordenDireccion = strtoupper($ordenDireccion) === 'ASC' ? 'ASC' : 'DESC';
 
@@ -67,7 +67,7 @@ class Activo
             
             // Filtro de busqueda de texto
             if (!empty($busqueda)) {
-                $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
+                $sql .= " AND (a.nombre LIKE :busqueda OR a.descripcion LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda OR s.nombre LIKE :busqueda OR e.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
 
@@ -101,6 +101,7 @@ class Activo
             'id' => 'a.id',
             'codigo' => 'a.codigo',
             'nombre' => 'a.nombre',
+            'descripcion' => 'a.descripcion',
             'tipo' => 'ta.nombre',
             'valor_adquisicion' => 'a.valor_adquisicion',
             'estado' => 'a.estado',
@@ -151,7 +152,7 @@ class Activo
             
             // Filtro de busqueda de texto
             if (!empty($busqueda)) {
-                $sql .= " AND (a.nombre LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda)";
+                $sql .= " AND (a.nombre LIKE :busqueda OR a.descripcion LIKE :busqueda OR a.codigo LIKE :busqueda OR ta.nombre LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
             

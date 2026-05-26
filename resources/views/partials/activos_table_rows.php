@@ -11,7 +11,7 @@
             <div class="table-cell cell-id" data-label="Código"><?= htmlspecialchars((string) ($activo['codigo'] ?? $activo['id']), ENT_QUOTES, 'UTF-8') ?></div>
             <div class="table-cell cell-name" data-label="Nombre"><?= htmlspecialchars((string) ($activo['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
             <div class="table-cell cell-type" data-label="Tipo Activo" data-tipo-id="<?= (int) ($activo['tipo_activo_id'] ?? 0) ?>"><?= htmlspecialchars((string) ($activo['tipo'] ?? 'Sin tipo'), ENT_QUOTES, 'UTF-8') ?></div>
-            <div class="table-cell cell-valor" data-label="Valor"><?= $activo['valor_adquisicion'] !== null ? '$' . number_format((float)$activo['valor_adquisicion'], 2) : '-' ?></div>
+            <div class="table-cell cell-descripcion" data-label="Descripción"><?= htmlspecialchars((string) ($activo['descripcion'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
             <div class="table-cell cell-status" data-label="Estado">
                 <span class="status-badge status-<?= htmlspecialchars((string) ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                     <?= str_replace(['_', '-'], ' ', htmlspecialchars(\App\Models\Activo::ESTADOS[$activo['estado']] ?? ($activo['estado'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
