@@ -17,6 +17,13 @@ final class AuthController
 
     public function login(): void
     {
+        // NOTA: No se valida CSRF en login porque:
+        //   - El usuario NO está autenticado (no hay sesión que proteger)
+        //   - Las credenciales (username+password) son la protección
+        //   - La cookie de sesión puede perderse entre GET y POST en
+        //     entornos como XAMPP, dejando al usuario atrapado sin poder entrar
+        //   - Las rutas POST autenticadas SÍ tienen CSRF via Router.php
+
         $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
 
@@ -28,6 +35,13 @@ final class AuthController
         try {
             $user = $this->service->autenticar($username, $password);
             $userId = (int) $user['id'];
+
+            // ────────────────────────────────────────────────────────────────
+            // REGENERAR TOKEN CSRF después de login exitoso
+            // Esto previene ataques de fijación de sesión.
+            // ────────────────────────────────────────────────────────────────
+            Csrf::regenerate();
+
             $this->service->iniciarSesionBd($userId);
             $_SESSION['auth_user'] = [
                 'id' => $userId,
@@ -126,17 +140,13 @@ final class AuthController
 
     /**
      * Procesa el cambio de nueva contraseña
+     * 
+     * NOTA: No se valida CSRF aquí porque el usuario NO está autenticado.
+     * La protección está en el token de recuperación (token GET/POST)
+     * que es único, temporal y de un solo uso.
      */
     public function resetPasswordPost(): string
     {
-        // Verificar token CSRF antes de procesar
-        if (!Csrf::validate()) {
-            return view('administracion_usuarios.reset_password', [
-                'token' => '',
-                'error' => 'Token CSRF inválido. Por favor, recarga la página e intenta de nuevo.',
-            ]);
-        }
-        
         // Guardamos la nueva contraseña si el token es válido.
         $token = (string) ($_POST['token'] ?? '');
         $password = (string) ($_POST['password'] ?? '');

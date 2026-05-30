@@ -61,13 +61,30 @@ final class Router
         }
 
         // 2. Validación CSRF Automática para métodos de escritura
+        // NOTA: La ruta /sigmu/login está EXCLUIDA porque:
+        //   - El usuario NO está autenticado aún (no hay sesión que proteger)
+        //   - Las credenciales (username+password) son la protección por sí mismas
+        //   - El token CSRF en login es contraproducente: si la cookie de sesión se
+        //     pierde entre GET y POST (común en XAMPP), el usuario queda atrapado
+        //   - Las rutas POST autenticadas (editar, eliminar, guardar) SÍ están protegidas
         if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
-            // Excluir login del CSRF si es necesario o manejarlo dentro de AuthController
-            // Pero por seguridad, mejor que todas las rutas lo tengan.
-            if (!\App\Support\Csrf::validate()) {
-                http_response_code(403);
-                echo "Error de seguridad: Token CSRF inválido. Por favor recargue la página.";
-                return;
+            // Lista de rutas que NO requieren CSRF global
+            // Son rutas públicas donde el usuario NO está autenticado:
+            //   - /sigmu/login: formulario de inicio de sesión
+            //   - /sigmu/recuperar: formulario de recuperación de contraseña
+            //   - /sigmu/reset: formulario de restablecimiento de contraseña
+            $excludedPaths = [
+                '/sigmu/login',
+                '/sigmu/recuperar',
+                '/sigmu/reset',
+            ];
+
+            if (!in_array($path, $excludedPaths, true)) {
+                if (!\App\Support\Csrf::validate()) {
+                    http_response_code(403);
+                    echo "Error de seguridad: Token CSRF inválido. Por favor recargue la página.";
+                    return;
+                }
             }
         }
 

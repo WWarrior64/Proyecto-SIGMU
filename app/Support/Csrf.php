@@ -103,4 +103,21 @@ final class Csrf
             throw new \RuntimeException('CSRF token invalid or missing. Please reload the page and try again.');
         }
     }
+
+    /**
+     * Valida el token CSRF y redirige con mensaje de error si falla.
+     * Útil para formularios donde queremos mostrar un mensaje amigable
+     * en lugar de lanzar una excepción.
+     * 
+     * @param string $redirectUrl URL a redirigir si falla la validación
+     * @return bool true si el token es válido
+     */
+    public static function validateOrRedirect(string $redirectUrl = '/sigmu?error=sesion_expirada'): bool
+    {
+        if (!self::validate()) {
+            header('Location: ' . $redirectUrl);
+            return false;
+        }
+        return true;
+    }
 }
